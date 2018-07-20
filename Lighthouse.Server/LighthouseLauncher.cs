@@ -8,7 +8,7 @@ namespace Lighthouse.Server
     public static class LighthouseLauncher
     {
         public static T BuildService<T>(string name)
-            where T: ILighthouseService<ILighthouseServiceConfigurationContext>
+            where T: ILighthouseService //<ILighthouseServiceConfigurationContext>
         {
             return default(T);
         }

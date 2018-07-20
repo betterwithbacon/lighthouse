@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Lighthouse.Core
 {
-    public abstract class LighthouseServiceBase
+    public abstract class LighthouseServiceBase : ILighthouseService
         //<TConfig> : ILighthouseService<TConfig>
         //where TConfig : ILighthouseServiceConfigurationContext, new()
     {
