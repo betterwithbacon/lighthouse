@@ -52,7 +52,7 @@ namespace Lighthouse.Core.UI
 
 		public void ValidateAndLoadArgs(IList<string> args)
 		{
-			foreach (var arg in args) //.Select(a => a.Split('=')[0]))
+			foreach (var arg in args)
 			{
 				if (TryParseArg(arg, out var val))
 				{
@@ -67,8 +67,15 @@ namespace Lighthouse.Core.UI
 
 		static (string argKey, string argValue) ParseArgs(string input)
 		{
+			if (string.IsNullOrEmpty(input))
+				return ("", "");
+
 			var args = input.Split('=');
-			return (args[0], args[1]);
+
+			if (args.Count() == 1)
+				return (args[0], "");
+			else
+				return (args[0], args[1]);
 		}
 
 		bool TryParseArg(string arg, out (AppCommand Command, string CommandValue) value)

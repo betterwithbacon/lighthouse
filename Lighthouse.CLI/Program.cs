@@ -22,7 +22,7 @@ namespace Lighthouse.CLI
 						.AddHint("serverIP", "Deploy to the target IP. This machine should have a Lighthouse Monitor on it.");
 
 			System.Diagnostics.Debugger.Launch();
-			//app.Start(new[] { "test=yup" });
+			
 			app.Start(args);
 		}
 	}
