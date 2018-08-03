@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Lighthouse.Core.UI
 {
@@ -10,6 +11,8 @@ namespace Lighthouse.Core.UI
 		public IList<AppCommandArgument> Arguments { get; private set; }
 
 		public string CommandName { get; private set; }
+
+		public Action<AppCommandExecutionArguments> ExecutionAction { get; internal set; }
 
 		public AppCommand(string commandName, CliApp app)
 		{
@@ -25,5 +28,45 @@ namespace Lighthouse.Core.UI
 		{
 			return CommandName;
 		}
+
+		public bool IsValidArgument(string argKey)
+		{
+			return Arguments.Any(c => c.ArgumentName.Equals(argKey, StringComparison.OrdinalIgnoreCase));
+		}
+
+		public void Execute(AppCommandExecutionArguments executionArguments)
+		{
+			ExecutionAction?.Invoke(executionArguments);
+		}
 	}
+
+	public class AppCommandValidationResult
+	{
+		public string Message { get; private set; }
+		public bool IsValid { get; private set; }		
+		public bool IsFatal { get; internal set; }
+
+		public AppCommandValidationResult(string message, bool isValid, bool isFatal)
+		{
+			IsValid = isValid;
+			Message = message;
+			IsFatal = isFatal;
+		}
+	}
+
+	public class MissingRequiredArgValidationResult : AppCommandValidationResult
+	{
+		public MissingRequiredArgValidationResult(AppCommandArgument argument)
+			: base($"Required argument was missing: {argument.ArgumentName}",false, true)
+		{
+		}
+	}
+
+	//public enum AppCommandValidationResultType
+	//{
+	//	Valid,
+	//	Failed,
+	//	Informational,
+	//	Obsolete
+	//}
 }

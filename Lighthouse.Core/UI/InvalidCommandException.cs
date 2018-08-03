@@ -4,7 +4,7 @@ using System.Runtime.Serialization;
 namespace Lighthouse.Core.UI
 {
 	[Serializable]
-	internal class InvalidCommandException : Exception
+	public class InvalidCommandException : Exception
 	{
 		InvalidCommandException()
 		{
@@ -18,7 +18,30 @@ namespace Lighthouse.Core.UI
 		{
 		}
 
-		public InvalidCommandException(string invalidArgument)
+		public InvalidCommandException(string invalidCommand)
+		{
+			InvalidCommand = invalidCommand;
+		}
+
+		public string InvalidCommand { get; internal set; }
+	}
+
+	[Serializable]
+	public class InvalidCommandArgumentException : Exception
+	{
+		InvalidCommandArgumentException()
+		{
+		}
+
+		InvalidCommandArgumentException(string message, Exception innerException) : base(message, innerException)
+		{
+		}
+
+		InvalidCommandArgumentException(SerializationInfo info, StreamingContext context) : base(info, context)
+		{
+		}
+
+		public InvalidCommandArgumentException(string invalidArgument)
 		{
 			InvalidArgument = invalidArgument;
 		}

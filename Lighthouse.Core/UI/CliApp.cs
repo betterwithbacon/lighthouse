@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -7,21 +8,31 @@ namespace Lighthouse.Core.UI
 {
 	public class CliApp
 	{
-		public string Name { get; }
-		public List<AppCommand> Commands { get; }
-		public List<AppCommandValue> CommandValues { get; }
-		private readonly Action<string> writeToConsole;
-		private readonly Func<string> readFromConsole;
-		private readonly Func<ConsoleKeyInfo> readKeyFromConsole;
+		public static class CommandPrompts
+		{
+			public const string PRESS_ANY_KEY_TO_QUIT = "Press Any Key to quit...";
+		}
+		
+		public string Name { get; }		
+		public List<AppCommand> AvailableCommands { get; }		
+		private readonly Action<string> WriteToConsole;
+		private readonly Func<string> ReadFromConsole;
+		private readonly Func<ConsoleKeyInfo> ReadKeyFromConsole;
+
+		public AppCommand SelectedCommand { get; private set; }
+		public List<AppCommandArgValue> SelectedCommandArgValues { get; private set; }
 
 		public CliApp(string name, Action<string> writeToConsole, Func<string> readFromConsole, Func<ConsoleKeyInfo> readKeyFromConsole)
 		{
-			Name = name;
-			this.writeToConsole = writeToConsole;
-			this.readFromConsole = readFromConsole;
-			this.readKeyFromConsole = readKeyFromConsole;
-			Commands = new List<AppCommand>();
-			CommandValues = new List<AppCommandValue>();
+			Name = name;			
+			this.WriteToConsole = writeToConsole;
+			this.ReadFromConsole = readFromConsole;
+			this.ReadKeyFromConsole = readKeyFromConsole;
+
+			AvailableCommands = new List<AppCommand>();
+
+			SelectedCommand = null;
+			SelectedCommandArgValues = new List<AppCommandArgValue>();
 		}
 
 		public void Start(IList<string> args)
@@ -29,38 +40,109 @@ namespace Lighthouse.Core.UI
 			// get those args loaded up
 			try
 			{
-				ValidateAndLoadArgs(args.Skip(1).ToList()); // skip the first argument for the app
-			}
-			catch(InvalidCommandException ice)
-			{
-				writeToConsole($"Invalid Argument: {ice.InvalidArgument}. {Environment.NewLine} Valid arguments are: {GetAllCommands()}");
-			}
+				// there's ALWAYS a first arg, because the command line, will always pass the app name
+				ValidateAppName(args[0]);
 
-			QuitOnInput();
-		}
+				if (args.Count >= 2)
+					LoadCommand(args[1]);
+				else
+					LoadCommand("");
 
-		string GetAllCommands()
-		{
-			return string.Join(',', Commands);
-		}
+				if (args.Count > 2)
+					ValidateAndLoadCommandArgs(args.Skip(2).ToList()); // skip the app name, AND the app command
 
-		void QuitOnInput()
-		{
-			writeToConsole("Press Any Key to quit...");
-			var _ = readKeyFromConsole();			
-		}
+				var validationResults = ValidateCommand().Where(c => c.IsFatal);
 
-		public void ValidateAndLoadArgs(IList<string> args)
-		{
-			foreach (var arg in args)
-			{
-				if (TryParseArg(arg, out var val))
-				{
-					CommandValues.Add(new AppCommandValue { Command = val.Command, Value = val.CommandValue });
+				// if there are any fatal issues, just stop
+				if(validationResults.Any())
+				{	
+					foreach(var issue in validationResults)
+						WriteToConsole(issue.Message);					
 				}
 				else
 				{
-					throw new InvalidCommandException(arg);
+					// the app is valid, and ready to go, so do the commands that are connected
+					SelectedCommand.Execute(
+						new AppCommandExecutionArguments(this, SelectedCommand, SelectedCommandArgValues)						
+					);
+				}
+			}
+			catch(InvalidCommandException ice)
+			{
+				WriteToConsole($"Invalid Command: {ice.InvalidCommand}");
+				WriteToConsole($"Valid commands are: {GetAllCommandsDescription()}");
+			}
+			catch(InvalidCommandArgumentException icae)
+			{
+				WriteToConsole($"Invalid Argument: {icae.InvalidArgument}");
+				WriteToConsole($"Valid arguments are: {string.Join(',', SelectedCommand?.Arguments.Select(a => a.ToString())) }");
+			}
+
+			Quit();
+		}
+
+		public IEnumerable<AppCommandValidationResult> ValidateCommand()
+		{
+			foreach (var arg in SelectedCommand.Arguments)
+			{
+				// if an arg is required, and we don't have a value for it, then cvcreat a failure for it
+				if(arg.IsRequired && !SelectedCommandArgValues.Any(argVal => argVal.Argument == arg))
+				{
+					yield return new MissingRequiredArgValidationResult(arg);
+				}
+			}
+		}
+
+		public AppCommand GetCommand(string commandName)
+		{
+			return AvailableCommands.FirstOrDefault(a => a.CommandName.Equals(commandName, StringComparison.OrdinalIgnoreCase));
+		}
+
+		private void LoadCommand(string commandName)
+		{
+			if(IsCommand(commandName))
+			{
+				SelectedCommand = AvailableCommands.First(ac => ac.CommandName.Equals(commandName, StringComparison.OrdinalIgnoreCase));
+			}
+			else
+				throw new InvalidCommandException(commandName);
+		}
+
+		private void ValidateAppName(string appName)
+		{
+			if (!Name.ToLower().Equals(appName, StringComparison.OrdinalIgnoreCase))
+				throw new ApplicationException($"AppName doesn't match. Found: {appName} Expected: {Name}");
+		}
+
+		string GetAllCommandsDescription()
+		{
+			return string.Join(',', AvailableCommands);
+		}
+
+		void Quit(bool isFatal = false)
+		{
+			if (isFatal)
+			{
+				Environment.Exit(-1);				
+			}
+			else
+			{
+				WriteToConsole(CommandPrompts.PRESS_ANY_KEY_TO_QUIT);
+				var _ = ReadKeyFromConsole();
+			}
+		}
+
+		private void ValidateAndLoadCommandArgs(IList<string> args)
+		{
+			foreach (var arg in args)
+			{
+				if (TryParseArg(arg, SelectedCommand, out var val))
+				{
+					SelectedCommandArgValues.Add(new AppCommandArgValue { Argument = val.CommandArgument, Value = val.ArgValue });
+				}
+				else
+				{
+					throw new InvalidCommandArgumentException(arg);
 				}
 			}
 		}
@@ -78,14 +160,18 @@ namespace Lighthouse.Core.UI
 				return (args[0], args[1]);
 		}
 
-		bool TryParseArg(string arg, out (AppCommand Command, string CommandValue) value)
+		bool TryParseArg(string arg, AppCommand command, out (AppCommandArgument CommandArgument, string ArgValue) value)
 		{
 			value = (null,null);
+
+			if (command == null)
+				throw new ArgumentNullException(nameof(command));
+
 			var (argKey, argValue) = ParseArgs(arg);
 
-			if (IsCommand(argKey))
-			{				
-				value = (Commands.FirstOrDefault(c => c.CommandName.Equals(argKey, StringComparison.OrdinalIgnoreCase)), argValue);
+			if (command.IsValidArgument(argKey))
+			{
+				value = (command.Arguments.FirstOrDefault(c => c.ArgumentName.Equals(argKey, StringComparison.OrdinalIgnoreCase)), argValue);
 				return true;
 			}
 			
@@ -94,34 +180,37 @@ namespace Lighthouse.Core.UI
 
 		public bool IsCommand(string commandName)
 		{
-			return Commands.Any(c => c.CommandName.Equals(commandName, StringComparison.OrdinalIgnoreCase));
+			return AvailableCommands.Any(c => c.CommandName.Equals(commandName, StringComparison.OrdinalIgnoreCase));
 		}
 	}
 
 	public static class CliAppBuilderExtensions
 	{
-		public static AppCommand AddCommand(this CliApp app, string commandName) //, Action<IAppCommands> )
+		public static AppCommand AddCommand(this CliApp app, string commandName, Action<AppCommandExecutionArguments> executionAction = null)
 		{
 			if (app.IsCommand(commandName))
 				throw new Exception("Command with that name is already added.");
 
-			var command = new AppCommand(commandName, app);
+			var command = new AppCommand(commandName, app)
+			{
+				ExecutionAction = executionAction
+			};
 
-			app.Commands.Add(command);
+			app.AvailableCommands.Add(command);
 			return command;
 		}
 
-		public static AppCommand AddCommand(this AppCommand command, string commandName)
+		public static AppCommand AddCommand(this AppCommand command, string commandName, Action<AppCommandExecutionArguments> executionAction = null)
 		{
-			return command.App.AddCommand(commandName);			
+			return command.App.AddCommand(commandName, executionAction);			
 		}
 
-		public static AppCommandArgument AddArgument(this AppCommand command, string argumentName)
+		public static AppCommandArgument AddArgument(this AppCommand command, string argumentName, bool isRequired = false)
 		{
 			if (command.Arguments.Any(a => a.ArgumentName.ToLower() == argumentName.ToLower()))
 				throw new Exception("Command with that name is already added.");
 
-			var argument = new AppCommandArgument(argumentName, command);
+			var argument = new AppCommandArgument(argumentName, command, isRequired);
 			
 			command.Arguments.Add(argument);
 			return argument;
