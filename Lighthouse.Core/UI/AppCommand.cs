@@ -13,6 +13,7 @@ namespace Lighthouse.Core.UI
 		public string CommandName { get; private set; }
 
 		public Action<AppCommandExecutionArguments> ExecutionAction { get; internal set; }
+		public Type ExecutionActionType { get; internal set; }
 
 		public AppCommand(string commandName, CliApp app)
 		{
@@ -36,7 +37,15 @@ namespace Lighthouse.Core.UI
 
 		public void Execute(AppCommandExecutionArguments executionArguments)
 		{
-			ExecutionAction?.Invoke(executionArguments);
+			if (ExecutionActionType != null)
+			{
+				var executor = Activator.CreateInstance(ExecutionActionType) as IAppCommandExecutor;
+				executor?.Execute(executionArguments);
+			}
+			else
+			{
+				ExecutionAction?.Invoke(executionArguments);
+			}
 		}
 	}
 

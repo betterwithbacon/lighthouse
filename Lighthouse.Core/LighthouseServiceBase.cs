@@ -11,7 +11,6 @@ namespace Lighthouse.Core
         private ILighthouseServiceConfigurationContext ConfigurationContext { get; set; }
         protected Action<string> ClientLogger { get; set; }
 
-
         protected virtual void OnServiceStartBegin()
         { }
 
@@ -48,6 +47,7 @@ namespace Lighthouse.Core
             LoadConfiguration();
 
             Components.ForEach(LoadComponent);
+
         }
 
         protected virtual void LoadConfiguration()

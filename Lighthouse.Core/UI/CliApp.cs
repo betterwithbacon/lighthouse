@@ -186,6 +186,21 @@ namespace Lighthouse.Core.UI
 
 	public static class CliAppBuilderExtensions
 	{
+		public static AppCommand AddCommand<T>(this CliApp app, string commandName)
+			where T : IAppCommandExecutor
+		{
+			if (app.IsCommand(commandName))
+				throw new Exception("Command with that name is already added.");
+
+			var command = new AppCommand(commandName, app)
+			{
+				ExecutionActionType = typeof(T),
+			};
+
+			app.AvailableCommands.Add(command);
+			return command;
+		}
+
 		public static AppCommand AddCommand(this CliApp app, string commandName, Action<AppCommandExecutionArguments> executionAction = null)
 		{
 			if (app.IsCommand(commandName))
@@ -247,20 +262,20 @@ namespace Lighthouse.Core.UI
 		}
 	}
 
-	public class LighthouseTestCommands : IAppCommands
-	{
-	}
+	//public class LighthouseTestCommands : IAppCommandExecutor
+	//{
+	//}
 
-	public class LighthouseRunCommands : IAppCommands
-	{
-	}
+	//public class LighthouseRunCommands : IAppCommandExecutor
+	//{
+	//}
 
-	public class LighthouseDeployCommands : IAppCommands
-	{
-	}
+	//public class LighthouseDeployCommands : IAppCommandExecutor
+	//{
+	//}
 
-	public interface IAppCommands
+	public interface IAppCommandExecutor
 	{
-
+		void Execute(AppCommandExecutionArguments arguemnts);
 	}
 }

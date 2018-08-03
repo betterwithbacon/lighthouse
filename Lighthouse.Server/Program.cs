@@ -15,7 +15,8 @@ namespace Lighthouse.Server
 
 			//var server = LighthouseLauncher
 			//	.BuildService<LighthouseServer>("Lighthouse Environment Monitoring")
-			//	.AddClientLogger((message) => Console.WriteLine(message));
+			//	.AddClientLogger((message) => Console.WriteLine(message))
+			//	.SetRuntimeEnvironment(RuntimeEnvironment.)
 
 			// start the server
 			//server.Start();

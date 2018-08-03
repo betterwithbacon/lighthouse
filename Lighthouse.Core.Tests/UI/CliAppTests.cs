@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Lighthouse.Core.UI;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -165,9 +166,35 @@ namespace Lighthouse.Core.Tests.UI
 		}
 		#endregion
 
-		#region Command Activation
+		#region Command Activation - Types		
+		class MockAppCommandExecutor : IAppCommandExecutor
+		{
+			public static readonly ConcurrentBag<string> MockAppCommandExecutorArgumentsProvided = new ConcurrentBag<string>();
+			public void Execute(AppCommandExecutionArguments arguments)
+			{
+				MockAppCommandExecutorArgumentsProvided.Add(arguments.ArgValues[0].Value);
+			}
+		}
+
 		[Fact]
-		[Trait("CommandActivation", "Succeeds")]
+		[Trait("CommandActivation-TypeBased", "Succeeds")]
+		public void ValidCommand_ValidArg_ValidType_Succeeds()
+		{
+			string commandArg = "actualArg";
+
+			BuildApp("testapp");
+			App.AddCommand<MockAppCommandExecutor>("command1")
+				.AddArgument("commandArg1", true);
+
+			StartAppWithArguments($"command1 commandArg1={commandArg}");
+
+			MockAppCommandExecutor.MockAppCommandExecutorArgumentsProvided.Single().Should().Be(commandArg);
+		}
+		#endregion
+
+		#region Command Activation - Anonymous Functions
+		[Fact]
+		[Trait("CommandActivation-Lambda", "Succeeds")]
 		public void ValidCommand_ValidArg_ValidFunction_WasHit_Succeeds()
 		{
 			bool wasHit = false;
@@ -178,8 +205,7 @@ namespace Lighthouse.Core.Tests.UI
 			};
 
 			BuildApp("testapp");
-			App
-				.AddCommand("command1", wasHitHandler)
+			App.AddCommand("command1", wasHitHandler)
 				.AddArgument("commandArg1", true);
 
 			StartAppWithArguments($"command1 commandArg1={commandArg}");
@@ -188,7 +214,7 @@ namespace Lighthouse.Core.Tests.UI
 		}
 
 		[Fact]
-		[Trait("CommandActivation", "Succeeds")]
+		[Trait("CommandActivation-Lambda", "Succeeds")]
 		public void ValidCommand_ValidArg_ValidFunction_ArgsArePresentInExecution_Succeeds()
 		{
 			string commandArg = "actualArg";
@@ -199,8 +225,7 @@ namespace Lighthouse.Core.Tests.UI
 			};
 
 			BuildApp("testapp");
-			App
-				.AddCommand("command1", wasHitHandler)
+			App.AddCommand("command1", wasHitHandler)
 				.AddArgument("commandArg1", true);
 
 			StartAppWithArguments($"command1 commandArg1={commandArg}");
