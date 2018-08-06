@@ -251,7 +251,7 @@ namespace Lighthouse.Core.Tests.UI
 		}
 
 		[Fact]
-		[Trait("rgument Requiredness", "Succeeds")]
+		[Trait("Argument Requiredness", "Succeeds")]
 		public void ValidCommand_MissingOptionalArg_Succeeds()
 		{
 			BuildApp("testapp");

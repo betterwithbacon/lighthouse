@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lighthouse.Core.Deployment;
+using System;
 
 namespace Lighthouse.Server
 {
@@ -6,22 +7,25 @@ namespace Lighthouse.Server
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Starting server");
+            Console.WriteLine("Starting lighthouse server");
 
-            // the server needs to know what it's doing
-            //var server = new LighthouseServer(
-            //    clientLogger: (message) => Console.WriteLine(message)    
-            //);
+			var server = new LighthouseServer(
+				localLogger: (message) => Console.WriteLine(message)
+			);
+			
+			// start the server, it will wait before services are injected
+			server.Start();
 
-			//var server = LighthouseLauncher
-			//	.BuildService<LighthouseServer>("Lighthouse Environment Monitoring")
-			//	.AddClientLogger((message) => Console.WriteLine(message))
-			//	.SetRuntimeEnvironment(RuntimeEnvironment.)
+			var servicesToRun = LighthouseLauncher
+				.FindServices( new LighthouseAppLocation[]
+					{
+						new LighthouseFileSystemLocation { Directory = $"{Environment.CurrentDirectory}\\Apps" },
+						new LighthouseTypeBasedLocation { AssemblyPath = $"{Environment.CurrentDirectory}\\Lighthouse.Core.App.dll" }
+					}
+				);
 
-			// start the server
-			//server.Start();
-
-
-        }
+			// load the apps
+			server.LoadApps(servicesToRun);
+		}
     }
 }

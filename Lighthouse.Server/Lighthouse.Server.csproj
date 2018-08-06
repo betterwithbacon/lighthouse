@@ -14,6 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Lighthouse.Core.Apps\Lighthouse.Core.Apps.csproj" />
     <ProjectReference Include="..\Lighthouse.Core\Lighthouse.Core.csproj" />
   </ItemGroup>
 
