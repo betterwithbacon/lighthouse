@@ -7,6 +7,8 @@ namespace Lighthouse.Core
     {
 		public ILighthouseServiceContext Context { get; private set; }
 
+		public event StatusUpdatedEventHandler StatusUpdated;
+
 		public virtual void Start()
         {
         }

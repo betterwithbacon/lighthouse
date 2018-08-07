@@ -1,6 +1,6 @@
 ﻿namespace Lighthouse.Core
 {
-    public interface ILighthouseService
+    public interface ILighthouseService : ILighthouseComponent
     {
 		// Puts the service in a runnable state. 
 		void Initialize(ILighthouseServiceContext context);

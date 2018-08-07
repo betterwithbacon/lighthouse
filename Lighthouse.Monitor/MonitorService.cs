@@ -3,7 +3,7 @@ using System;
 
 namespace Lighthouse.Monitor
 {
-	public class MonitorService : ILighthouseServiceComponent
+	public class MonitorService : ILighthouseComponent
 	{
 		
 	}

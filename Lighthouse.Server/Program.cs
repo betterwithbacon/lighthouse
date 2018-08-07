@@ -13,19 +13,23 @@ namespace Lighthouse.Server
 				localLogger: (message) => Console.WriteLine(message)
 			);
 			
-			// start the server, it will wait before services are injected
+			// start the server
 			server.Start();
 
+
+			// block the console thread
+			var _ = Console.ReadKey();
+
 			var servicesToRun = LighthouseLauncher
-				.FindServices( new LighthouseAppLocation[]
+				.FindServices( new ILighthouseAppLocation[]
 					{
-						new LighthouseFileSystemLocation { Directory = $"{Environment.CurrentDirectory}\\Apps" },
-						new LighthouseTypeBasedLocation { AssemblyPath = $"{Environment.CurrentDirectory}\\Lighthouse.Core.App.dll" }
-					}
+						new LighthouseFileSystemLocation { Directory = $"{Environment.CurrentDirectory}\\Apps" } //,
+						//new LighthouseTypeBasedLocation { AssemblyPath = $"{Environment.CurrentDirectory}\\Lighthouse.Core.App.dll" }
+					}, (o,i) => Console.WriteLine($"{o}:{i}")
 				);
 
 			// load the apps
-			server.LoadApps(servicesToRun);
+			server.Launch(servicesToRun);
 		}
     }
 }

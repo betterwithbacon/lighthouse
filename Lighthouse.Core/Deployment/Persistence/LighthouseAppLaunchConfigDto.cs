@@ -9,6 +9,7 @@ namespace Lighthouse.Core.Deployment.Persistence
 		public string Name { get; set; }
 		public Guid Id { get; set; }
 		public string AssemblyPath { get; set; }
+		public string TypeName { get; set; }
 		public string NugetPackageName { get; set; }
 	}
 }

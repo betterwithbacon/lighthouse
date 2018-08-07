@@ -12,17 +12,7 @@ namespace Lighthouse.Server
 			LogLocally = localLogger;
 		}
 
-		List<ILighthouseServiceComponent> Components { get; set; }
-		private ILighthouseServiceConfigurationContext ConfigurationContext { get; set; }
 		protected Action<string> LogLocally { get; set; }
-
-		internal void LoadApps(IEnumerable<LighthouseAppLaunchConfig> servicesToRun)
-		{
-			throw new NotImplementedException();
-		}
-
-		protected virtual void OnLoadComponent(ILighthouseServiceComponent component)
-		{ }
 
 		public void Start()
 		{
@@ -31,8 +21,6 @@ namespace Lighthouse.Server
 			Initialize();
 
 			StartThreads();
-
-			var _ = Console.ReadKey(); // block the main thread.
 		}
 
 		private void StartThreads()
@@ -41,20 +29,13 @@ namespace Lighthouse.Server
 		}
 
 		private void Initialize()
-		{
-			LoadConfiguration();
+		{		
 
-			Components.ForEach(LoadComponent);
 		}
 
-		protected virtual void LoadConfiguration()
+		public void Launch(IEnumerable<LighthouseAppLaunchConfig> servicesToStart)
 		{
-			ConfigurationContext = new StandardServiceConfig();
-		}
-
-		private void LoadComponent(ILighthouseServiceComponent component)
-		{
-			OnLoadComponent(component);
+			
 		}
 
 		protected void Log(LogLevel level, string message)
