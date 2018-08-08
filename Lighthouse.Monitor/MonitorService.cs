@@ -5,6 +5,6 @@ namespace Lighthouse.Monitor
 {
 	public class MonitorService : ILighthouseComponent
 	{
-		
+		public event StatusUpdatedEventHandler StatusUpdated;
 	}
 }
