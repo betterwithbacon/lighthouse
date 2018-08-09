@@ -2,8 +2,8 @@
 
 namespace Lighthouse.Core
 {
-	public interface ILighthouseServiceContext
+	public interface ILighthouseServiceContext : ILighthouseComponent
 	{
-		void Log(LogLevel level, string message);
+		void Log(LogLevel level, ILighthouseComponent sender, string message);
 	}
 }

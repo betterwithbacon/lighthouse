@@ -68,7 +68,6 @@ namespace Lighthouse.Server.Tests
 		public void LaunchApp_AppRuns_ThenServiceStops_AndAppStops()
 		{
 			// create a service that simply emits a time log even every 10 milliseconds.
-
 			var servicesToStart = new[] {
 				new LighthouseAppLaunchConfig
 				{
@@ -83,10 +82,49 @@ namespace Lighthouse.Server.Tests
 			server.Launch(servicesToStart);
 
 			// just wait some time
-			Thread.Sleep(50);
+			Thread.Sleep(100);
 
-			var runningServices = server.GetRunningServices();
+			var runningServices = server.GetRunningServices().ToList();
 
+			runningServices.Count.Should().Be(1);
+
+			// this should wait for graceful exit. and THEN, it sdhould kill them
+			server.Stop();
+
+			server.GetRunningServices().Count().Should().Be(0, because: "The services shoudld be stopped.");
+		}
+
+		[Fact]
+		[Trait("Type", "Deployment")]
+		public void LaunchApp_Spawning10Apps_AndTheyAllWork()
+		{
+			int totalNumberOfServices = 10;
+
+			// create a service that simply emits a time log even every 10 milliseconds.
+			var servicesToStart = Enumerable.Range(1, totalNumberOfServices).Select( (_) => 
+				new LighthouseAppLaunchConfig
+				{
+					Id = Guid.NewGuid(),
+					Name= "TestApp",
+					Type = typeof(TimerApp)
+				}
+			);
+
+			var server = new LighthouseServer(Output.WriteLine);
+			server.Start();
+			server.Launch(servicesToStart);
+
+			// just wait some time
+			Thread.Sleep(25);
+
+			var runningServices = server.GetRunningServices().ToList();
+
+			runningServices.Count.Should().Be(totalNumberOfServices);
+
+			// this should wait for graceful exit. and THEN, it sdhould kill them
+			server.Stop();
+
+			server.GetRunningServices().Count().Should().Be(0, because: "The services shoudld be stopped.");
 		}
 
 		private class TimerApp : LighthouseServiceBase
@@ -96,7 +134,7 @@ namespace Lighthouse.Server.Tests
 			public TimerApp() // we don't have ways to bootstrap apps with launcher, to the constructor arguments
 			{
 				Timer = new System.Timers.Timer(10);
-				Timer.Elapsed += (o, e) => Context.Log(Core.Logging.LogLevel.Info, "event" + DateTime.Now.ToString("ss:fff"));
+				Timer.Elapsed += (o, e) => Context.Log(Core.Logging.LogLevel.Info, this, "event" + DateTime.Now.ToString("ss:fff"));
 			}
 
 			protected override void OnStart()

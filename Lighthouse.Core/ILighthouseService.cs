@@ -4,10 +4,10 @@ namespace Lighthouse.Core
 {
     public interface ILighthouseService : ILighthouseComponent
     {
-		Guid Id { get; }
+		string Id { get; }
 
 		// Puts the service in a runnable state. 
-		void Initialize(ILighthouseServiceContext context, Guid id);
+		void Initialize(ILighthouseServiceContext context, string id);
 
 		// Begins execution of the service
 		void Start();

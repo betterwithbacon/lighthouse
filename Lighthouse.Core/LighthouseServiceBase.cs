@@ -7,7 +7,7 @@ namespace Lighthouse.Core
     {
 		protected ILighthouseServiceContext Context { get; private set; }
 
-		public Guid Id { get; private set; }
+		public string Id { get; private set; }
 
 		public LighthouseServiceRunState RunState { get; protected set; }
 
@@ -31,6 +31,7 @@ namespace Lighthouse.Core
 		public virtual void Stop()
 		{
 			RaiseStatusUpdated(LighthouseServiceRunState.PendingStop);
+			StatusUpdated?.Invoke(this, $"Service shutting down.");
 			OnStop();
 			RaiseStatusUpdated(LighthouseServiceRunState.Stopped);
 		}
@@ -45,11 +46,16 @@ namespace Lighthouse.Core
 			RunState = newState;
 		}
 
-		public void Initialize(ILighthouseServiceContext context, Guid id)
+		public void Initialize(ILighthouseServiceContext context, string id)
 		{
 			Context = context;
 			Id = id;
 			RaiseStatusUpdated(LighthouseServiceRunState.PendingStart);
+		}
+
+		public override string ToString()
+		{
+			return $"[{GetType().Name}|{Id}]";
 		}
 	}
 }
