@@ -2,6 +2,7 @@
 using Lighthouse.Core.Deployment;
 using Lighthouse.Core.Logging;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -11,20 +12,29 @@ namespace Lighthouse.Server
 {
     public class LighthouseServer : ILighthouseServiceContext
     {
-		private readonly List<ILighthouseService> Services;
-		protected Action<string> LogLocally { get; set; }
-		private readonly Dictionary<string, Task> ServiceTasks = new Dictionary<string, Task>();
-		private readonly CancellationTokenSource CancellationTokenSource;
+		public class LighthouseServiceRun
+		{
+			public readonly ILighthouseService Service;
+			public readonly IProducerConsumerCollection<Exception> Exceptions = new ConcurrentBag<Exception>();
+			internal readonly Task Task;
 
+			public LighthouseServiceRun(ILighthouseService service, Task task)
+			{
+				Service = service;
+				Task = task;
+			}
+		}
+
+		private readonly ConcurrentBag<LighthouseServiceRun> ServiceThreads = new ConcurrentBag<LighthouseServiceRun>();		
+		private readonly Action<string> LogLocally;		
+		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
 		public event StatusUpdatedEventHandler StatusUpdated;
 
-		private bool IsRunning { get; set; }
+		public bool IsRunning { get; private set; }
 
 		public LighthouseServer(Action<string> localLogger)
 		{
 			LogLocally = localLogger;
-			Services = new List<ILighthouseService>();
-			CancellationTokenSource = new CancellationTokenSource();
 		}
 
 		public void Start()
@@ -39,7 +49,7 @@ namespace Lighthouse.Server
 		public void Stop()
 		{
 			// call stop on all of the services
-			Services.ForEach(service => { service.Stop(); });
+			ServiceThreads.ToList().ForEach(serviceRun => { serviceRun.Service.Stop(); });
 
 			int iter = 1;
 			
@@ -65,7 +75,31 @@ namespace Lighthouse.Server
 
 		private void StartMonitor()
 		{
+			// the unhandled exceptions from tasks, will be handled by the lighthouse runtime here
+			TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
+			Log(LogLevel.Debug, this, "Lighthouse Monitor Started");
+		}
+
+		private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+		{
+			// log the failure (where's the taskId?)
+			HandleTaskError(e.Exception);
+
+			// mark this as having "been seen"
+			e.SetObserved();
+		}
+
+		private void HandleTaskError(Exception e, string serviceId = null)
+		{
+			LighthouseServiceRun owner = null; 
+			if (serviceId != null)
+			{
+				owner = ServiceThreads.FirstOrDefault(ls => ls.Service.Id == serviceId);
+				owner?.Exceptions.TryAdd(e);
+			}
+
+			Log(LogLevel.Error, owner?.Service, $"Error occurred running task: {e.Message}");
 		}
 
 		public void Launch(IEnumerable<LighthouseAppLaunchConfig> launchConfigs)
@@ -85,16 +119,39 @@ namespace Lighthouse.Server
 			if (!(Activator.CreateInstance(launchConfig.Type) is ILighthouseService service))
 				throw new ApplicationException($"App launch config doesn't represent Lighthouse app. {launchConfig.Type.AssemblyQualifiedName}");
 
+			Launch(service);
+		}
+
+		public void Launch(ILighthouseService service)
+		{
+			AssertIsRunning();
+
 			// put the service in a runnable state
 			var serviceId = GetNewPseudoRandomString();
 			service.StatusUpdated += Service_StatusUpdated;
 			service.Initialize(this, serviceId);
-			
-			// start it, in a separate thread, that will run the business logic for this
-			var startedTask = Task.Run(() => service.Start(), CancellationTokenSource.Token); // fire and forget
-			ServiceTasks.Add(serviceId, startedTask);
 
-			Services.Add(service);
+			// start it, in a separate thread, that will run the business logic for this
+			var startedTask = Task.Run(() => service.Start(), CancellationTokenSource.Token).ContinueWith(
+				(task) =>
+				{
+					// handle errors
+					if (task.IsFaulted)
+					{ 						
+						HandleTaskError(task.Exception.InnerException, serviceId);
+					}
+					else
+					{
+						HandleTaskCompletion(task);
+					}
+				}, CancellationTokenSource.Token); // fire and forget
+
+			ServiceThreads.Add(new LighthouseServiceRun(service, startedTask));
+		}
+
+		private void HandleTaskCompletion(Task task)
+		{
+			Log(LogLevel.Debug, this, $"App completed successfully. {ServiceThreads.FirstOrDefault(lsr => lsr.Task == task)?.Service}");
 		}
 
 		private void Service_StatusUpdated(ILighthouseComponent owner, string status)
@@ -115,8 +172,8 @@ namespace Lighthouse.Server
 			LogLocally(log);
 		}
 
-		public IEnumerable<ILighthouseService> GetRunningServices()
-			=> Services.Where(s => s.RunState > LighthouseServiceRunState.PendingStart && s.RunState < LighthouseServiceRunState.PendingStop);
+		public IEnumerable<LighthouseServiceRun> GetRunningServices()
+			=> ServiceThreads.Where(s => s.Service.RunState > LighthouseServiceRunState.PendingStart && s.Service.RunState < LighthouseServiceRunState.PendingStop);
 
 		static string GetNewPseudoRandomString()
 		{
@@ -127,6 +184,22 @@ namespace Lighthouse.Server
 		public override string ToString()
 		{
 			return "Lighthouse Server";
+		}
+
+		public IEnumerable<T> FindServices<T>() where T : ILighthouseService
+		{
+			return ServiceThreads.Select(st => st.Service).OfType<T>();
+		}
+
+		public IEnumerable<T> FindRemoteServices<T>() where T : ILighthouseService
+		{
+			return Enumerable.Empty<T>();
+		}
+
+		public DateTime GetTime()
+		{
+			// for now, just use local time, but this should eventually use UTC
+			return DateTime.Now;
 		}
 	}
 }

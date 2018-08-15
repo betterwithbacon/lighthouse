@@ -27,10 +27,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Core.Apps", "Lig
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dependencies", "dependencies", "{5D7712C8-606E-4133-9FEE-F27BF1C085C6}"
 	ProjectSection(SolutionItems) = preProject
+		dependencies\BusDriver.Core.dll = dependencies\BusDriver.Core.dll
 		dependencies\WarehouseCore.dll = dependencies\WarehouseCore.dll
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lighthouse.Core.Apps.Tests", "Lighthouse.Core.Apps.Tests\Lighthouse.Core.Apps.Tests.csproj", "{BAB9EB1C-7284-4A07-A0A4-A4DD4F2A385B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Core.Apps.Tests", "Lighthouse.Core.Apps.Tests\Lighthouse.Core.Apps.Tests.csproj", "{BAB9EB1C-7284-4A07-A0A4-A4DD4F2A385B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

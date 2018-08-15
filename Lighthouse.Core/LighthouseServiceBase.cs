@@ -14,7 +14,7 @@ namespace Lighthouse.Core
 		public event StatusUpdatedEventHandler StatusUpdated;
 
 		public virtual void Start()
-        {			
+        {
 			OnStart();
 			RaiseStatusUpdated(LighthouseServiceRunState.Running);
 			OnAfterStart();
@@ -44,6 +44,11 @@ namespace Lighthouse.Core
 		{
 			StatusUpdated?.Invoke(this, $"Status changing from {RunState} to {newState}");
 			RunState = newState;
+		}
+
+		protected void RaiseStatusUpdated(string message)
+		{
+			StatusUpdated?.Invoke(this, message);			
 		}
 
 		public void Initialize(ILighthouseServiceContext context, string id)
