@@ -62,7 +62,7 @@ namespace Lighthouse.Core.Apps.Tests
 
 			// get a shelf that can hold data for the duration of the session	
 			var payload = new[] { "data" };
-			warehouseServer.Store("test", StorageScope.Global, payload, new[] { LoadingDockPolicy.Ephemeral });
+			warehouseServer.Store("testData", StorageScope.Global, payload, new[] { LoadingDockPolicy.Ephemeral });
 
 			var retrievedValues = warehouseServer.Retrieve("test", StorageScope.Global);
 			payload.Should().BeEquivalentTo(payload);

@@ -1,23 +1,46 @@
-﻿using System;
+﻿using BusDriver.Core.Events;
+using BusDriver.Core.Scheduling;
+using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Core
 {
     public abstract class LighthouseServiceBase : ILighthouseService
     {
+		
 		protected ILighthouseServiceContext Context { get; private set; }
-
 		public string Id { get; private set; }
-
 		public LighthouseServiceRunState RunState { get; protected set; }
-
 		public event StatusUpdatedEventHandler StatusUpdated;
+		protected EventContext EventContext { get; private set; }
+		private readonly List<Action<EventContext>> StartupActions = new List<Action<EventContext>>();
+				
+		protected void AddStartupTask(Action<EventContext> task)
+		{
+			StartupActions.Add(task);
+		}
+
+		protected void AddScheduledTask(Schedule schedule, Action<DateTime> taskToPerform)
+		{
+			EventContext.AddSchedule(schedule, taskToPerform);
+		}
 
 		public virtual void Start()
         {
 			OnStart();
 			RaiseStatusUpdated(LighthouseServiceRunState.Running);
 			OnAfterStart();
+			PerformStartupTasks();
+		}
+
+		private void PerformStartupTasks()
+		{
+			// the context, will do the work for us
+			// this is useful, because if some of the things you want to do will be emitting Events, then they'll be picked up
+			EventContext.Do(StartupActions);
+
+			//Parallel.ForEach(StartupActions, new ParallelOptions{ (action) => action(), )
 		}
 
 		protected virtual void OnStart()
