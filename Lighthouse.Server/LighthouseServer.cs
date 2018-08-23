@@ -1,4 +1,6 @@
-﻿using Lighthouse.Core;
+﻿using BusDriver.Core.Events;
+using BusDriver.Core.Logging;
+using Lighthouse.Core;
 using Lighthouse.Core.Deployment;
 using Lighthouse.Core.Logging;
 using System;
@@ -10,8 +12,8 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Server
 {
-    public class LighthouseServer : ILighthouseServiceContext
-    {
+    public class LighthouseServer : ILighthouseServiceContainer, ILogSource
+	{
 		public class LighthouseServiceRun
 		{
 			public readonly ILighthouseService Service;
@@ -29,12 +31,15 @@ namespace Lighthouse.Server
 		private readonly Action<string> LogLocally;		
 		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
 		public event StatusUpdatedEventHandler StatusUpdated;
-
 		public bool IsRunning { get; private set; }
+		public IEventContext EventContext { get; private set; }
 
-		public LighthouseServer(Action<string> localLogger)
+		public string Identifier => throw new NotImplementedException();
+
+		public LighthouseServer(Action<string> localLogger, IEventContext eventContext = null)
 		{
 			LogLocally = localLogger;
+			EventContext = eventContext ?? new EventContext();
 		}
 
 		public void Start()
@@ -126,10 +131,9 @@ namespace Lighthouse.Server
 		{
 			AssertIsRunning();
 
-			// put the service in a runnable state
-			var serviceId = GetNewPseudoRandomString();
+			// put the service in a runnable state			
 			service.StatusUpdated += Service_StatusUpdated;
-			service.Initialize(this, serviceId);
+			service.Initialize(this);
 
 			// start it, in a separate thread, that will run the business logic for this
 			var startedTask = Task.Run(() => service.Start(), CancellationTokenSource.Token).ContinueWith(
@@ -138,7 +142,7 @@ namespace Lighthouse.Server
 					// handle errors
 					if (task.IsFaulted)
 					{ 						
-						HandleTaskError(task.Exception.InnerException, serviceId);
+						HandleTaskError(task.Exception.InnerException);
 					}
 					else
 					{
@@ -170,16 +174,13 @@ namespace Lighthouse.Server
 
 			// ALL messages are logged locally for now
 			LogLocally(log);
+
+			// emit the messages in the event context as well, so it can be reacted to there as well
+			EventContext?.Log(BusDriver.Core.Logging.LogType.Info, message, sender is ILogSource ls ? ls : this);
 		}
 
 		public IEnumerable<LighthouseServiceRun> GetRunningServices()
 			=> ServiceThreads.Where(s => s.Service.RunState > LighthouseServiceRunState.PendingStart && s.Service.RunState < LighthouseServiceRunState.PendingStop);
-
-		static string GetNewPseudoRandomString()
-		{
-			var rawId = Guid.NewGuid().ToString();
-			return rawId.Substring(rawId.LastIndexOf('-') + 1);
-		}
 
 		public override string ToString()
 		{

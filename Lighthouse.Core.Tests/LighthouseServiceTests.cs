@@ -14,14 +14,14 @@ namespace Lighthouse.Core.Tests
 			public List<Action> StartupActions = new List<Action>();
 			public List<Action> ScheduledTasks = new List<Action>();
 
-			public override void OnBuild(LighthouseServiceBuilder serviceBuilder)
-			{
-				foreach (var action in StartupActions)
-					AddStartupTask(action);
+			//public override void OnBuild(LighthouseServiceBuilder serviceBuilder)
+			//{
+			//	foreach (var action in StartupActions)
+			//		AddStartupTask(action);
 
-				foreach (var action in ScheduledTasks)
-					AddScheduledTask(action);
-			}
+			//	foreach (var action in ScheduledTasks)
+			//		AddScheduledTask(action);
+			//}
 		}
 
 		[Fact]

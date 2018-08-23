@@ -7,27 +7,28 @@ using System.Threading.Tasks;
 namespace Lighthouse.Core
 {
     public abstract class LighthouseServiceBase : ILighthouseService
-    {
-		
-		protected ILighthouseServiceContext Context { get; private set; }
+    {		
+		protected ILighthouseServiceContainer LighthouseContainer { get; private set; }
 		public string Id { get; private set; }
 		public LighthouseServiceRunState RunState { get; protected set; }
-		public event StatusUpdatedEventHandler StatusUpdated;
-		protected EventContext EventContext { get; private set; }
-		private readonly List<Action<EventContext>> StartupActions = new List<Action<EventContext>>();
-				
-		protected void AddStartupTask(Action<EventContext> task)
+		public event StatusUpdatedEventHandler StatusUpdated;		
+		private readonly List<Action<IEventContext>> StartupActions = new List<Action<IEventContext>>();
+		
+		protected void AddStartupTask(Action<IEventContext> task)
 		{
 			StartupActions.Add(task);
 		}
 
 		protected void AddScheduledTask(Schedule schedule, Action<DateTime> taskToPerform)
 		{
-			EventContext.AddSchedule(schedule, taskToPerform);
+			LighthouseContainer.EventContext.AddScheduledAction(schedule, taskToPerform);
 		}
 
 		public virtual void Start()
         {
+			if (LighthouseContainer == null)
+				throw new InvalidOperationException("Service not initialized.");
+
 			OnStart();
 			RaiseStatusUpdated(LighthouseServiceRunState.Running);
 			OnAfterStart();
@@ -38,7 +39,7 @@ namespace Lighthouse.Core
 		{
 			// the context, will do the work for us
 			// this is useful, because if some of the things you want to do will be emitting Events, then they'll be picked up
-			EventContext.Do(StartupActions);
+			LighthouseContainer.EventContext.Do(StartupActions);
 
 			//Parallel.ForEach(StartupActions, new ParallelOptions{ (action) => action(), )
 		}
@@ -74,10 +75,10 @@ namespace Lighthouse.Core
 			StatusUpdated?.Invoke(this, message);			
 		}
 
-		public void Initialize(ILighthouseServiceContext context, string id)
+		public void Initialize(ILighthouseServiceContainer context)
 		{
-			Context = context;
-			Id = id;
+			LighthouseContainer = context;
+			Id = EventContext.GenerateSessionIdentifier(this);
 			RaiseStatusUpdated(LighthouseServiceRunState.PendingStart);
 		}
 

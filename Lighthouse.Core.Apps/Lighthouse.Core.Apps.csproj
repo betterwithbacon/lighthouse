@@ -12,9 +12,6 @@
     <Reference Include="BusDriver.Core">
       <HintPath>..\dependencies\BusDriver.Core.dll</HintPath>
     </Reference>
-    <Reference Include="WarehouseCore">
-      <HintPath>..\dependencies\WarehouseCore.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
 </Project>
