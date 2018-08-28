@@ -26,7 +26,8 @@ namespace Lighthouse.Server.Tests
 			var servicesToRun = LighthouseLauncher
 				.FindServices(new ILighthouseAppLocation[]
 					{
-						new LighthouseFileSystemLocation { Directory = $"{Environment.CurrentDirectory}\\Apps" }
+						// TODO: i want to abstract away any lighthouse component having direct file system awareness OR environment variables to faciliate cross-platform support better
+						new LighthouseFileSystemLocation(null) { Directory = $"{Environment.CurrentDirectory}\\Apps" }
 					}, logHandler: (o, m) => Output.WriteLine($"{o}: {m}")
 				);
 

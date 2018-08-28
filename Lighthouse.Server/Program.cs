@@ -23,7 +23,7 @@ namespace Lighthouse.Server
 			var servicesToRun = LighthouseLauncher
 				.FindServices( new ILighthouseAppLocation[]
 					{
-						new LighthouseFileSystemLocation { Directory = $"{Environment.CurrentDirectory}\\Apps" } //,
+						new LighthouseFileSystemLocation(server) { Directory = $"{Environment.CurrentDirectory}\\Apps" } //,
 						//new LighthouseTypeBasedLocation { AssemblyPath = $"{Environment.CurrentDirectory}\\Lighthouse.Core.App.dll" }
 					}, (o,i) => Console.WriteLine($"{o}:{i}")
 				);

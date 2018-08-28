@@ -33,9 +33,9 @@ namespace Lighthouse.Server
 		public event StatusUpdatedEventHandler StatusUpdated;
 		public bool IsRunning { get; private set; }
 		public IEventContext EventContext { get; private set; }
-
+		ILighthouseServiceContainer ILighthouseComponent.LighthouseContainer => this;
 		public string Identifier => throw new NotImplementedException();
-
+		
 		public LighthouseServer(Action<string> localLogger, IEventContext eventContext = null)
 		{
 			LogLocally = localLogger;

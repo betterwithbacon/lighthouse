@@ -18,7 +18,14 @@ namespace Lighthouse.Core.Deployment
 	{
 		public string Directory { get; set; }
 
+		public ILighthouseServiceContainer LighthouseContainer { get; }
+
 		public event StatusUpdatedEventHandler StatusUpdated;
+
+		public LighthouseFileSystemLocation(ILighthouseServiceContainer lighthouseContainer)
+		{
+			LighthouseContainer = lighthouseContainer;
+		}
 
 		public IEnumerable<LighthouseAppLaunchConfig> FindServices()
 		{

@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 namespace Lighthouse.Core
 {
     public abstract class LighthouseServiceBase : ILighthouseService
-    {		
-		protected ILighthouseServiceContainer LighthouseContainer { get; private set; }
+    {	
 		public string Id { get; private set; }
 		public LighthouseServiceRunState RunState { get; protected set; }
+		public ILighthouseServiceContainer LighthouseContainer { get; private set; }
+
 		public event StatusUpdatedEventHandler StatusUpdated;		
 		private readonly List<Action<IEventContext>> StartupActions = new List<Action<IEventContext>>();
 		
