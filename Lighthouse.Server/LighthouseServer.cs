@@ -2,6 +2,7 @@
 using BusDriver.Core.Logging;
 using Lighthouse.Core;
 using Lighthouse.Core.Deployment;
+using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using System;
 using System.Collections.Concurrent;
@@ -201,6 +202,16 @@ namespace Lighthouse.Server
 		{
 			// for now, just use local time, but this should eventually use UTC
 			return DateTime.Now;
+		}
+
+		public IEnumerable<T> GetResourceProviders<T>() where T : IResourceProvider
+		{
+			
+		}
+
+		public IEnumerable<IFileSystemProvider> GetFileSystemProviders()
+		{
+			return GetResourceProviders<IFileSystemProvider>();
 		}
 	}
 }

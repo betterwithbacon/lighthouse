@@ -1,4 +1,5 @@
 ﻿using BusDriver.Core.Events;
+using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using System;
 using System.Collections.Generic;
@@ -43,19 +44,12 @@ namespace Lighthouse.Core
 		IEventContext EventContext { get; }
 
 		/// <summary>
-		/// Provides abstracted access to the runtime file system. This might be either a linux or window host. 
-		/// The storage might also not be truly persistent, if the container is hosted on an ephemeral file system.
+		/// Exposes low-level server local resources, such as the disk, network, or specific hardware devices.		
+		/// This should NOT be used as a substitute for higher level abstractions such as <see cref="Warehouse.Core.IWarehouse"/>.
+		/// These resources should be wrapped by lighthouse services and exposed to other applications.
 		/// </summary>
-		/// <param name="fileName"></param>
-		/// <param name="data"></param>
-		void WriteToFileSystem(string fileName, byte[] data);
-
-		/// <summary>
-		/// Provides abstracted access to the runtime file system. This might be either a linux or window host. 
-		/// The storage might also not be truly persistent, if the container is hosted on an ephemeral file system.
-		/// </summary>
-		/// <param name="fileName"></param>
+		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		byte[] ReadFromFileSystem(string fileName);
+		IEnumerable<IFileSystemProvider> GetFileSystemProviders();
 	}
 }
