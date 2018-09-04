@@ -51,5 +51,14 @@ namespace Lighthouse.Core
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
 		IEnumerable<IFileSystemProvider> GetFileSystemProviders();
+
+		/// <summary>
+		/// Exposes low-level server local resources, such as the disk, network, or specific hardware devices.		
+		/// This should NOT be used as a substitute for higher level abstractions such as <see cref="Warehouse.Core.IWarehouse"/>.
+		/// These resources should be wrapped by lighthouse services and exposed to other applications.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
+		IEnumerable<INetworkProvider> GetNetworkProviders();
 	}
 }
