@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
@@ -24,6 +24,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Lighthouse.Core\Lighthouse.Core.csproj" />
+    <ProjectReference Include="..\Lighthouse.Server\Lighthouse.Server.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BusDriver.Core">
+      <HintPath>..\dependencies\BusDriver.Core.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

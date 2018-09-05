@@ -4,10 +4,13 @@ using Lighthouse.Core;
 using Lighthouse.Core.Deployment;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
+using Lighthouse.Server.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,6 +18,7 @@ namespace Lighthouse.Server
 {
     public class LighthouseServer : ILighthouseServiceContainer, ILogSource
 	{
+		#region LighthouseServiceRun
 		public class LighthouseServiceRun
 		{
 			public readonly ILighthouseService Service;
@@ -27,7 +31,9 @@ namespace Lighthouse.Server
 				Task = task;
 			}
 		}
+		#endregion
 
+		#region Fields
 		private readonly ConcurrentBag<LighthouseServiceRun> ServiceThreads = new ConcurrentBag<LighthouseServiceRun>();		
 		private readonly Action<string> LogLocally;		
 		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
@@ -36,17 +42,30 @@ namespace Lighthouse.Server
 		public IEventContext EventContext { get; private set; }
 		ILighthouseServiceContainer ILighthouseComponent.LighthouseContainer => this;
 		public string Identifier => throw new NotImplementedException();
-		
+
+		public readonly OSPlatform OS;
+		#endregion
+
+		#region Constructors
 		public LighthouseServer(Action<string> localLogger, IEventContext eventContext = null)
 		{
 			LogLocally = localLogger;
 			EventContext = eventContext ?? new EventContext();
-		}
 
+			// set the local environment state
+			OS = RuntimeServices.GetOS();
+
+			// load up the providers
+			LoadProviders();
+		}
+		#endregion
+
+		#region Server Lifecycle
 		public void Start()
 		{
 			Log(LogLevel.Debug,this, "Lighthouse server starting");
 
+			// load up the local resources						
 			StartMonitor();
 			
 			IsRunning = true;
@@ -86,7 +105,9 @@ namespace Lighthouse.Server
 
 			Log(LogLevel.Debug, this, "Lighthouse Monitor Started");
 		}
+		#endregion
 
+		#region Error Handling
 		private void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
 		{
 			// log the failure (where's the taskId?)
@@ -107,7 +128,9 @@ namespace Lighthouse.Server
 
 			Log(LogLevel.Error, owner?.Service, $"Error occurred running task: {e.Message}");
 		}
+		#endregion
 
+		#region Service Launching
 		public void Launch(IEnumerable<LighthouseAppLaunchConfig> launchConfigs)
 		{
 			foreach(var launchConfig in launchConfigs)
@@ -132,10 +155,9 @@ namespace Lighthouse.Server
 		{
 			AssertIsRunning();
 
-			// put the service in a runnable state			
-			service.StatusUpdated += Service_StatusUpdated;
-			service.Initialize(this);
-
+			// put the service in a runnable state
+			RegisterComponent(service);			
+			
 			// start it, in a separate thread, that will run the business logic for this
 			var startedTask = Task.Run(() => service.Start(), CancellationTokenSource.Token).ContinueWith(
 				(task) =>
@@ -154,6 +176,21 @@ namespace Lighthouse.Server
 			ServiceThreads.Add(new LighthouseServiceRun(service, startedTask));
 		}
 
+		public void RegisterComponent(ILighthouseComponent component)
+		{
+			Log(LogLevel.Debug, this, $"Added component: {component}.");
+			component.StatusUpdated += Service_StatusUpdated;
+
+			// subclass specific operations
+			if (component is IResourceProvider rs)
+				Resources.Add(rs);
+
+			if(component is ILighthouseService service)
+				service.Initialize(this);
+		}
+		#endregion
+
+		#region Auditing/Logging
 		private void HandleTaskCompletion(Task task)
 		{
 			Log(LogLevel.Debug, this, $"App completed successfully. {ServiceThreads.FirstOrDefault(lsr => lsr.Task == task)?.Service}");
@@ -179,14 +216,11 @@ namespace Lighthouse.Server
 			// emit the messages in the event context as well, so it can be reacted to there as well
 			EventContext?.Log(BusDriver.Core.Logging.LogType.Info, message, sender is ILogSource ls ? ls : this);
 		}
+		#endregion
 
+		#region Service Discovery
 		public IEnumerable<LighthouseServiceRun> GetRunningServices()
 			=> ServiceThreads.Where(s => s.Service.RunState > LighthouseServiceRunState.PendingStart && s.Service.RunState < LighthouseServiceRunState.PendingStop);
-
-		public override string ToString()
-		{
-			return "Lighthouse Server";
-		}
 
 		public IEnumerable<T> FindServices<T>() where T : ILighthouseService
 		{
@@ -197,21 +231,53 @@ namespace Lighthouse.Server
 		{
 			return Enumerable.Empty<T>();
 		}
+		#endregion
 
-		public DateTime GetTime()
+		#region Resources
+		private readonly ConcurrentBag<IResourceProvider> Resources = new ConcurrentBag<IResourceProvider>();
+
+		private void LoadProviders()
 		{
-			// for now, just use local time, but this should eventually use UTC
-			return DateTime.Now;
+			// TODO: allow for a discovery of the various providers, using reflection
+
+			// TODO: factor out how the "root" directory is found. This probably needs to be an environment config option
+			// File System providers
+			if(OS == OSPlatform.Windows)
+				RegisterComponent(new WindowsFileSystemProvider(@"C:\development\lighthouse", this));
+			else if (OS == OSPlatform.Linux)
+				RegisterComponent(new UnixFileSystemProvider());
+
+			// TODO: add network support
 		}
 
-		public IEnumerable<T> GetResourceProviders<T>() where T : IResourceProvider
+		public IEnumerable<T> GetResourceProviders<T>()
+			where T : IResourceProvider
 		{
-			
+			return Resources.OfType<T>();
 		}
 
 		public IEnumerable<IFileSystemProvider> GetFileSystemProviders()
 		{
 			return GetResourceProviders<IFileSystemProvider>();
 		}
+
+		public IEnumerable<INetworkProvider> GetNetworkProviders()
+		{
+			return GetResourceProviders<INetworkProvider>();
+		}
+		#endregion
+
+		#region Utils
+		public DateTime GetTime()
+		{
+			// for now, just use local time, but this should eventually use UTC
+			return DateTime.Now;
+		}
+
+		public override string ToString()
+		{
+			return "Lighthouse Server";
+		}
+		#endregion
 	}
 }

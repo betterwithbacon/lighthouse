@@ -2,26 +2,22 @@
 using System.Collections.Generic;
 using System.Text;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Lighthouse.Core.Tests
 {
-    public class LighthouseServiceTests
-    {
+    public class LighthouseServiceTests : LighthouseTestsBase
+	{
 		public List<string> RecordedValues = new List<string>();
+
+		public LighthouseServiceTests(ITestOutputHelper output) : base(output)
+		{
+		}
 
 		private class TestApp : LighthouseServiceBase
 		{
 			public List<Action> StartupActions = new List<Action>();
 			public List<Action> ScheduledTasks = new List<Action>();
-
-			//public override void OnBuild(LighthouseServiceBuilder serviceBuilder)
-			//{
-			//	foreach (var action in StartupActions)
-			//		AddStartupTask(action);
-
-			//	foreach (var action in ScheduledTasks)
-			//		AddScheduledTask(action);
-			//}
 		}
 
 		[Fact]
@@ -38,6 +34,9 @@ namespace Lighthouse.Core.Tests
 			);
 
 			app.ScheduledTasks.Add(() => RecordedValues.Add(expectedValues[2]) );
+
+			// init the app,
+			app.Initialize(Container);
 
 			// the app starts, and the startup tasks should run
 			app.Start();

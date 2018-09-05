@@ -28,7 +28,7 @@ namespace Lighthouse.Core
 		public virtual void Start()
         {
 			if (LighthouseContainer == null)
-				throw new InvalidOperationException("Service not initialized.");
+				throw new InvalidOperationException("Service not initialized. (No container set)");
 
 			OnStart();
 			RaiseStatusUpdated(LighthouseServiceRunState.Running);

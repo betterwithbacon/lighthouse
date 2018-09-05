@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Lighthouse.Core.IO
 {
-    public interface INetworkProvider
+    public interface INetworkProvider : IResourceProvider
     {
 		WebClient GetWebClient();
     }
