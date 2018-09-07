@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Lighthouse.Core
 {
-	public interface ILighthouseServiceContainer : ILighthouseComponent
+	public interface ILighthouseServiceContainer
 	{
 		/// <summary>
 		/// A generic way to log messages. These messages should be emitted as events in the Context as well as any internal logging.
@@ -14,7 +14,7 @@ namespace Lighthouse.Core
 		/// <param name="level"></param>
 		/// <param name="sender"></param>
 		/// <param name="message"></param>
-		void Log(LogLevel level, ILighthouseComponent sender, string message);
+		void Log(LogLevel level, ILighthouseLogSource sender, string message);
 
 		/// <summary>
 		/// Finds lighthouse services that are hosted within this container.
@@ -64,6 +64,12 @@ namespace Lighthouse.Core
 		/// </summary>
 		/// <param name="component"></param>
 		void RegisterComponent(ILighthouseComponent component);
-		
+
+		/// <summary>
+		/// An event hook for changes to the status of the lighthouse service
+		/// </summary>
+		event StatusUpdatedEventHandler StatusUpdated;
+
+		string WorkingDirectory { get; }
 	}
 }

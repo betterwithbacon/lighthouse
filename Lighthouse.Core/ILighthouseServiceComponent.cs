@@ -1,9 +1,9 @@
-﻿using System;
+﻿using Lighthouse.Core.Logging;
 
 namespace Lighthouse.Core
 {
-    public interface ILighthouseComponent
-    {
+    public interface ILighthouseComponent : ILighthouseLogSource
+	{
 		event StatusUpdatedEventHandler StatusUpdated;
 		
 		/// <summary>

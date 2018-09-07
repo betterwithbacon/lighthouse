@@ -18,29 +18,45 @@ namespace Lighthouse.Core.IO
 			{
 				throw new ArgumentException("storageRootDirectory must be specified", nameof(rootDirectory));
 			}
-
-			RootDirectory = rootDirectory;
+						
+			RootDirectory = rootDirectory;			
 			LighthouseContainer = container;
+			StatusUpdated?.Invoke(this, $"RootDirectory is {RootDirectory}");
 		}
 
 		public event StatusUpdatedEventHandler StatusUpdated;
 
 		public async Task<byte[]> ReadFromFileSystem(string fileName)
 		{
-			StatusUpdated(this, $"[READ] Requested for {fileName}.");
-			return await File.ReadAllBytesAsync(Path.Combine(RootDirectory, fileName));
+			var fullWritePath = GetFilePath(fileName);
+			StatusUpdated(this, $"[READ] Requested for {fullWritePath}.");
+			return await File.ReadAllBytesAsync(fullWritePath);
 		}
 
-		public async Task WriteToFileSystem(string fileName, byte[] data)
+		public void WriteToFileSystem(string fileName, byte[] data)
 		{
-			StatusUpdated(this, $"[WRITE] Requested for {fileName}.");
-			await File.WriteAllBytesAsync(Path.Combine(RootDirectory, fileName), data);
+			var fullWritePath = GetFilePath(fileName);
+			StatusUpdated(this, $"[WRITE] Requested for {fileName}. Writing to {fullWritePath}");
+
+			EnsurePath(fullWritePath);
+			File.WriteAllBytes(fullWritePath, data);
+		}
+
+		private void EnsurePath(string fullWritePath)
+		{
+			new FileInfo(fullWritePath).Directory.Create();
 		}
 
 		public bool FileExists(string fileName)
 		{
-			StatusUpdated(this, $"[FILE_EXISTS] Requested for {fileName}.");
-			return File.Exists(Path.Combine(RootDirectory, fileName));
+			var fullWritePath = GetFilePath(fileName);
+			StatusUpdated(this, $"[FILE_EXISTS] Requested for {fullWritePath}.");
+			return File.Exists(fullWritePath);
+		}
+
+		string GetFilePath(string fileName)
+		{
+			return Path.Combine(RootDirectory, fileName.TrimStart('\\'));
 		}
 
 		public override string ToString()
@@ -50,7 +66,7 @@ namespace Lighthouse.Core.IO
 
 		public async Task AppendToFileOnFileSystem(string fileName, byte[] data)
 		{
-			var fullyQualifiedPathName = Path.Combine(RootDirectory, fileName);
+			var fullyQualifiedPathName = GetFilePath(fileName);
 
 			await Task.Run(() =>
 			{

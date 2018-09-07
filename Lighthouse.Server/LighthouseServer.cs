@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Server
 {
-    public class LighthouseServer : ILighthouseServiceContainer, ILogSource
+    public class LighthouseServer : ILighthouseServiceContainer, ILighthouseLogSource, ILogSource
 	{
 		#region LighthouseServiceRun
 		public class LighthouseServiceRun
@@ -39,21 +39,24 @@ namespace Lighthouse.Server
 		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
 		public event StatusUpdatedEventHandler StatusUpdated;
 		public bool IsRunning { get; private set; }
-		public IEventContext EventContext { get; private set; }
-		ILighthouseServiceContainer ILighthouseComponent.LighthouseContainer => this;
+		public IEventContext EventContext { get; private set; }		
 		public string Identifier => throw new NotImplementedException();
+		public string WorkingDirectory { get; private set; } = @"C:\";
 
 		public readonly OSPlatform OS;
 		#endregion
 
 		#region Constructors
-		public LighthouseServer(Action<string> localLogger, IEventContext eventContext = null)
+		public LighthouseServer(Action<string> localLogger, IEventContext eventContext = null, string workingDirectory = null)
 		{
 			LogLocally = localLogger;
 			EventContext = eventContext ?? new EventContext();
 
 			// set the local environment state
 			OS = RuntimeServices.GetOS();
+			WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory;
+
+			Log(LogLevel.Debug, this, "Lighthouse server initializing...");
 
 			// load up the providers
 			LoadProviders();
@@ -196,17 +199,17 @@ namespace Lighthouse.Server
 			Log(LogLevel.Debug, this, $"App completed successfully. {ServiceThreads.FirstOrDefault(lsr => lsr.Task == task)?.Service}");
 		}
 
-		private void Service_StatusUpdated(ILighthouseComponent owner, string status)
+		private void Service_StatusUpdated(ILighthouseLogSource owner, string status)
 		{
 			Log(LogLevel.Debug, owner, status);
 		}
 
-		void RaiseStatusUpdated(string statusChangeMessage)
-		{
-			StatusUpdated?.Invoke(this, statusChangeMessage);
-		}
+		//void RaiseStatusUpdated(string statusChangeMessage)
+		//{
+		//	StatusUpdated?.Invoke(this, statusChangeMessage);
+		//}
 
-		public void Log(LogLevel level, ILighthouseComponent sender, string message)
+		public void Log(LogLevel level, ILighthouseLogSource sender, string message)
 		{
 			string log = $"[{DateTime.Now.ToString("HH:mm:fff")}] [{sender}]: {message}";
 
@@ -238,12 +241,15 @@ namespace Lighthouse.Server
 
 		private void LoadProviders()
 		{
+			Log(LogLevel.Debug, this, "Loading server-local resources...");
+			Log(LogLevel.Debug, this, $"WorkingDirectory:{WorkingDirectory}");
+
 			// TODO: allow for a discovery of the various providers, using reflection
 
 			// TODO: factor out how the "root" directory is found. This probably needs to be an environment config option
 			// File System providers
-			if(OS == OSPlatform.Windows)
-				RegisterComponent(new WindowsFileSystemProvider(@"C:\development\lighthouse", this));
+			if (OS == OSPlatform.Windows)
+				RegisterComponent(new WindowsFileSystemProvider(WorkingDirectory, this));
 			else if (OS == OSPlatform.Linux)
 				RegisterComponent(new UnixFileSystemProvider());
 

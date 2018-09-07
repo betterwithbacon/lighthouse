@@ -17,7 +17,8 @@ namespace Lighthouse.Core.IO
 		/// </summary>
 		/// <param name="fileName"></param>
 		/// <param name="data"></param>
-		Task WriteToFileSystem(string fileName, byte[] data);
+		//Task WriteToFileSystem(string fileName, byte[] data);
+		void WriteToFileSystem(string fileName, byte[] data);
 
 		/// <summary>
 		/// Provides abstracted access to the runtime file system. This might be either a linux or window host. 
@@ -52,6 +53,11 @@ namespace Lighthouse.Core.IO
 
 		public event StatusUpdatedEventHandler StatusUpdated;
 
+		public Task AppendToFileOnFileSystem(string fileName, byte[] data)
+		{
+			throw new NotImplementedException();
+		}
+
 		public bool FileExists(string fileName)
 		{
 			throw new NotImplementedException();
@@ -62,7 +68,7 @@ namespace Lighthouse.Core.IO
 			throw new NotImplementedException();
 		}
 
-		public Task WriteToFileSystem(string fileName, byte[] data)
+		public void WriteToFileSystem(string fileName, byte[] data)
 		{
 			throw new NotImplementedException();
 		}

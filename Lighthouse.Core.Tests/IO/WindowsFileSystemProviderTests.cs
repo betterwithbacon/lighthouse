@@ -18,7 +18,7 @@ namespace Lighthouse.Core.Tests.IO
 		public WindowsFileSystemProviderTests(ITestOutputHelper output)
 			: base(output)
 		{
-			Provider = new WindowsFileSystemProvider(@"C:\development\lighthouse", Container);
+			Provider = new WindowsFileSystemProvider(Container.WorkingDirectory, Container);
 			Container.RegisterComponent(Provider);
 		}
 
@@ -27,7 +27,7 @@ namespace Lighthouse.Core.Tests.IO
 		{
 			var fileName = "testfile1.txt";
 			var fileData = "test";
-			await Provider.WriteToFileSystem(fileName, Encoding.UTF8.GetBytes(fileData));
+			Provider.WriteToFileSystem(fileName, Encoding.UTF8.GetBytes(fileData));
 
 			// TODO: the issue with thnis method of verification, is that it's contingent on Read working correctly.
 			// Probably should use: File.OpenRead("FILE") to verify it, as it's an alternative method.
