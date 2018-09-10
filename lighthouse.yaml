@@ -1,0 +1,13 @@
+name: 'Lighthouse Server'
+version: '0.0'
+maxThreadCount: '4'
+
+services:
+    # warehouse-server: .
+    
+    # homehub-server: .
+        
+    test-app: .        
+        type: Lighthouse.Core.Apps,TestApps        
+
+    timer-app: .

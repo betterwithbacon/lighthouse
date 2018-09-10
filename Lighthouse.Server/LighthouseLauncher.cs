@@ -19,23 +19,5 @@ namespace Lighthouse.Server
 					yield return service;
 			}
         }
-
-		//public static IEnumerable<LighthouseAppLaunchConfig> FindServices(LighthouseTypeBasedLocation location)
-		//{
-			
-		//	return FindServices(location);			
-		//}
-		
-		//public static IEnumerable<LighthouseAppLaunchConfig> FindServices(LighthouseFileSystemLocation location)
-		//{
-
-		//	return FindServices(location);
-		//}
-
-		//public static IEnumerable<LighthouseAppLaunchConfig> FindServices(LighthouseFileSystemLocation location)
-		//{
-
-		//	return FindServices(location);
-		//}
 	}
 }

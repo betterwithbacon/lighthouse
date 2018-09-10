@@ -1,8 +1,10 @@
 using FluentAssertions;
 using Lighthouse.Core;
+using Lighthouse.Core.Configuration;
 using Lighthouse.Core.Deployment;
 using System;
 using System.Collections.Concurrent;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using Xunit;
@@ -126,6 +128,37 @@ namespace Lighthouse.Server.Tests
 			server.Stop();
 
 			server.GetRunningServices().Count().Should().Be(0, because: "The services shoudld be stopped.");
+		}
+
+		[Fact]
+		[Trait("Type", "Deployment")]
+		public void LaunchApp_ReadConfigFile_LaunchSuccessfully()
+		{
+			// copy the test path to the read location
+			File.Copy(
+				Path.Combine("C:\\development\\lighthouse\\", FileBasedConfigProvider.DEFAULT_CONFIG_FILENAME),
+				Path.Combine(Environment.CurrentDirectory, FileBasedConfigProvider.DEFAULT_CONFIG_FILENAME),
+				true);
+
+			var server = new LighthouseServer(Output.WriteLine);
+			
+			// this will start the server
+			// it will look in the default location for a YAML config file. If it finds one, it will load it
+			server.Start();
+
+			var provider = server.ConfigProviders.FirstOrDefault();
+			provider.Should().NotBeNull();
+
+			var launchRequests = provider.GetServiceLaunchRequests();
+			launchRequests.Should().NotBeEmpty();
+
+			var testAppLauncheRequest = launchRequests.FirstOrDefault(slr => slr.Name == "test-app");
+
+			// just wait some time
+			Thread.Sleep(25);
+
+
+			//server.GetRunningServices().Count().Should().Be(0, because: "The services shoudld be stopped.");
 		}
 
 		private class TimerApp : LighthouseServiceBase

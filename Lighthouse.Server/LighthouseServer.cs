@@ -1,9 +1,11 @@
 ﻿using BusDriver.Core.Events;
 using BusDriver.Core.Logging;
 using Lighthouse.Core;
+using Lighthouse.Core.Configuration;
 using Lighthouse.Core.Deployment;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
+using Lighthouse.Monitor;
 using Lighthouse.Server.Utils;
 using System;
 using System.Collections.Concurrent;
@@ -42,6 +44,9 @@ namespace Lighthouse.Server
 		public IEventContext EventContext { get; private set; }		
 		public string Identifier => throw new NotImplementedException();
 		public string WorkingDirectory { get; private set; } = @"C:\";
+		public List<IConfigurationProvider> ConfigProviders { get; private set; }
+		public List<IServiceRepository> ServiceRepositories { get; private set; }
+		public LighthouseMonitor LighthouseMonitor { get; private set; }
 
 		public readonly OSPlatform OS;
 		#endregion
@@ -51,6 +56,8 @@ namespace Lighthouse.Server
 		{
 			LogLocally = localLogger;
 			EventContext = eventContext ?? new EventContext();
+			ServiceRepositories = new List<IServiceRepository>();
+			ConfigProviders = new List<IConfigurationProvider>();
 
 			// set the local environment state
 			OS = RuntimeServices.GetOS();
@@ -68,10 +75,48 @@ namespace Lighthouse.Server
 		{
 			Log(LogLevel.Debug,this, "Lighthouse server starting");
 
-			// load up the local resources						
+			// start the Mointor service. This will make sure everything is working correctly.
 			StartMonitor();
-			
+
+			// load up the local resources						
+			// look for the local service config
+			LoadConfigProviders();
+			LoadServiceRepositories();
+			LoadConfiguredServices();
+
+			// the service is now runnable
 			IsRunning = true;
+		}
+
+		private void LoadConfiguredServices()
+		{
+			// TODO: right now, it's one, but it COULD be more, what's that like?!
+			var provider = ConfigProviders.FirstOrDefault();
+
+			// reigster all of the service requests, from the config providers.
+			foreach (var request in ConfigProviders.SelectMany(cp => cp.GetServiceLaunchRequests()))
+			{
+				Log(LogLevel.Debug, this, $"Registering service request: {request}");
+				LighthouseMonitor.RegisterServiceRequest(request);
+
+				// launch the service
+				Launch(request);
+			}
+		}
+
+		public void LoadConfigProviders()
+		{
+			ConfigProviders.Clear();
+
+			// TODO: what kind of filtering will we need to do here
+			ConfigProviders = GetResourceProviders<IConfigurationProvider>().ToList();
+		}
+
+		public void LoadServiceRepositories()
+		{
+			ServiceRepositories.Clear();
+
+			ServiceRepositories.AddRange(ConfigProviders.SelectMany(cp => cp.GetServiceRepositories()));
 		}
 
 		public void Stop()
@@ -107,6 +152,8 @@ namespace Lighthouse.Server
 			TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
 			Log(LogLevel.Debug, this, "Lighthouse Monitor Started");
+
+			LighthouseMonitor = new LighthouseMonitor();
 		}
 		#endregion
 
@@ -150,6 +197,18 @@ namespace Lighthouse.Server
 
 			if (!(Activator.CreateInstance(launchConfig.Type) is ILighthouseService service))
 				throw new ApplicationException($"App launch config doesn't represent Lighthouse app. {launchConfig.Type.AssemblyQualifiedName}");
+
+			Launch(service);
+		}
+
+		public void Launch(ServiceLaunchRequest launchRequest)
+		{
+			AssertIsRunning();
+
+			Log(LogLevel.Debug, this, $"Attempting to start service: {launchRequest.Name}.");
+
+			if (!(Activator.CreateInstance(launchRequest.ServiceType) is ILighthouseService service))
+				throw new ApplicationException($"App launch config doesn't represent Lighthouse app. {launchRequest.ServiceType.AssemblyQualifiedName}");
 
 			Launch(service);
 		}
@@ -245,6 +304,9 @@ namespace Lighthouse.Server
 			Log(LogLevel.Debug, this, $"WorkingDirectory:{WorkingDirectory}");
 
 			// TODO: allow for a discovery of the various providers, using reflection
+
+			// Configuration Providers
+			RegisterComponent(new FileBasedConfigProvider(this));
 
 			// TODO: factor out how the "root" directory is found. This probably needs to be an environment config option
 			// File System providers

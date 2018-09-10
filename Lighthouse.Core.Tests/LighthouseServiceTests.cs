@@ -41,5 +41,6 @@ namespace Lighthouse.Core.Tests
 			// the app starts, and the startup tasks should run
 			app.Start();
 		}
+
     }
 }
