@@ -6,6 +6,7 @@ using Lighthouse.Core.IO;
 using System.Text;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+using Lighthouse.Core.Configuration.Formats.YAML;
 
 namespace Lighthouse.Core.Configuration
 {
@@ -28,7 +29,7 @@ namespace Lighthouse.Core.Configuration
 			if (!IsInitted)
 				Init();
 
-			return null;
+			return Enumerable.Empty<IServiceRepository>();
 		}
 
 		public IEnumerable<ServiceLaunchRequest> GetServiceLaunchRequests()
@@ -41,6 +42,7 @@ namespace Lighthouse.Core.Configuration
 
 		private void Init()
 		{
+			// TODO: this is a complete mess right now, as it makes A LOT OF assumptions, about what files will be used and from where ,but this is just step 1.
 			var completeConfigFilePath = ConfigFilePath ?? Path.Combine(LighthouseContainer.WorkingDirectory, DEFAULT_CONFIG_FILENAME);
 			configData = LighthouseContainer.GetFileSystemProviders().FirstOrDefault()?.ReadStringFromFileSystem(completeConfigFilePath) ?? "";
 			if(configData != null)
@@ -49,6 +51,8 @@ namespace Lighthouse.Core.Configuration
 					.WithNamingConvention(new CamelCaseNamingConvention())
 					.Build();
 				
+				var config = deserializer.Deserialize<LighthouseYamlConfig>(configData);
+				config
 			}
 			else
 			{

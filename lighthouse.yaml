@@ -2,12 +2,16 @@ name: 'Lighthouse Server'
 version: '0.0'
 maxThreadCount: '4'
 
-services:
-    # warehouse-server: .
-    
-    # homehub-server: .
-        
-    test-app: .        
-        type: Lighthouse.Core.Apps,TestApps        
+service-repositories:
+    -   name: local
+    -   name: global
+        uri: 'lighthouse:global_service_repo'
 
-    timer-app: .
+services:     
+    -   name: test-app
+        type: Lighthouse.Core.Apps,TestApps
+    -   name: timer-app
+    -   name: warehouse
+    -   name: service_repo  
+        type: Lighthouse.Core.Apps,ServiceRepo
+        alias: global_service_repo
