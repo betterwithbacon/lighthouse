@@ -16,15 +16,22 @@ namespace Lighthouse.Core.Tests.Configuration.Formats.YAML
 		{
 			var testContent = @"---
 name: 'Lighthouse Server'
-version: '6.1'
+version: '0.1'
 maxThreadCount: '4'
+
+service-repositories:
+    -   name: local
+    -   name: global
+        uri: 'lighthouse:global_service_repo'
 
 services:     
     -   name: test-app
-        type: Lighthouse.Core.Apps,TestApps        
-
+        type: Lighthouse.Core.Apps,TestApps
     -   name: timer-app
-    -   name: warehouse";
+    -   name: warehouse
+    -   name: service_repo  
+        type: Lighthouse.Core.Apps,ServiceRepo
+        alias: global_service_repo";
 
 			var deserializer = new DeserializerBuilder()
 					.WithNamingConvention(new CamelCaseNamingConvention())
@@ -39,6 +46,9 @@ services:
 			configFile.Services[0].Name.Should().Be("test-app");
 			configFile.Services[1].Name.Should().Be("timer-app");
 			configFile.Services[2].Name.Should().Be("warehouse");
+
+			configFile.ServiceRepositories.Count.Should().Be(2);
+			configFile.ServiceRepositories[0].Name.Should().Be("local");
 		}
 	}
 }

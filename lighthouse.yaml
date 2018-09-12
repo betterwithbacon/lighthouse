@@ -1,5 +1,5 @@
 name: 'Lighthouse Server'
-version: '0.0'
+version: '0.1'
 maxThreadCount: '4'
 
 service-repositories:

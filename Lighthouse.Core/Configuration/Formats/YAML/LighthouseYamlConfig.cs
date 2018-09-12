@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using YamlDotNet.Serialization;
 
 namespace Lighthouse.Core.Configuration.Formats.YAML
 {
@@ -10,6 +11,8 @@ namespace Lighthouse.Core.Configuration.Formats.YAML
 		public string Version { get; set; }
 		public int MaxThreadCount { get; set; }
 		public List<LighthouseYamlConfigServiceDescriptor> Services { get; set; }
+
+		[YamlMember(Alias = "service-repositories")]
 		public List<LighthouseYamlConfigServiceRepositoryDescriptor> ServiceRepositories { get; set; }
 	}
 

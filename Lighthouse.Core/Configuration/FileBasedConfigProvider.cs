@@ -29,7 +29,9 @@ namespace Lighthouse.Core.Configuration
 			if (!IsInitted)
 				Init();
 
-			return Enumerable.Empty<IServiceRepository>();
+			// the file is loaded, so pull out the configs
+			throw new NotImplementedException("FileBasedConfigProvider.GetServiceRepositories");
+			//return Enumerable.Empty<IServiceRepository>();
 		}
 
 		public IEnumerable<ServiceLaunchRequest> GetServiceLaunchRequests()
@@ -52,7 +54,7 @@ namespace Lighthouse.Core.Configuration
 					.Build();
 				
 				var config = deserializer.Deserialize<LighthouseYamlConfig>(configData);
-				config
+				
 			}
 			else
 			{
