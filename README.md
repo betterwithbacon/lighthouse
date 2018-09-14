@@ -42,3 +42,6 @@ Represents a common implementation of a lighthouse service that will run many sm
     - Inform Monitor of service
     - Launch the service
 5) Monitor Services
+
+### Service Repository
+A provider of service descriptors. A service descriptor is enough information for a LighthouseServer to start the service, and manage it over time (e.g. versioning).

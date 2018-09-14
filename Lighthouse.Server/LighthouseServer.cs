@@ -2,6 +2,9 @@
 using BusDriver.Core.Logging;
 using Lighthouse.Core;
 using Lighthouse.Core.Configuration;
+using Lighthouse.Core.Configuration.Providers;
+using Lighthouse.Core.Configuration.Providers.Local;
+using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Deployment;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
@@ -36,28 +39,38 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Fields
+		public const string DEFAULT_APP_NAME = "Lighthouse Server";
 		private readonly ConcurrentBag<LighthouseServiceRun> ServiceThreads = new ConcurrentBag<LighthouseServiceRun>();		
 		private readonly Action<string> LogLocally;		
 		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
 		public event StatusUpdatedEventHandler StatusUpdated;
+
 		public bool IsRunning { get; private set; }
 		public IEventContext EventContext { get; private set; }		
 		public string Identifier => throw new NotImplementedException();
 		public string WorkingDirectory { get; private set; } = @"C:\";
-		public List<IConfigurationProvider> ConfigProviders { get; private set; }
-		public List<IServiceRepository> ServiceRepositories { get; private set; }
-		public LighthouseMonitor LighthouseMonitor { get; private set; }
 
+		public IAppConfigurationProvider LaunchConfiguration { get; private set; }
+
+		// Local cache of ALL repositories. this will likely include more than the initial config
+		private IList<IServiceRepository> ServiceRepositories { get; set; }
+
+		public LighthouseMonitor LighthouseMonitor { get; private set; }
 		public readonly OSPlatform OS;
 		#endregion
 
 		#region Constructors
-		public LighthouseServer(Action<string> localLogger, IEventContext eventContext = null, string workingDirectory = null)
+		public LighthouseServer(Action<string> localLogger, IAppConfigurationProvider launchConfiguration = null, IEventContext eventContext = null, string workingDirectory = null)
 		{
 			LogLocally = localLogger;
 			EventContext = eventContext ?? new EventContext();
 			ServiceRepositories = new List<IServiceRepository>();
-			ConfigProviders = new List<IConfigurationProvider>();
+			LaunchConfiguration = launchConfiguration ?? new MemoryAppConfigurationProvider("lighthouse ", this); // if no config is passed in, start with a blank one
+
+			//TODO: this seems a little hacky, but I DO want to eventually enforce graph participation by components
+			// e.g.: if a component tries to log, it needs to be registered with this container
+			if (LaunchConfiguration.LighthouseContainer != this)
+				RegisterComponent(LaunchConfiguration);
 
 			// set the local environment state
 			OS = RuntimeServices.GetOS();
@@ -80,21 +93,19 @@ namespace Lighthouse.Server
 
 			// load up the local resources						
 			// look for the local service config
-			LoadConfigProviders();
-			LoadServiceRepositories();
-			LoadConfiguredServices();
+			LoadConfiguration();			
+			LaunchConfiguredServices();
 
 			// the service is now runnable
 			IsRunning = true;
 		}
 
-		private void LoadConfiguredServices()
+		private void LaunchConfiguredServices()
 		{
 			// TODO: right now, it's one, but it COULD be more, what's that like?!
-			var provider = ConfigProviders.FirstOrDefault();
-
+			
 			// reigster all of the service requests, from the config providers.
-			foreach (var request in ConfigProviders.SelectMany(cp => cp.GetServiceLaunchRequests()))
+			foreach (var request in LaunchConfiguration.GetServiceLaunchRequests())
 			{
 				Log(LogLevel.Debug, this, $"Registering service request: {request}");
 				LighthouseMonitor.RegisterServiceRequest(request);
@@ -104,19 +115,10 @@ namespace Lighthouse.Server
 			}
 		}
 
-		public void LoadConfigProviders()
+		public void LoadConfiguration()
 		{
-			ConfigProviders.Clear();
-
-			// TODO: what kind of filtering will we need to do here
-			ConfigProviders = GetResourceProviders<IConfigurationProvider>().ToList();
-		}
-
-		public void LoadServiceRepositories()
-		{
-			ServiceRepositories.Clear();
-
-			ServiceRepositories.AddRange(ConfigProviders.SelectMany(cp => cp.GetServiceRepositories()));
+			// TODO: there should probably be only one local appconfig resource
+			LaunchConfiguration = GetResourceProviders<IAppConfigurationProvider>().FirstOrDefault();
 		}
 
 		public void Stop()
@@ -275,6 +277,9 @@ namespace Lighthouse.Server
 			// ALL messages are logged locally for now
 			LogLocally(log);
 
+			// right now these status updates are anonymous. But this is is for specific messages in the serer, not not services running within the server
+			StatusUpdated?.Invoke(null, message);
+
 			// emit the messages in the event context as well, so it can be reacted to there as well
 			EventContext?.Log(BusDriver.Core.Logging.LogType.Info, message, sender is ILogSource ls ? ls : this);
 		}
@@ -304,9 +309,6 @@ namespace Lighthouse.Server
 			Log(LogLevel.Debug, this, $"WorkingDirectory:{WorkingDirectory}");
 
 			// TODO: allow for a discovery of the various providers, using reflection
-
-			// Configuration Providers
-			RegisterComponent(new FileBasedConfigProvider(this));
 
 			// TODO: factor out how the "root" directory is found. This probably needs to be an environment config option
 			// File System providers

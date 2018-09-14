@@ -1,6 +1,8 @@
 using FluentAssertions;
 using Lighthouse.Core;
 using Lighthouse.Core.Configuration;
+using Lighthouse.Core.Configuration.Formats.YAML;
+using Lighthouse.Core.Configuration.Providers.Local;
 using Lighthouse.Core.Deployment;
 using System;
 using System.Collections.Concurrent;
@@ -136,8 +138,8 @@ namespace Lighthouse.Server.Tests
 		{
 			// copy the test path to the read location
 			File.Copy(
-				Path.Combine("C:\\development\\lighthouse\\", FileBasedConfigProvider.DEFAULT_CONFIG_FILENAME),
-				Path.Combine(Environment.CurrentDirectory, FileBasedConfigProvider.DEFAULT_CONFIG_FILENAME),
+				Path.Combine("C:\\development\\lighthouse\\", LighthouseYamlBaseConfig.DEFAULT_CONFIG_FILENAME),
+				Path.Combine(Environment.CurrentDirectory, LighthouseYamlBaseConfig.DEFAULT_CONFIG_FILENAME),
 				true);
 
 			var server = new LighthouseServer(Output.WriteLine);
@@ -146,10 +148,10 @@ namespace Lighthouse.Server.Tests
 			// it will look in the default location for a YAML config file. If it finds one, it will load it
 			server.Start();
 
-			var provider = server.ConfigProviders.FirstOrDefault();
-			provider.Should().NotBeNull();
+			var config = server.LaunchConfiguration;
+			config.Should().NotBeNull();
 
-			var launchRequests = provider.GetServiceLaunchRequests();
+			var launchRequests = config.GetServiceLaunchRequests();
 			launchRequests.Should().NotBeEmpty();
 
 			var testAppLauncheRequest = launchRequests.FirstOrDefault(slr => slr.Name == "test-app");

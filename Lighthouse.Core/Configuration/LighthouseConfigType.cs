@@ -4,7 +4,9 @@ using System.Text;
 
 namespace Lighthouse.Core.Configuration
 {
-	public class ServiceRepository
+	public enum LighthouseConfigType
 	{
+		App,
+		Component
 	}
 }

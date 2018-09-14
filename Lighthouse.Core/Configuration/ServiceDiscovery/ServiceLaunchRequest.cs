@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Lighthouse.Core.Configuration
+namespace Lighthouse.Core.Configuration.ServiceDiscovery
 {
 	public class ServiceLaunchRequest
 	{

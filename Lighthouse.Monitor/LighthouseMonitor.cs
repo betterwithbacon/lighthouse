@@ -1,5 +1,6 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Configuration;
+using Lighthouse.Core.Configuration.ServiceDiscovery;
 using System;
 
 namespace Lighthouse.Monitor

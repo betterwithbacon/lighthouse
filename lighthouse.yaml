@@ -1,8 +1,9 @@
 name: 'Lighthouse Server'
 version: '0.1'
 maxThreadCount: '4'
+type: app
 
-service-repositories:
+service_repositories:
     -   name: local
     -   name: global
         uri: 'lighthouse:global_service_repo'
