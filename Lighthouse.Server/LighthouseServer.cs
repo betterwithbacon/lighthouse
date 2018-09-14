@@ -65,7 +65,7 @@ namespace Lighthouse.Server
 			LogLocally = localLogger;
 			EventContext = eventContext ?? new EventContext();
 			ServiceRepositories = new List<IServiceRepository>();
-			LaunchConfiguration = launchConfiguration ?? new MemoryAppConfigurationProvider("lighthouse ", this); // if no config is passed in, start with a blank one
+			LaunchConfiguration = launchConfiguration ?? new MemoryAppConfigurationProvider(DEFAULT_APP_NAME, this); // if no config is passed in, start with a blank one
 
 			//TODO: this seems a little hacky, but I DO want to eventually enforce graph participation by components
 			// e.g.: if a component tries to log, it needs to be registered with this container

@@ -33,8 +33,4 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Configuration\Providers\Local\" />
-  </ItemGroup>
-
 </Project>
