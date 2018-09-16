@@ -26,9 +26,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Core.Apps", "Lighthouse.Core.Apps\Lighthouse.Core.Apps.csproj", "{27519058-DB2A-4281-AE69-637396F2FA7A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dependencies", "dependencies", "{5D7712C8-606E-4133-9FEE-F27BF1C085C6}"
-	ProjectSection(SolutionItems) = preProject
-		dependencies\BusDriver.Core.dll = dependencies\BusDriver.Core.dll
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Core.Apps.Tests", "Lighthouse.Core.Apps.Tests\Lighthouse.Core.Apps.Tests.csproj", "{4E3DBD56-EE43-47FD-85A8-735063937F4E}"
 EndProject

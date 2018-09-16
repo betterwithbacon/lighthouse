@@ -6,8 +6,10 @@ using Lighthouse.Core.Configuration.Providers;
 using Lighthouse.Core.Configuration.Providers.Local;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Deployment;
+using Lighthouse.Core.Events.Time;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
+using Lighthouse.Core.Scheduling;
 using Lighthouse.Monitor;
 using Lighthouse.Server.Utils;
 using System;
@@ -21,7 +23,7 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Server
 {
-    public class LighthouseServer : ILighthouseServiceContainer, ILighthouseLogSource, ILogSource
+    public class LighthouseServer : ILighthouseServiceContainer, ILighthouseLogSource, ILighthouseLogSource
 	{
 		#region LighthouseServiceRun
 		public class LighthouseServiceRun
@@ -265,11 +267,9 @@ namespace Lighthouse.Server
 			Log(LogLevel.Debug, owner, status);
 		}
 
-		//void RaiseStatusUpdated(string statusChangeMessage)
-		//{
-		//	StatusUpdated?.Invoke(this, statusChangeMessage);
-		//}
 
+
+		
 		public void Log(LogLevel level, ILighthouseLogSource sender, string message)
 		{
 			string log = $"[{DateTime.Now.ToString("HH:mm:fff")}] [{sender}]: {message}";
@@ -281,7 +281,7 @@ namespace Lighthouse.Server
 			StatusUpdated?.Invoke(null, message);
 
 			// emit the messages in the event context as well, so it can be reacted to there as well
-			EventContext?.Log(BusDriver.Core.Logging.LogType.Info, message, sender is ILogSource ls ? ls : this);
+			//EventContext?.Log(LogType.Info, message, sender is ILighthouseLogSource ls ? ls : this);
 		}
 		#endregion
 
@@ -347,6 +347,22 @@ namespace Lighthouse.Server
 		public override string ToString()
 		{
 			return "Lighthouse Server";
+		}
+		#endregion
+
+		#region Scheduling
+		public void AddScheduledAction(Schedule schedule, Action<DateTime> actionToPerform)
+		{
+			var consumer = new TimeEventConsumer();
+			consumer.Schedules.Add(schedule);
+			consumer.EventAction = (time) => actionToPerform(time);
+			EventContext.RegisterConsumer<TimeEvent>(consumer);
+		}
+
+		public void CreateSchedule<TAction>()
+			where TAction : IScheduledAction
+		{
+			// a schedule embedded in a type? is that practical/valuable? (daily backup?)
 		}
 		#endregion
 	}

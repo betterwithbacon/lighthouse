@@ -1,6 +1,8 @@
 ﻿using BusDriver.Core.Events;
+using Lighthouse.Core.Events;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
+using Lighthouse.Core.Scheduling;
 using System;
 using System.Collections.Generic;
 
@@ -71,5 +73,9 @@ namespace Lighthouse.Core
 		event StatusUpdatedEventHandler StatusUpdated;
 
 		string WorkingDirectory { get; }
+
+		void Do(IEnumerable<Action<IEventContext>> actions);
+
+		void AddScheduledAction(Schedule schedule, Action<DateTime> taskToPerform);
 	}
 }

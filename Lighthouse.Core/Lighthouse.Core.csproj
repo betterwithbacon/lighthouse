@@ -18,9 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="BusDriver.Core">
-      <HintPath>..\dependencies\BusDriver.Core.dll</HintPath>
-    </Reference>
+    <Folder Include="Events\" />
   </ItemGroup>
 
 </Project>
