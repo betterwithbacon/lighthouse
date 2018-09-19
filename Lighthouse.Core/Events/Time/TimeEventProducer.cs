@@ -1,7 +1,4 @@
 ﻿
-using BusDriver.Core.Logging;
-using System;
-using System.Collections.Generic;
 using System.Timers;
 
 namespace Lighthouse.Core.Events.Time
@@ -18,7 +15,7 @@ namespace Lighthouse.Core.Events.Time
 
 		private void Timer_Elapsed(object sender, ElapsedEventArgs e)
 		{
-			Context.RaiseEvent(new TimeEvent(Context, e.SignalTime), this);
+			LighthouseContainer.EmitEvent(new TimeEvent(LighthouseContainer, e.SignalTime), this);
 		}
 
 		public override void Start()

@@ -7,11 +7,11 @@ namespace Lighthouse.Core.Events.Time
 	{
 		public DateTime Time { get;  set; }
 
-		public IEventContext Context { get;  private set; }
+		public ILighthouseServiceContainer LighthouseContainer { get;  private set; }
 
-		public TimeEvent(IEventContext context, DateTime time)
+		public TimeEvent(ILighthouseServiceContainer container, DateTime time)
 		{
-			Context = context;
+			LighthouseContainer = container;
 			Time = time;			
 		}
 

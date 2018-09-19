@@ -8,10 +8,4 @@
     <ProjectReference Include="..\Lighthouse.Core\Lighthouse.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="BusDriver.Core">
-      <HintPath>..\dependencies\BusDriver.Core.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>

@@ -1,5 +1,4 @@
-﻿using BusDriver.Core.Events;
-using BusDriver.Core.Scheduling;
+﻿using Lighthouse.Core.Scheduling;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -13,16 +12,16 @@ namespace Lighthouse.Core
 		public ILighthouseServiceContainer LighthouseContainer { get; private set; }
 
 		public event StatusUpdatedEventHandler StatusUpdated;		
-		private readonly List<Action<IEventContext>> StartupActions = new List<Action<IEventContext>>();
+		private readonly List<Action<ILighthouseServiceContainer>> StartupActions = new List<Action<ILighthouseServiceContainer>>();
 		
-		protected void AddStartupTask(Action<IEventContext> task)
+		protected void AddStartupTask(Action<ILighthouseServiceContainer> task)
 		{
 			StartupActions.Add(task);
 		}
 
 		protected void AddScheduledTask(Schedule schedule, Action<DateTime> taskToPerform)
 		{
-			LighthouseContainer.EventContext.AddScheduledAction(schedule, taskToPerform);
+			LighthouseContainer.AddScheduledAction(schedule, taskToPerform);
 		}
 
 		public virtual void Start()
@@ -40,7 +39,7 @@ namespace Lighthouse.Core
 		{
 			// the context, will do the work for us
 			// this is useful, because if some of the things you want to do will be emitting Events, then they'll be picked up
-			LighthouseContainer.EventContext.Do(StartupActions);
+			LighthouseContainer.Do(StartupActions);
 
 			//Parallel.ForEach(StartupActions, new ParallelOptions{ (action) => action(), )
 		}
@@ -79,7 +78,7 @@ namespace Lighthouse.Core
 		public void Initialize(ILighthouseServiceContainer context)
 		{
 			LighthouseContainer = context;
-			Id = EventContext.GenerateSessionIdentifier(this);
+			//Id = EventContext.GenerateSessionIdentifier(this);
 			RaiseStatusUpdated(LighthouseServiceRunState.PendingStart);
 		}
 

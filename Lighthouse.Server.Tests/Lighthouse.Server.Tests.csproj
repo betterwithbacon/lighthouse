@@ -15,12 +15,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Lighthouse.Core.Tests\Lighthouse.Core.Tests.csproj" />
     <ProjectReference Include="..\Lighthouse.Server\Lighthouse.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="BusDriver.Core">
-      <HintPath>..\dependencies\BusDriver.Core.dll</HintPath>
+    <Reference Include="WarehouseCore">
+      <HintPath>..\dependencies\WarehouseCore.dll</HintPath>
     </Reference>
   </ItemGroup>
 

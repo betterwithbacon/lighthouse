@@ -51,5 +51,10 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 		{
 			ServiceRepositories.Add(repository);
 		}
+
+		public override string ToString()
+		{
+			return "In-Memory AppConfig";
+		}
 	}
 }

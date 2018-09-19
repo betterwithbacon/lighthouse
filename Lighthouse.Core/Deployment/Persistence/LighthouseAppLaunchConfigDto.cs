@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Text;
 
-namespace Lighthouse.Core.Deployment.Persistence
-{
-    public class LighthouseAppLaunchConfigDto
-    {
-		public string Name { get; set; }
-		public Guid Id { get; set; }
-		public string AssemblyPath { get; set; }
-		public string TypeName { get; set; }
-		public string NugetPackageName { get; set; }
-	}
-}
+//namespace Lighthouse.Core.Deployment.Persistence
+//{
+//    public class LighthouseAppLaunchConfigDto
+//    {
+//		public string Name { get; set; }
+//		public Guid Id { get; set; }
+//		public string AssemblyPath { get; set; }
+//		public string TypeName { get; set; }
+//		public string NugetPackageName { get; set; }
+//	}
+//}

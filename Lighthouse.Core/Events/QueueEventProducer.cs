@@ -1,4 +1,4 @@
-﻿using BusDriver.Core.Queueing;
+﻿using Lighthouse.Core.Events.Queueing;
 using System;
 using System.Linq;
 using System.Threading;
@@ -23,20 +23,21 @@ namespace Lighthouse.Core.Events
 			// TODO: the creation of the handler should be somewhere else probably
 			Timer = new Timer(
 				(context ) => {
-					var eventContext = context as IEventContext;
+					var eventContext = context as ILighthouseServiceContainer;
 					try
 					{
 						var ev = WorkQueue.Dequeue(1).FirstOrDefault();
 						if (ev != null)
 						{
-							eventContext.RaiseEvent(ev, this);
+							eventContext.EmitEvent(ev, this);
 						}
-					}catch(Exception e)
+					}
+					catch (Exception e)
 					{
-						eventContext.LogError(e, source: this);
+						LighthouseContainer.Log(Core.Logging.LogLevel.Error, Core.Logging.LogType.Error, this, exception: e);
 						throw;
 					}
-				}, Context, 100, 1000
+				}, LighthouseContainer, 100, 1000
 			);
 		}
 	}

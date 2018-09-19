@@ -11,8 +11,8 @@
         - **Lighthouse Service**
             - f
             - d
-        - **Event Bus** (*IEventContext*)
-            - d
+        - **Event Bus**
+            - Provides inter-process (local/remote) event-driven communication.
         - **Service Discovery**
             - Local/Remote Services
         - **System Logging**

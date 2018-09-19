@@ -1,9 +1,4 @@
-﻿using BusDriver.Core.Logging;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Lighthouse.Core.Events.Logging
+﻿namespace Lighthouse.Core.Events.Logging
 {
 	//public class LogEventProducer : IEventProducer, ILighthouseLogSource
 	//{

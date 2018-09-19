@@ -1,5 +1,4 @@
-﻿using BusDriver.Core.Events;
-using Lighthouse.Core.Events;
+﻿using Lighthouse.Core.Events;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using Lighthouse.Core.Scheduling;
@@ -8,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Lighthouse.Core
 {
-	public interface ILighthouseServiceContainer
+	public interface ILighthouseServiceContainer : ILighthouseLogSource
 	{
 		/// <summary>
 		/// A generic way to log messages. These messages should be emitted as events in the Context as well as any internal logging.
@@ -16,7 +15,7 @@ namespace Lighthouse.Core
 		/// <param name="level"></param>
 		/// <param name="sender"></param>
 		/// <param name="message"></param>
-		void Log(LogLevel level, ILighthouseLogSource sender, string message);
+		void Log(LogLevel level, LogType logType,  ILighthouseLogSource sender, string message = null, Exception exception = null);
 
 		/// <summary>
 		/// Finds lighthouse services that are hosted within this container.
@@ -37,13 +36,6 @@ namespace Lighthouse.Core
 		/// </summary>
 		/// <returns></returns>
 		DateTime GetTime();
-
-		/// <summary>
-		/// This is the context where app events are published and subscribed.
-		/// Communication between lighthouse components can also occur using the context
-		/// 
-		/// </summary>
-		IEventContext EventContext { get; }
 
 		/// <summary>
 		/// Exposes low-level server local resources, such as the disk, network, or specific hardware devices.		
@@ -74,8 +66,21 @@ namespace Lighthouse.Core
 
 		string WorkingDirectory { get; }
 
-		void Do(IEnumerable<Action<IEventContext>> actions);
+		/// <summary>
+		/// Will perform these actions in a context-attached, meaning they can potentially receive/emit events if the worker threads have subscriber
+		/// </summary>
+		/// <param name="actions"></param>
+		void Do(IEnumerable<Action<ILighthouseServiceContainer>> actions);
 
 		void AddScheduledAction(Schedule schedule, Action<DateTime> taskToPerform);
+
+		void RegisterEventProducer(IEventProducer eventSource);
+
+		void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer)
+			where TEvent : IEvent;
+
+		void EmitEvent(IEvent ev, ILighthouseLogSource source = null);
+
+		IEnumerable<IEvent> GetAllReceivedEvents(PointInTime since = null);
 	}
 }

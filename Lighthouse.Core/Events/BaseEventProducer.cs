@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Lighthouse.Core.Logging;
+using Lighthouse.Core.Utils;
+using System;
 
 namespace Lighthouse.Core.Events
 {
@@ -6,16 +8,15 @@ namespace Lighthouse.Core.Events
 	{
 		public string Identifier { get; private set; }
 
-		public string LogDescriptor => Identifier;
+		public ILighthouseServiceContainer LighthouseContainer { get; protected set; }
 
-		protected IEventContext Context { get; private set; }
+		public event StatusUpdatedEventHandler StatusUpdated;
 
-		public void Init(IEventContext context)
+		public void Init(ILighthouseServiceContainer container)
 		{
-			Context = context;
-			Identifier = EventContext.GenerateSessionIdentifier(this);
-			//Context.Log(LogType.ProducerStartup, source: this);
-
+			LighthouseContainer = container;
+			Identifier = LighthouseComponentLifetime.GenerateSessionIdentifier(this);
+			LighthouseContainer.Log(LogLevel.Debug, LogType.ProducerStartup,this);
 			Start();
 		}
 
@@ -23,18 +24,13 @@ namespace Lighthouse.Core.Events
 
 		protected virtual void AssertIsReady()
 		{
-			if (Context == null)
+			if (LighthouseContainer == null)
 				throw new InvalidOperationException("Context is not set.");
 		}
 
 		public override string ToString()
 		{
 			return Identifier;
-		}
-
-		public string GetContextId()
-		{
-			return Context.Id;
 		}
 	}
 }

@@ -1,7 +1,4 @@
-﻿
-using BusDriver.Core.Logging;
-using BusDriver.Core.Scheduling;
-using Lighthouse.Core.Scheduling;
+﻿using Lighthouse.Core.Scheduling;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,10 +13,10 @@ namespace Lighthouse.Core.Events.Time
 		public List<Schedule> Schedules { get; private set; }
 
 		public Action<DateTime> EventAction { get; set;}
-		
-		IEventContext Context { get; set; }
 
-		public string Identifier { get; private set; }
+		public ILighthouseServiceContainer LighthouseContainer { get; private set; }
+
+		public event StatusUpdatedEventHandler StatusUpdated;
 
 		public TimeEventConsumer()
 		{
@@ -41,11 +38,9 @@ namespace Lighthouse.Core.Events.Time
 			}
 		}
 
-		public void Init(IEventContext context)
+		public void Init(ILighthouseServiceContainer container)
 		{
-			Context = context;
-			Identifier = EventContext.GenerateSessionIdentifier(this);
-			//TODO: Context.Log(LogType.ConsumerStartup, source: this);
+			LighthouseContainer = container;
 		}
 	}
 }

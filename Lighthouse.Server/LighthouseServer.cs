@@ -1,11 +1,9 @@
-﻿using BusDriver.Core.Events;
-using BusDriver.Core.Logging;
-using Lighthouse.Core;
-using Lighthouse.Core.Configuration;
+﻿using Lighthouse.Core;
 using Lighthouse.Core.Configuration.Providers;
 using Lighthouse.Core.Configuration.Providers.Local;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
-using Lighthouse.Core.Deployment;
+using Lighthouse.Core.Events;
+using Lighthouse.Core.Events.Queueing;
 using Lighthouse.Core.Events.Time;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
@@ -16,14 +14,13 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lighthouse.Server
 {
-    public class LighthouseServer : ILighthouseServiceContainer, ILighthouseLogSource, ILighthouseLogSource
+    public class LighthouseServer : ILighthouseServiceContainer, ILighthouseLogSource
 	{
 		#region LighthouseServiceRun
 		public class LighthouseServiceRun
@@ -47,25 +44,36 @@ namespace Lighthouse.Server
 		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
 		public event StatusUpdatedEventHandler StatusUpdated;
 
-		public bool IsRunning { get; private set; }
-		public IEventContext EventContext { get; private set; }		
+		public bool IsRunning { get; private set; }			
 		public string Identifier => throw new NotImplementedException();
 		public string WorkingDirectory { get; private set; } = @"C:\";
-
+		TimeEventProducer GlobalClock { get; set; } // raise an event every minute, like a clock (a not very good clock)
+		public readonly OSPlatform OS;
+		#endregion
+		
+		#region Fields - Configuration
 		public IAppConfigurationProvider LaunchConfiguration { get; private set; }
-
 		// Local cache of ALL repositories. this will likely include more than the initial config
 		private IList<IServiceRepository> ServiceRepositories { get; set; }
-
 		public LighthouseMonitor LighthouseMonitor { get; private set; }
-		public readonly OSPlatform OS;
+		#endregion
+
+		#region Fields - Events
+		public IWorkQueue<IEvent> EventQueue { get; }
+		IWorkQueue<IEvent> WorkQueue { get; set; }
+		readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
+		readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
+		readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
+		Timer Timer;
+		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 60 * 1000;
 		#endregion
 
 		#region Constructors
-		public LighthouseServer(Action<string> localLogger, IAppConfigurationProvider launchConfiguration = null, IEventContext eventContext = null, string workingDirectory = null)
+		public LighthouseServer(Action<string> localLogger,			
+			IAppConfigurationProvider launchConfiguration = null, string workingDirectory = null,
+			IWorkQueue<IEvent> eventQueue = null, double defaultScheduleTimeIntervalInMilliseconds = DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS)
 		{
-			LogLocally = localLogger;
-			EventContext = eventContext ?? new EventContext();
+			LogLocally = localLogger;			
 			ServiceRepositories = new List<IServiceRepository>();
 			LaunchConfiguration = launchConfiguration ?? new MemoryAppConfigurationProvider(DEFAULT_APP_NAME, this); // if no config is passed in, start with a blank one
 
@@ -74,32 +82,41 @@ namespace Lighthouse.Server
 			if (LaunchConfiguration.LighthouseContainer != this)
 				RegisterComponent(LaunchConfiguration);
 
+			EventQueue = eventQueue ?? new MemoryEventQueue();
+			GlobalClock = new TimeEventProducer(defaultScheduleTimeIntervalInMilliseconds);
+
 			// set the local environment state
 			OS = RuntimeServices.GetOS();
 			WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory;
 
-			Log(LogLevel.Debug, this, "Lighthouse server initializing...");
+			Log(LogLevel.Debug,LogType.Info, this, "Lighthouse server initializing...");
 
 			// load up the providers
 			LoadProviders();
+
+			// load up the local resources						
+			// look for the local service config
+			LoadConfiguration();
 		}
 		#endregion
 
 		#region Server Lifecycle
+		//public void Initialize()
+		//{
+			
+		//}
+
 		public void Start()
 		{
-			Log(LogLevel.Debug,this, "Lighthouse server starting");
+			Log(LogLevel.Debug,LogType.Info,this, "Lighthouse server starting");
 
 			// start the Mointor service. This will make sure everything is working correctly.
 			StartMonitor();
 
-			// load up the local resources						
-			// look for the local service config
-			LoadConfiguration();			
-			LaunchConfiguredServices();
-
 			// the service is now runnable
 			IsRunning = true;
+
+			LaunchConfiguredServices();
 		}
 
 		private void LaunchConfiguredServices()
@@ -109,7 +126,7 @@ namespace Lighthouse.Server
 			// reigster all of the service requests, from the config providers.
 			foreach (var request in LaunchConfiguration.GetServiceLaunchRequests())
 			{
-				Log(LogLevel.Debug, this, $"Registering service request: {request}");
+				Log(LogLevel.Debug,LogType.Info,this, $"Registering service request: {request}");
 				LighthouseMonitor.RegisterServiceRequest(request);
 
 				// launch the service
@@ -133,7 +150,7 @@ namespace Lighthouse.Server
 			// just do some kindness before killing the thread. Most thread terminations should be instantaneous.
 			while(GetRunningServices().Any() && iter < 3)
 			{
-				Log(LogLevel.Debug, this, $"[Stopping] Waiting for services to finish. attempt {iter}");
+				Log(LogLevel.Debug,LogType.Info,this, $"[Stopping] Waiting for services to finish. attempt {iter}");
 				Thread.Sleep(500);
 				iter++;
 			}
@@ -141,7 +158,7 @@ namespace Lighthouse.Server
 			// wait some period of time, for the services to stop by themselves, then just kill the threads out right.
 			CancellationTokenSource.Cancel();
 
-			Log(LogLevel.Debug,this, "[Lighthouse Server Stopped]");
+			Log(LogLevel.Debug,LogType.Info,this, "[Lighthouse Server Stopped]");
 		}
 
 		void AssertIsRunning()
@@ -155,7 +172,7 @@ namespace Lighthouse.Server
 			// the unhandled exceptions from tasks, will be handled by the lighthouse runtime here
 			TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
 
-			Log(LogLevel.Debug, this, "Lighthouse Monitor Started");
+			Log(LogLevel.Debug,LogType.Info,this, "Lighthouse Monitor Started");
 
 			LighthouseMonitor = new LighthouseMonitor();
 		}
@@ -180,27 +197,32 @@ namespace Lighthouse.Server
 				owner?.Exceptions.TryAdd(e);
 			}
 
-			Log(LogLevel.Error, owner?.Service, $"Error occurred running task: {e.Message}");
+			Log(LogLevel.Error,LogType.Error, owner?.Service, $"Error occurred running task: {e.Message}");
+		}
+
+		public void LogError(Exception exception, ILighthouseLogSource source = null)
+		{
+			
 		}
 		#endregion
 
 		#region Service Launching
-		public void Launch(IEnumerable<LighthouseAppLaunchConfig> launchConfigs)
+		public void Launch(IEnumerable<ServiceLaunchRequest> launchRequests)
 		{
-			foreach(var launchConfig in launchConfigs)
+			foreach(var request in launchRequests)
 			{
-				Launch(launchConfig);
+				Launch(request);
 			}
 		}
 
-		public void Launch(LighthouseAppLaunchConfig launchConfig)
+		public void Launch(Type serviceType)
 		{
 			AssertIsRunning();
 
-			Log(LogLevel.Debug, this, $"Attempting to start app: {launchConfig.Name} (ID: {launchConfig.Id}).");
+			Log(LogLevel.Debug,LogType.Info,this, $"Attempting to start app: {serviceType.Name}");
 
-			if (!(Activator.CreateInstance(launchConfig.Type) is ILighthouseService service))
-				throw new ApplicationException($"App launch config doesn't represent Lighthouse app. {launchConfig.Type.AssemblyQualifiedName}");
+			if (!(Activator.CreateInstance(serviceType) is ILighthouseService service))
+				throw new ApplicationException($"App launch config doesn't represent Lighthouse app. {serviceType.AssemblyQualifiedName}");
 
 			Launch(service);
 		}
@@ -209,12 +231,42 @@ namespace Lighthouse.Server
 		{
 			AssertIsRunning();
 
-			Log(LogLevel.Debug, this, $"Attempting to start service: {launchRequest.Name}.");
+			Log(LogLevel.Debug,LogType.Info,this, $"Attempting to start service: {launchRequest.ServiceName}.");
 
-			if (!(Activator.CreateInstance(launchRequest.ServiceType) is ILighthouseService service))
-				throw new ApplicationException($"App launch config doesn't represent Lighthouse app. {launchRequest.ServiceType.AssemblyQualifiedName}");
+			var validationIssues = Validate(launchRequest);
+			if (validationIssues.Any())
+				throw new ApplicationException($"Can't launch service {launchRequest}. Reasons: {string.Join(',',validationIssues)}");
+			
+			// launch based on launch type
+			switch(launchRequest.LaunchType)
+			{
+				case ServiceLaunchRequestType.ByType:
+					Launch(launchRequest.ServiceType);
+					break;
+				case ServiceLaunchRequestType.ByServiceName:
+					Launch(ResolveService(launchRequest.ServiceName));
+					break;
+				case ServiceLaunchRequestType.ByTypeThenName:
+					if (launchRequest.ServiceType != null)
+						Launch(launchRequest.ServiceType);
+					else if (string.IsNullOrEmpty(launchRequest.ServiceName))
+						Launch(ResolveService(launchRequest.ServiceName));
+					else
+						throw new ApplicationException("Can't launch service, with no type nor name.");
+					break;
+				default:
+					throw new ApplicationException($"Unrecognized Launch Type {launchRequest.LaunchType}");					
+			}
+		}
 
-			Launch(service);
+		private ILighthouseService ResolveService(string serviceName)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IEnumerable<ServiceLaunchRequestValidationResult> Validate(ServiceLaunchRequest serviceLaunchRequest)
+		{
+			return Enumerable.Empty<ServiceLaunchRequestValidationResult>();
 		}
 
 		public void Launch(ILighthouseService service)
@@ -244,7 +296,7 @@ namespace Lighthouse.Server
 
 		public void RegisterComponent(ILighthouseComponent component)
 		{
-			Log(LogLevel.Debug, this, $"Added component: {component}.");
+			Log(LogLevel.Debug,LogType.Info,this, $"Added component: {component}.");
 			component.StatusUpdated += Service_StatusUpdated;
 
 			// subclass specific operations
@@ -259,19 +311,16 @@ namespace Lighthouse.Server
 		#region Auditing/Logging
 		private void HandleTaskCompletion(Task task)
 		{
-			Log(LogLevel.Debug, this, $"App completed successfully. {ServiceThreads.FirstOrDefault(lsr => lsr.Task == task)?.Service}");
+			Log(LogLevel.Debug,LogType.Info,this, $"App completed successfully. {ServiceThreads.FirstOrDefault(lsr => lsr.Task == task)?.Service}");
 		}
 
 		private void Service_StatusUpdated(ILighthouseLogSource owner, string status)
 		{
-			Log(LogLevel.Debug, owner, status);
+			Log(LogLevel.Debug, LogType.Info, owner, status);
 		}
 
-
-
-		
-		public void Log(LogLevel level, ILighthouseLogSource sender, string message)
-		{
+		public void Log(LogLevel level, LogType logType, ILighthouseLogSource sender, string message = null, Exception exception = null)
+	{
 			string log = $"[{DateTime.Now.ToString("HH:mm:fff")}] [{sender}]: {message}";
 
 			// ALL messages are logged locally for now
@@ -305,9 +354,9 @@ namespace Lighthouse.Server
 
 		private void LoadProviders()
 		{
-			Log(LogLevel.Debug, this, "Loading server-local resources...");
-			Log(LogLevel.Debug, this, $"WorkingDirectory:{WorkingDirectory}");
-
+			Log(LogLevel.Debug, LogType.Info, this, $"WorkingDirectory: {WorkingDirectory}");
+			Log(LogLevel.Debug,LogType.Info,this, "Loading server-local resources...");
+			
 			// TODO: allow for a discovery of the various providers, using reflection
 
 			// TODO: factor out how the "root" directory is found. This probably needs to be an environment config option
@@ -356,13 +405,134 @@ namespace Lighthouse.Server
 			var consumer = new TimeEventConsumer();
 			consumer.Schedules.Add(schedule);
 			consumer.EventAction = (time) => actionToPerform(time);
-			EventContext.RegisterConsumer<TimeEvent>(consumer);
+			RegisterEventConsumer<TimeEvent>(consumer);
 		}
 
 		public void CreateSchedule<TAction>()
 			where TAction : IScheduledAction
 		{
 			// a schedule embedded in a type? is that practical/valuable? (daily backup?)
+		}
+		#endregion
+
+		#region Events
+		void PollForEvents()
+		{
+			// kick off the timer
+			// TODO: the creation of the handler should be somewhere else probably
+			Timer = new Timer(
+				(context) =>
+				{
+						//var eventContext = context as EventContext;
+						try
+					{
+						var ev = WorkQueue.Dequeue(1).FirstOrDefault();
+						if (ev != null)
+						{
+							HandleEvent(ev);
+						}
+					}
+					catch (Exception e)
+					{
+						LogError(e);
+						throw;
+					}
+				}, this, 100, 1000
+				);
+		}
+
+		public void RegisterProducer(IEventProducer eventProducer)
+		{
+			// add it
+			Producers.Add(eventProducer);
+
+			// and register this as the context with the producer
+			//eventProducer.Init(this);
+
+			Log(LogLevel.Debug, LogType.ProducerRegistered, eventProducer);
+
+			AssertProducerIsReady(eventProducer);
+
+			// after registered, go ahead and start the producer.
+			eventProducer.Start();
+		}
+
+		public void AssertProducerIsReady(IEventProducer producer)
+		{
+			// if the containers aren't equal, this the producer's not ready.	
+			if (producer.LighthouseContainer != this)
+				throw new ApplicationException($"Producer: {producer} is not ready.");
+		}
+
+		public void RegisterConsumer<TEvent>(IEventConsumer eventConsumer)
+			where TEvent : IEvent
+		{
+			Consumers.GetOrAdd(typeof(TEvent), new List<IEventConsumer> { eventConsumer }); //?.Add(eventConsumer);
+
+			eventConsumer.Init(this);
+
+			Log(LogLevel.Debug, LogType.ConsumerRegistered, eventConsumer as ILighthouseLogSource);
+		}
+
+		public void EmitEvent(IEvent ev, ILighthouseLogSource logSource = null)
+		{	
+			// log the event was raised within the context
+			Log(LogLevel.Debug, LogType.EventSent, logSource, ev.ToString());
+
+			// ALL work should be enqueued for later execution. this means, that every event received, 
+			// will be heard by both the local context, and potentially propagated to other contexts
+			EventQueue.Enqueue(ev);
+
+			HandleEvent(ev);
+		}
+
+		//private void AssertIsInited()
+		//{
+		//	if (!IsInited)
+		//		throw new InvalidOperationException("The context is not initialized.");
+		//}
+
+		private void HandleEvent(IEvent ev)
+		{
+			if (ev == null)
+				return;
+
+			// handle tasks in a separate thread
+			_ = Task.Run(() =>
+			{
+				AllReceivedEvents.Add(ev);
+
+				if (Consumers.TryGetValue(ev.GetType(), out var consumers))
+				{
+					foreach (var consumer in consumers)
+						consumer.HandleEvent(ev);
+				}
+			});
+		}
+		public IEnumerable<IEvent> GetAllReceivedEvents(PointInTime since = null)
+		{
+			return AllReceivedEvents.Where(e => since == null || since <= e.Time).ToArray();
+		}
+
+		public void RegisterEventProducer(IEventProducer eventSource)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer) where TEvent : IEvent
+		{
+			throw new NotImplementedException();
+		}
+
+		/// <summary>
+		/// Will perform these actions in a context-attached, meaning they can potentially receive/emit events if the worker threads have subscriber
+		/// </summary>
+		/// <param name="actions"></param>
+		public void Do(IEnumerable<Action<ILighthouseServiceContainer>> actions)
+		{
+			// just run all of the tasks
+			foreach (var action in actions)
+				action(this);
 		}
 		#endregion
 	}

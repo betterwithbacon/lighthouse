@@ -5,14 +5,14 @@ namespace Lighthouse.Core.Events.Logging
 	public class LogEvent : IEvent
 	{
 		public string Message { get; set; }
-
 		public DateTime Time { get; set; }
+		public ILighthouseServiceContainer LighthouseContainer { get; }
+		public ILighthouseComponent Source { get; }
 
-		public IEventContext Context { get; private set; }
-
-		public LogEvent(IEventContext context)
+		public LogEvent(ILighthouseComponent source)
 		{
-			Context = context;
+			Source = source;
+			LighthouseContainer = source.LighthouseContainer;
 		}
 
 		public override string ToString()

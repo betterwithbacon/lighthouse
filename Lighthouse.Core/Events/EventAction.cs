@@ -1,5 +1,4 @@
 ﻿using System;
-using BusDriver.Core.Events.Time;
 
 namespace Lighthouse.Core.Events
 {

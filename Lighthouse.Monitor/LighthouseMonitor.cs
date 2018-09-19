@@ -13,7 +13,7 @@ namespace Lighthouse.Monitor
 
 		public void RegisterServiceRequest(ServiceLaunchRequest request)
 		{
-			throw new NotImplementedException();
+			
 		}
 	}
 }

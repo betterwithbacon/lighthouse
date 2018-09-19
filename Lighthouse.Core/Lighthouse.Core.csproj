@@ -18,7 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Events\" />
+    <Reference Include="WarehouseCore">
+      <HintPath>..\dependencies\WarehouseCore.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

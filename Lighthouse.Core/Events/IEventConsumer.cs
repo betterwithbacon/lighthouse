@@ -1,4 +1,4 @@
-﻿using BusDriver.Core.Logging;
+﻿using Lighthouse.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,13 +6,13 @@ using System.Text;
 
 namespace Lighthouse.Core.Events
 {
-	public interface IEventConsumer : IEventActionTrigger, ILighthouseLogSource
+	public interface IEventConsumer : IEventActionTrigger, ILighthouseLogSource, ILighthouseComponent
 	{
 		IList<Type> Consumes { get; }
 
 		void HandleEvent(IEvent ev);
 
-		void Init(IEventContext context);
+		void Init(ILighthouseServiceContainer container);
 	}
 
 	public static class IEventExtensions
