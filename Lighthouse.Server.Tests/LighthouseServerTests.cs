@@ -119,10 +119,7 @@ namespace Lighthouse.Server.Tests
 		{
 			var reached = false;
 
-			GivenAContainer()
-				.Do(new Action<ILighthouseServiceContainer>[] 
-					{ (c) => { reached = true; } }
-				);
+			GivenAContainer().Do((c) => { reached = true; } );
 
 			reached.Should().BeTrue();
 		}

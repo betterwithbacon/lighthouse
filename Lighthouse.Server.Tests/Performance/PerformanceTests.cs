@@ -50,8 +50,8 @@ namespace Lighthouse.Server.Tests.Performance
 			// create a consumer that will see the evenets and write to the log
 			var logWriteConsumer = new LogEventConsumer();
 
-			container.RegisterConsumer<TimeEvent>(timeEventConsumer);
-			container.RegisterConsumer<LogEvent>(logWriteConsumer);
+			container.RegisterEventConsumer<TimeEvent>(timeEventConsumer);
+			container.RegisterEventConsumer<LogEvent>(logWriteConsumer);
 
 			// run and ensure the listeners are all responding
 			container.Start();
@@ -113,8 +113,8 @@ namespace Lighthouse.Server.Tests.Performance
 			// create a consumer that will see the evenets and write to the log
 			var logWriteConsumer = new LogEventConsumer();
 
-			container.RegisterConsumer<TimeEvent>(timeEventConsumer);
-			container.RegisterConsumer<LogEvent>(logWriteConsumer);
+			container.RegisterEventConsumer<TimeEvent>(timeEventConsumer);
+			container.RegisterEventConsumer<LogEvent>(logWriteConsumer);
 
 			// run and ensure the listeners are all responding
 			container.Start();

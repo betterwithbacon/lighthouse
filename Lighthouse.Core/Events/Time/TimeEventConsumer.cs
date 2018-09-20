@@ -1,4 +1,5 @@
-﻿using Lighthouse.Core.Scheduling;
+﻿using Lighthouse.Core.Logging;
+using Lighthouse.Core.Scheduling;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,41 +7,47 @@ using System.Text;
 
 namespace Lighthouse.Core.Events.Time
 {
-	public class TimeEventConsumer : IEventConsumer
+	public class TimeEventConsumer : BaseEventConsumer
 	{
-		public IList<Type> Consumes => new[] { typeof(TimeEvent) };
-
 		public List<Schedule> Schedules { get; private set; }
 
 		public Action<DateTime> EventAction { get; set;}
 
-		public ILighthouseServiceContainer LighthouseContainer { get; private set; }
-
-		public event StatusUpdatedEventHandler StatusUpdated;
+		public override IList<Type> Consumes { get; } = new[] { typeof(TimeEvent) };
 
 		public TimeEventConsumer()
 		{
 			Schedules = new List<Schedule>();
 		}
 
-		public void HandleEvent(IEvent ev)
+		/// <summary>
+		/// Handles <see cref="TimeEvent"/>s
+		/// </summary>
+		/// <param name="timeEvent"></param>
+		public void HandleEvent(TimeEvent timeEvent)
 		{
-			this.ThrowIfInvalidEvent(ev);
-
-			var timeEvent = ev as TimeEvent;
-
-			//TODO: Context.Log(LogType.EventReceived, timeEvent.ToString(), source: this);
+			LighthouseContainer.Log(LogLevel.Debug, LogType.EventReceived, this, timeEvent.ToString());
 
 			// evaluate all of the schedules to see if one is a hit, if so, then run the action configured for this consumer
 			if (Schedules.Any(s => s.IsMatch(timeEvent.Time)))
 			{
-				EventAction(ev.Time);
+				LighthouseContainer.Do((o) => EventAction(timeEvent.Time));
 			}
 		}
 
-		public void Init(ILighthouseServiceContainer container)
-		{
-			LighthouseContainer = container;
-		}
+		//public override void HandleEvent(IEvent ev)
+		//{
+		//	this.ThrowIfInvalidEvent(ev);
+
+		//	var timeEvent = ev as TimeEvent;
+
+		//	LighthouseContainer.Log(LogLevel.Debug, LogType.EventReceived, this, timeEvent.ToString());
+
+		//	// evaluate all of the schedules to see if one is a hit, if so, then run the action configured for this consumer
+		//	if (Schedules.Any(s => s.IsMatch(timeEvent.Time)))
+		//	{
+		//		EventAction(ev.Time);
+		//	}
+		//}
 	}
 }

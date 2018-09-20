@@ -114,7 +114,7 @@ namespace Lighthouse.Core.Events
 	//			throw new ApplicationException($"Producer: {producer} is not ready.");
 	//	}
 
-	//	public void RegisterConsumer<TEvent>(IEventConsumer eventConsumer)
+	//	public void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer)
 	//		where TEvent : IEvent
 	//	{
 	//		Consumers.GetOrAdd(typeof(TEvent), new List<IEventConsumer> { eventConsumer }); //?.Add(eventConsumer);

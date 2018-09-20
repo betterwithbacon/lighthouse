@@ -13,7 +13,7 @@ namespace Lighthouse.Core.Events
 
 	//	void RegisterProducer(IEventProducer eventSource);
 
-	//	void RegisterConsumer<TEvent>(IEventConsumer eventConsumer)
+	//	void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer)
 	//		where TEvent : IEvent;
 
 	//	void EmitEvent(IEvent ev, ILighthouseLogSource source = null);

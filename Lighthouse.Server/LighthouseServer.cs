@@ -116,6 +116,13 @@ namespace Lighthouse.Server
 			// the service is now runnable
 			IsRunning = true;
 
+			// configure a producer, that will periodically read from an event stream, and emit those events within the context.			
+			RegisterEventProducer(new QueueEventProducer(EventQueue, 1000));
+
+			// TODO: lets just make this be a hook to add queues, to avoid this being overused
+			// the internal queue, is a ideally a way to create durability of this process, NOT a way to provide inter-lighthouse communication
+
+
 			LaunchConfiguredServices();
 		}
 
@@ -320,8 +327,8 @@ namespace Lighthouse.Server
 		}
 
 		public void Log(LogLevel level, LogType logType, ILighthouseLogSource sender, string message = null, Exception exception = null)
-	{
-			string log = $"[{DateTime.Now.ToString("HH:mm:fff")}] [{sender}]: {message}";
+		{
+			string log = $"[{DateTime.Now.ToString("HH:mm:fff")}] [{sender}] [{logType}]: {message}";
 
 			// ALL messages are logged locally for now
 			LogLocally(log);
@@ -441,37 +448,11 @@ namespace Lighthouse.Server
 				);
 		}
 
-		public void RegisterProducer(IEventProducer eventProducer)
-		{
-			// add it
-			Producers.Add(eventProducer);
-
-			// and register this as the context with the producer
-			//eventProducer.Init(this);
-
-			Log(LogLevel.Debug, LogType.ProducerRegistered, eventProducer);
-
-			AssertProducerIsReady(eventProducer);
-
-			// after registered, go ahead and start the producer.
-			eventProducer.Start();
-		}
-
 		public void AssertProducerIsReady(IEventProducer producer)
 		{
 			// if the containers aren't equal, this the producer's not ready.	
 			if (producer.LighthouseContainer != this)
 				throw new ApplicationException($"Producer: {producer} is not ready.");
-		}
-
-		public void RegisterConsumer<TEvent>(IEventConsumer eventConsumer)
-			where TEvent : IEvent
-		{
-			Consumers.GetOrAdd(typeof(TEvent), new List<IEventConsumer> { eventConsumer }); //?.Add(eventConsumer);
-
-			eventConsumer.Init(this);
-
-			Log(LogLevel.Debug, LogType.ConsumerRegistered, eventConsumer as ILighthouseLogSource);
 		}
 
 		public void EmitEvent(IEvent ev, ILighthouseLogSource logSource = null)
@@ -514,25 +495,37 @@ namespace Lighthouse.Server
 			return AllReceivedEvents.Where(e => since == null || since <= e.Time).ToArray();
 		}
 
-		public void RegisterEventProducer(IEventProducer eventSource)
+		public void RegisterEventProducer(IEventProducer eventProducer)
 		{
-			throw new NotImplementedException();
+			// add it
+			Producers.Add(eventProducer);
+
+			// and register this as the context with the producer
+			eventProducer.Init(this);
+
+			Log(LogLevel.Debug, LogType.ProducerRegistered, eventProducer);
+			
+			AssertProducerIsReady(eventProducer);
+
+			// after registered, go ahead and start the producer.
+			eventProducer.Start();
 		}
 
-		public void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer) where TEvent : IEvent
+		public void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer)
+			where TEvent : IEvent
 		{
-			throw new NotImplementedException();
+			Consumers.GetOrAdd(typeof(TEvent), new List<IEventConsumer> { eventConsumer });
+
+			eventConsumer.Init(this);
+
+			Log(LogLevel.Debug, LogType.ConsumerRegistered, eventConsumer);
 		}
 
-		/// <summary>
-		/// Will perform these actions in a context-attached, meaning they can potentially receive/emit events if the worker threads have subscriber
-		/// </summary>
-		/// <param name="actions"></param>
-		public void Do(IEnumerable<Action<ILighthouseServiceContainer>> actions)
+		public void Do(Action<ILighthouseServiceContainer> action)
 		{
-			// just run all of the tasks
-			foreach (var action in actions)
-				action(this);
+			// just run all of the tasks			
+			// TOD: do all of the magic, that this method is supposed to do
+			action(this);
 		}
 		#endregion
 	}

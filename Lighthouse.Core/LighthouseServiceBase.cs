@@ -39,9 +39,7 @@ namespace Lighthouse.Core
 		{
 			// the context, will do the work for us
 			// this is useful, because if some of the things you want to do will be emitting Events, then they'll be picked up
-			LighthouseContainer.Do(StartupActions);
-
-			//Parallel.ForEach(StartupActions, new ParallelOptions{ (action) => action(), )
+			StartupActions.ForEach(LighthouseContainer.Do);			
 		}
 
 		protected virtual void OnStart()

@@ -67,10 +67,11 @@ namespace Lighthouse.Core
 		string WorkingDirectory { get; }
 
 		/// <summary>
-		/// Will perform these actions in a context-attached, meaning they can potentially receive/emit events if the worker threads have subscriber
+		/// Will perform the action context-attached non-blocking error-resistant environment, meaning they can potentially receive/emit events if the worker threads have subscriber
+		/// The work may be queued up, so items performed in parallel should simply be added sequentially.
 		/// </summary>
 		/// <param name="actions"></param>
-		void Do(IEnumerable<Action<ILighthouseServiceContainer>> actions);
+		void Do(Action<ILighthouseServiceContainer> action);
 
 		void AddScheduledAction(Schedule schedule, Action<DateTime> taskToPerform);
 

@@ -19,4 +19,10 @@
     <ProjectReference Include="..\Lighthouse.Monitor\Lighthouse.Monitor.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="WarehouseCore">
+      <HintPath>..\dependencies\WarehouseCore.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
