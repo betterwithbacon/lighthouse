@@ -1,4 +1,5 @@
 ﻿using Lighthouse.Core.Logging;
+using Lighthouse.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -24,17 +25,13 @@ namespace Lighthouse.Core.Events
 		private readonly IReadOnlyDictionary<Type, MethodInfo> MethodCache;
 
 		public BaseEventConsumer()
-		{			
+		{
 			MethodCache = new ReadOnlyDictionary<Type, MethodInfo>(
-				// Get all the methods named HandleEvent, then fijnd the ones with just ONE argument, and then separate them by type
-				// TODO: this doesn't handle 
-				GetType()
-				.GetMethods()
-				.Where(mi =>
-					mi.Name == "HandleEvent" &&
-					mi.GetParameters().Count() == 1)
-				.ToDictionary(mi => mi.GetParameters().Single().ParameterType, mx => mx)
+				ReflectionUtil.GetMethodsBySingleParameterType(this.GetType(), "HandleEvent")
 			);
+
+			// Get all the methods named HandleEvent, then fijnd the ones with just ONE argument, and then separate them by type
+			// TODO: this doesn't handle 
 		}
 
 		public bool Equals(IStorageScope x, IStorageScope y)
