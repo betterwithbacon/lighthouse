@@ -66,6 +66,9 @@ namespace Lighthouse.Core.Events
 		/// </summary>
 		protected virtual void OnInit() { }
 
-		//protected virtual void HandleAnyEvent(IEvent ev) { }
+		public override string ToString()
+		{
+			return Identifier;
+		}
 	}
 }

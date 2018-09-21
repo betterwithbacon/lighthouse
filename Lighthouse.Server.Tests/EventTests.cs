@@ -76,7 +76,7 @@ namespace Lighthouse.Server.Tests
 			container.Start();
 
 			container.EmitEvent(new TimeEvent(container, time), null);
-			Thread.Sleep(500); // just wait a bit for the events to be handled
+			Thread.Sleep(50); // just wait a bit for the events to be handled
 			container.AssertEventExists<TimeEvent>();
 			container.AssertEventExists<LogEvent>();
 

@@ -21,7 +21,7 @@ namespace Lighthouse.Core.Events.Logging
 
 		public override IList<Type> Consumes => new[] { typeof(LogEvent) };
 
-		public void HandleEvent(IEvent ev)
+		public void HandleEvent(LogEvent ev)
 		{
 			this.ThrowIfInvalidEvent(ev);
 			
@@ -37,11 +37,6 @@ namespace Lighthouse.Core.Events.Logging
 		{				
 			Warehouse = new Warehouse();			
 			Warehouse.Store(new WarehouseKey(LOG_NAME, this), new[] { $"[{LighthouseContainer.GetTime()}] Log Starting" }, LoadingDockPolicies);
-		}
-
-		public override string ToString()
-		{
-			return "LogEventWriter";
 		}
 	}
 }
