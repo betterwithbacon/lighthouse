@@ -6,6 +6,7 @@ using Lighthouse.Core.Configuration.Providers;
 using Lighthouse.Core.Configuration.Providers.Local;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Logging;
+using Lighthouse.Core.Utils;
 using NSubstitute;
 using System;
 using System.Collections.Concurrent;
@@ -168,7 +169,7 @@ namespace Lighthouse.Server.Tests
 			public TimerApp() // we don't have ways to bootstrap apps with launcher, to the constructor arguments
 			{
 				Timer = new System.Timers.Timer(10);
-				Timer.Elapsed += (o, e) => LighthouseContainer.Log(LogLevel.Info,LogType.Info, this, "event" + DateTime.Now.ToString("ss:fff"));
+				Timer.Elapsed += (o, e) => LighthouseContainer.Log(LogLevel.Info, LogType.Info, this, "event" + DateTime.Now.ToLighthouseLogString());
 			}
 
 			protected override void OnStart()

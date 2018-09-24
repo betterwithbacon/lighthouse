@@ -7,8 +7,8 @@ namespace Lighthouse.Core
 	{
 		//TODO: do we still need this? All components will have access to the container, and can call log directly from there, and pass more information
 		// it would seem like testing would require the container to exist anyhow, so using events seems like a double implementation
-		[Obsolete("This will likely go away soon, as it's redundant",false)]
-		event StatusUpdatedEventHandler StatusUpdated;
+		//[Obsolete("This will likely go away soon, as it's redundant",false)]
+		//event StatusUpdatedEventHandler StatusUpdated;
 		
 		/// <summary>
 		/// This is the runtime environment that hosts this component. It provides all of the context for the component.

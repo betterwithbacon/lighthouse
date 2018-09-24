@@ -43,7 +43,7 @@ namespace Lighthouse.Server.Tests.Performance
 			);
 
 			// create a schedule that will only fire the Action when the time matches the event time
-			timeEventConsumer.Schedules.Add(new Schedule { Frequency = ScheduleFrequency.OncePerDay, TimeToRun = time });
+			timeEventConsumer.AddSchedule(new Schedule { Frequency = ScheduleFrequency.Daily, TimeToRun = time });
 
 			var totalEventsSent = 10_000;
 
@@ -106,7 +106,7 @@ namespace Lighthouse.Server.Tests.Performance
 			);
 
 			// create a schedule that will only fire the Action when the time matches the event time
-			timeEventConsumer.Schedules.Add(new Schedule { Frequency = ScheduleFrequency.OncePerDay, TimeToRun = time });
+			timeEventConsumer.AddSchedule(new Schedule { Frequency = ScheduleFrequency.Daily, TimeToRun = time });
 
 			var totalEventsSent = 100;
 

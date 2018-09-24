@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lighthouse.Core.Utils;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -11,31 +12,49 @@ namespace Lighthouse.Core.Scheduling
 	{
 		public ScheduleFrequency Frequency { get; set; }
 		public DateTime TimeToRun { get; set; }		
-		public decimal FrequencyUnit { get; set; }
+		public double FrequencyUnit { get; set; }
 		
-		public bool IsMatch(DateTime time)
+		public DateTime GetNextRunTime(DateTime? lastRun, DateTime now)
 		{
-			switch(Frequency)
+			// never run again
+			var nextRunTime = DateTime.MaxValue;
+
+			switch (Frequency)
 			{
 				case ScheduleFrequency.Once:
-					return TimeToRun.Date == time.Date && TimeToRun.Hour == time.Hour && TimeToRun.Minute == time.Minute;
-				case ScheduleFrequency.OncePerDay: // the hour/minute per day to run
-					return TimeToRun.Hour == time.Hour && TimeToRun.Minute == time.Minute;
-				case ScheduleFrequency.OncePerHour: // the minute per hour to run
-					return FrequencyUnit == time.Minute;
-				case ScheduleFrequency.OnceEveryUnitsMinute: // the second per minute to run
-					return FrequencyUnit == time.Second;
-				default:
-					return false; // what schedule frequency is this?					
+					nextRunTime = TimeToRun;
+					break;
+				case ScheduleFrequency.Daily: // every _ days
+					nextRunTime = lastRun?.AddDays(FrequencyUnit) ?? now; // if it's never run, now's the time
+					break;
+				case ScheduleFrequency.Hourly: // every _ hours
+					nextRunTime = lastRun?.AddHours(FrequencyUnit) ?? now; // if it's never run, now's the time
+					break;
+				case ScheduleFrequency.Minutely: 
+					nextRunTime = lastRun?.AddMinutes(FrequencyUnit) ?? now;
+					break;
+				case ScheduleFrequency.Secondly: // every _ seconds
+					nextRunTime = lastRun?.AddSeconds(FrequencyUnit) ?? now;
+					break;
 			}
+
+			return nextRunTime.RemoveSeconds();
+		}
+
+		public bool IsMatch(DateTime? lastRun, DateTime now)
+		{	
+			// if the next time it should run is now or in the past, run right now
+			// TODO: do some work to create a window (remove seconds? anything else?)
+			return GetNextRunTime(lastRun, now) <= now.RemoveSeconds();
 		}
 	}
 
 	public enum ScheduleFrequency
 	{
 		Once,
-		OncePerDay,		
-		OncePerHour,
-		OnceEveryUnitsMinute		
+		Daily,		
+		Hourly,
+		Minutely,
+		Secondly			
 	}
 }

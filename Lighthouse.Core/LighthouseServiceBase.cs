@@ -86,31 +86,3 @@ namespace Lighthouse.Core
 		}
 	}
 }
-
-
-//public Guid Id { get; private set; }
-
-//public LighthouseServiceRunState RunState { get; set; }
-
-//public event StatusUpdatedEventHandler StatusUpdated;
-
-//private ILighthouseServiceContext Context { get; set; }
-
-//public void Initialize(ILighthouseServiceContext context, Guid id)
-//{
-//	RunState = LighthouseServiceRunState.PendingStart;
-//	Context = context;
-//	Id = id;
-//}
-
-//public void Start()
-//{
-//	RunState = LighthouseServiceRunState.Running;
-//	System.Timers.Timer timer = new System.Timers.Timer(10);
-//	timer.Elapsed += (o, e) => Context.Log(Core.Logging.LogLevel.Info, "event" + DateTime.Now.ToString("ss:fff"));
-//}
-
-//public void Stop()
-//{
-//	throw new NotImplementedException();
-//}

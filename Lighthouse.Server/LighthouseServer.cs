@@ -8,6 +8,7 @@ using Lighthouse.Core.Events.Time;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using Lighthouse.Core.Scheduling;
+using Lighthouse.Core.Utils;
 using Lighthouse.Monitor;
 using Lighthouse.Server.Utils;
 using System;
@@ -70,8 +71,11 @@ namespace Lighthouse.Server
 
 		#region Constructors
 		public LighthouseServer(Action<string> localLogger,			
-			IAppConfigurationProvider launchConfiguration = null, string workingDirectory = null,
-			IWorkQueue<IEvent> eventQueue = null, double defaultScheduleTimeIntervalInMilliseconds = DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS)
+			IAppConfigurationProvider launchConfiguration = null, 
+			string workingDirectory = null,
+			IWorkQueue<IEvent> eventQueue = null, 
+			double defaultScheduleTimeIntervalInMilliseconds = DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS,
+			TimeEventProducer globalClock = null)
 		{
 			LogLocally = localLogger;			
 			ServiceRepositories = new List<IServiceRepository>();
@@ -83,8 +87,8 @@ namespace Lighthouse.Server
 				RegisterComponent(LaunchConfiguration);
 
 			EventQueue = eventQueue ?? new MemoryEventQueue();
-			GlobalClock = new TimeEventProducer(defaultScheduleTimeIntervalInMilliseconds);
-
+			GlobalClock = globalClock ?? new TimeEventProducer(defaultScheduleTimeIntervalInMilliseconds);
+			
 			// set the local environment state
 			OS = RuntimeServices.GetOS();
 			WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory;
@@ -100,12 +104,7 @@ namespace Lighthouse.Server
 		}
 		#endregion
 
-		#region Server Lifecycle
-		//public void Initialize()
-		//{
-			
-		//}
-
+		#region Server Lifecycle		
 		public void Start()
 		{
 			Log(LogLevel.Debug,LogType.Info,this, "Lighthouse server starting");
@@ -118,10 +117,10 @@ namespace Lighthouse.Server
 
 			// configure a producer, that will periodically read from an event stream, and emit those events within the context.			
 			RegisterEventProducer(new QueueEventProducer(EventQueue, 1000));
+			RegisterEventProducer(GlobalClock);
 
 			// TODO: lets just make this be a hook to add queues, to avoid this being overused
 			// the internal queue, is a ideally a way to create durability of this process, NOT a way to provide inter-lighthouse communication
-
 
 			LaunchConfiguredServices();
 		}
@@ -147,7 +146,7 @@ namespace Lighthouse.Server
 			LaunchConfiguration = GetResourceProviders<IAppConfigurationProvider>().FirstOrDefault();
 		}
 
-		public void Stop()
+		public async Task Stop()
 		{
 			// call stop on all of the services
 			ServiceThreads.ToList().ForEach(serviceRun => { serviceRun.Service.Stop(); });
@@ -158,7 +157,7 @@ namespace Lighthouse.Server
 			while(GetRunningServices().Any() && iter < 3)
 			{
 				Log(LogLevel.Debug,LogType.Info,this, $"[Stopping] Waiting for services to finish. attempt {iter}");
-				Thread.Sleep(500);
+				await Task.Delay(500);
 				iter++;
 			}
 
@@ -304,7 +303,7 @@ namespace Lighthouse.Server
 		public void RegisterComponent(ILighthouseComponent component)
 		{
 			Log(LogLevel.Debug,LogType.Info,this, $"Added component: {component}.");
-			component.StatusUpdated += Service_StatusUpdated;
+			//component.StatusUpdated += Service_StatusUpdated;
 
 			// subclass specific operations
 			if (component is IResourceProvider rs)
@@ -328,7 +327,7 @@ namespace Lighthouse.Server
 
 		public void Log(LogLevel level, LogType logType, ILighthouseLogSource sender, string message = null, Exception exception = null)
 		{
-			string log = $"[{DateTime.Now.ToString("HH:mm:fff")}] [{sender}] [{logType}]: {message}";
+			string log = $"[{DateTime.Now.ToLighthouseLogString()}] [{sender}] [{logType}]: {message}";
 
 			// ALL messages are logged locally for now
 			LogLocally(log);
@@ -410,7 +409,7 @@ namespace Lighthouse.Server
 		public void AddScheduledAction(Schedule schedule, Action<DateTime> actionToPerform)
 		{
 			var consumer = new TimeEventConsumer();
-			consumer.Schedules.Add(schedule);
+			consumer.AddSchedule(schedule);
 			consumer.EventAction = (time) => actionToPerform(time);
 			RegisterEventConsumer<TimeEvent>(consumer);
 		}
@@ -462,16 +461,10 @@ namespace Lighthouse.Server
 
 			// ALL work should be enqueued for later execution. this means, that every event received, 
 			// will be heard by both the local context, and potentially propagated to other contexts
-			EventQueue.Enqueue(ev);
+			//EventQueue.Enqueue(ev);
 
 			HandleEvent(ev);
 		}
-
-		//private void AssertIsInited()
-		//{
-		//	if (!IsInited)
-		//		throw new InvalidOperationException("The context is not initialized.");
-		//}
 
 		private void HandleEvent(IEvent ev)
 		{
@@ -490,6 +483,7 @@ namespace Lighthouse.Server
 				}
 			});
 		}
+
 		public IEnumerable<IEvent> GetAllReceivedEvents(PointInTime since = null)
 		{
 			return AllReceivedEvents.Where(e => since == null || since <= e.Time).ToArray();
@@ -526,6 +520,11 @@ namespace Lighthouse.Server
 			// just run all of the tasks			
 			// TOD: do all of the magic, that this method is supposed to do
 			action(this);
+		}
+
+		public IEnumerable<T> FindComponent<T>() where T : ILighthouseComponent
+		{
+			return null;
 		}
 		#endregion
 	}

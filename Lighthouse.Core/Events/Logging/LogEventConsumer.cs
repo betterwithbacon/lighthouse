@@ -17,8 +17,7 @@ namespace Lighthouse.Core.Events.Logging
 		private IList<LoadingDockPolicy> LoadingDockPolicies => new[] { LoadingDockPolicy.Ephemeral };		
 		
 		public List<string> AllLogRecords => Warehouse.Retrieve<string>( new WarehouseKey(LOG_NAME, this)).ToList();
-
-
+		
 		public override IList<Type> Consumes => new[] { typeof(LogEvent) };
 
 		public void HandleEvent(LogEvent ev)

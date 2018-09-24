@@ -25,7 +25,8 @@ namespace Lighthouse.Server.Tests
 			this.Output = output;
 		}
 
-		protected LighthouseServer GivenAContainer(IWorkQueue<IEvent> workQueue = null,
+		protected LighthouseServer GivenAContainer(
+			IWorkQueue<IEvent> workQueue = null,
 			double defaultScheduleTimeIntervalInMilliseconds = LighthouseServer.DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS,
 			IAppConfigurationProvider launchConfiguration = null, 
 			string workingDirectory = null,
@@ -38,9 +39,9 @@ namespace Lighthouse.Server.Tests
 					Output.WriteLine(m);
 				},
 				launchConfiguration: launchConfiguration, 
-				workingDirectory: workingDirectory,				
-				defaultScheduleTimeIntervalInMilliseconds: defaultScheduleTimeIntervalInMilliseconds,
-				eventQueue: workQueue
+				workingDirectory: workingDirectory,								
+				eventQueue: workQueue,
+				defaultScheduleTimeIntervalInMilliseconds: defaultScheduleTimeIntervalInMilliseconds
 			);
 			return Container;
 		}

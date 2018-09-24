@@ -10,8 +10,6 @@ namespace Lighthouse.Core.Events
 
 		public ILighthouseServiceContainer LighthouseContainer { get; protected set; }
 
-		public event StatusUpdatedEventHandler StatusUpdated;
-
 		public void Init(ILighthouseServiceContainer container)
 		{
 			LighthouseContainer = container;

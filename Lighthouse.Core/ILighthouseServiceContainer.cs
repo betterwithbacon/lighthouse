@@ -17,6 +17,8 @@ namespace Lighthouse.Core
 		/// <param name="message"></param>
 		void Log(LogLevel level, LogType logType,  ILighthouseLogSource sender, string message = null, Exception exception = null);
 
+		IEnumerable<T> FindComponent<T>() where T : ILighthouseComponent;
+
 		/// <summary>
 		/// Finds lighthouse services that are hosted within this container.
 		/// </summary>

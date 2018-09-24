@@ -1,4 +1,5 @@
 ﻿
+using Lighthouse.Core.Utils;
 using System;
 
 namespace Lighthouse.Core.Events.Time
@@ -17,7 +18,7 @@ namespace Lighthouse.Core.Events.Time
 
 		public override string ToString()
 		{
-			return $"Time: {Time.ToString("hh:mm:ss:fff")}";
+			return $"Time: {Time.ToLighthouseLogString()}";
 		}
 	}
 }
