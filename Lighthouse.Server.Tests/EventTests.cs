@@ -56,7 +56,7 @@ namespace Lighthouse.Server.Tests
 			// create a consumer that when it receives a time event, that matches it's schedule, it will trigger a log write event
 			var timeEventConsumer = new TimeEventConsumer();
 			timeEventConsumer.EventAction = (triggerTime) => container.EmitEvent(
-				new LogEvent(timeEventConsumer)
+				new LogEvent(container, timeEventConsumer)
 				{
 					Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}",
 					Time = container.GetTime()
@@ -97,7 +97,7 @@ namespace Lighthouse.Server.Tests
 			// create a consumer that when it receives a time event, that matches it's schedule, it will trigger a log write event
 			var timeEventConsumer = new TimeEventConsumer();
 			timeEventConsumer.EventAction = (triggerTime) => container.EmitEvent(
-				new LogEvent(timeEventConsumer)
+				new LogEvent(container, timeEventConsumer)
 				{
 					Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}",
 					Time = container.GetTime()

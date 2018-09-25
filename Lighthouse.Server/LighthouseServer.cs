@@ -3,6 +3,7 @@ using Lighthouse.Core.Configuration.Providers;
 using Lighthouse.Core.Configuration.Providers.Local;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Events;
+using Lighthouse.Core.Events.Logging;
 using Lighthouse.Core.Events.Queueing;
 using Lighthouse.Core.Events.Time;
 using Lighthouse.Core.IO;
@@ -317,26 +318,28 @@ namespace Lighthouse.Server
 		#region Auditing/Logging
 		private void HandleTaskCompletion(Task task)
 		{
-			Log(LogLevel.Debug,LogType.Info,this, $"App completed successfully. {ServiceThreads.FirstOrDefault(lsr => lsr.Task == task)?.Service}");
+			Log(LogLevel.Debug,LogType.Info,this, $"App completed successfully. {ServiceThreads.FirstOrDefault(lsr => lsr.Task.Id == task.Id)?.Service}", emitEvent:false);
 		}
 
 		private void Service_StatusUpdated(ILighthouseLogSource owner, string status)
 		{
-			Log(LogLevel.Debug, LogType.Info, owner, status);
+			Log(LogLevel.Debug, LogType.Info, owner, status, emitEvent: false);
 		}
 
-		public void Log(LogLevel level, LogType logType, ILighthouseLogSource sender, string message = null, Exception exception = null)
+		public void Log(LogLevel level, LogType logType, ILighthouseLogSource sender, string message = null, Exception exception = null, bool emitEvent = true)
 		{
 			string log = $"[{DateTime.Now.ToLighthouseLogString()}] [{sender}] [{logType}]: {message}";
 
-			// ALL messages are logged locally for now
+			// ALL messages are logged locally for now			
 			LogLocally(log);
 
 			// right now these status updates are anonymous. But this is is for specific messages in the serer, not not services running within the server
 			StatusUpdated?.Invoke(null, message);
 
-			// emit the messages in the event context as well, so it can be reacted to there as well
-			//EventContext?.Log(LogType.Info, message, sender is ILighthouseLogSource ls ? ls : this);
+			// emit a log event so that other places can view it	
+			// but don't emit debug logs
+			if(emitEvent)
+				EmitEvent(new LogEvent(this, sender as ILighthouseComponent) { Message = message ?? $"{level}:{logType} {sender} {exception}"}, sender);
 		}
 		#endregion
 
@@ -426,11 +429,9 @@ namespace Lighthouse.Server
 		{
 			// kick off the timer
 			// TODO: the creation of the handler should be somewhere else probably
-			Timer = new Timer(
-				(context) =>
-				{
-						//var eventContext = context as EventContext;
-						try
+			Timer = 
+				new Timer((context) => {					
+					try
 					{
 						var ev = WorkQueue.Dequeue(1).FirstOrDefault();
 						if (ev != null)
@@ -457,7 +458,10 @@ namespace Lighthouse.Server
 		public void EmitEvent(IEvent ev, ILighthouseLogSource logSource = null)
 		{	
 			// log the event was raised within the context
-			Log(LogLevel.Debug, LogType.EventSent, logSource, ev.ToString());
+			// but don't log events emitted by the source itself
+			// subscribers can listen, but no need to alert others
+			if(logSource != this)
+				Log(LogLevel.Debug, LogType.EventSent, logSource, ev.ToString(), emitEvent:false);
 
 			// ALL work should be enqueued for later execution. this means, that every event received, 
 			// will be heard by both the local context, and potentially propagated to other contexts
@@ -471,9 +475,8 @@ namespace Lighthouse.Server
 			if (ev == null)
 				return;
 
-			// handle tasks in a separate thread
-			_ = Task.Run(() =>
-			{
+			// handle tasks in a separate Task
+			Do((container) => {
 				AllReceivedEvents.Add(ev);
 
 				if (Consumers.TryGetValue(ev.GetType(), out var consumers))
@@ -519,7 +522,20 @@ namespace Lighthouse.Server
 		{
 			// just run all of the tasks			
 			// TOD: do all of the magic, that this method is supposed to do
-			action(this);
+			Task.Run(() => action(this), CancellationTokenSource.Token).ContinueWith(
+				(task) =>
+				{
+					// handle errors
+					if (task.IsFaulted)
+					{
+						HandleTaskError(task.Exception.InnerException);
+					}
+					// no need to handle successful "do" calls, as they're expected to succeed, and also won't have any thread metadata
+					//else
+					//{
+					//	HandleTaskCompletion(task);
+					//}
+				}, CancellationTokenSource.Token);
 		}
 
 		public IEnumerable<T> FindComponent<T>() where T : ILighthouseComponent

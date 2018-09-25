@@ -15,7 +15,7 @@ namespace Lighthouse.Core
 		/// <param name="level"></param>
 		/// <param name="sender"></param>
 		/// <param name="message"></param>
-		void Log(LogLevel level, LogType logType,  ILighthouseLogSource sender, string message = null, Exception exception = null);
+		void Log(LogLevel level, LogType logType,  ILighthouseLogSource sender, string message = null, Exception exception = null, bool emitEvent = true);
 
 		IEnumerable<T> FindComponent<T>() where T : ILighthouseComponent;
 

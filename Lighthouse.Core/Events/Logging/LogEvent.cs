@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lighthouse.Core.Utils;
+using System;
 
 namespace Lighthouse.Core.Events.Logging
 {
@@ -9,15 +10,15 @@ namespace Lighthouse.Core.Events.Logging
 		public ILighthouseServiceContainer LighthouseContainer { get; }
 		public ILighthouseComponent Source { get; }
 
-		public LogEvent(ILighthouseComponent source)
+		public LogEvent(ILighthouseServiceContainer container, ILighthouseComponent source)
 		{
 			Source = source;
-			LighthouseContainer = source.LighthouseContainer;
+			LighthouseContainer = container;
 		}
 
 		public override string ToString()
 		{
-			return $"LogEvent: {Message.Substring(0,25)}";
+			return $"LogEvent: {Message?.ToLogSummary(50) ?? "<no message>"}";
 		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Lighthouse.Core;
+using Lighthouse.Core.Apps;
 using Lighthouse.Core.Configuration.Providers;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Events;
@@ -51,7 +52,10 @@ namespace Lighthouse.Server.Tests
 		[Trait("Tag", "Logging")]
 		[Trait("Category", "Unit")]
 		public void Log_ShouldLog()
-		{			
+		{
+			var testGuid = Guid.NewGuid().ToString();
+			GivenAContainer().Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, Container, testGuid);
+			ContainerMessages.Should().Contain((rec) => rec.Contains(testGuid));
 		}
 		#endregion
 
@@ -61,6 +65,11 @@ namespace Lighthouse.Server.Tests
 		[Trait("Category", "Unit")]
 		public void FindServices_ShouldFindService()
 		{
+			var container = GivenAContainer();
+			container.Start();
+			container.Launch(new TestApp());
+			var foundTestApp = container.FindServices<TestApp>();
+			foundTestApp.Should().NotBeEmpty();
 		}
 
 		[Fact]
