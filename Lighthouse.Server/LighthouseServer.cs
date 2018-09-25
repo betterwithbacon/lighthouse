@@ -70,7 +70,7 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Constructors
-		public LighthouseServer(Action<string> localLogger,			
+		public LighthouseServer(Action<string> localLogger = null,			
 			IAppConfigurationProvider launchConfiguration = null, 
 			string workingDirectory = null,
 			IWorkQueue<IEvent> eventQueue = null, 

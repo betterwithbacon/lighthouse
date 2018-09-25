@@ -21,7 +21,7 @@ namespace Lighthouse.Core.IO
 						
 			RootDirectory = rootDirectory;			
 			LighthouseContainer = container;
-			StatusUpdated?.Invoke(this, $"RootDirectory is {RootDirectory}");
+			LighthouseContainer.Log(Logging.LogLevel.Info, Logging.LogType.Info, this, $"RootDirectory is {RootDirectory}");
 		}
 
 		public event StatusUpdatedEventHandler StatusUpdated;
@@ -29,14 +29,14 @@ namespace Lighthouse.Core.IO
 		public async Task<byte[]> ReadFromFileSystem(string fileName)
 		{
 			var fullWritePath = GetFilePath(fileName);
-			StatusUpdated(this, $"[READ] Requested for {fullWritePath}.");
+			LighthouseContainer.Log(Logging.LogLevel.Debug, Logging.LogType.Info, this, $"[READ] Requested for {fullWritePath}.");
 			return await File.ReadAllBytesAsync(fullWritePath);
 		}
 
 		public void WriteToFileSystem(string fileName, byte[] data)
 		{
 			var fullWritePath = GetFilePath(fileName);
-			StatusUpdated(this, $"[WRITE] Requested for {fileName}. Writing to {fullWritePath}");
+			LighthouseContainer.Log(Logging.LogLevel.Debug, Logging.LogType.Info, this, $"[WRITE] Requested for {fileName}. Writing to {fullWritePath}");
 
 			EnsurePath(fullWritePath);
 			File.WriteAllBytes(fullWritePath, data);
@@ -50,7 +50,7 @@ namespace Lighthouse.Core.IO
 		public bool FileExists(string fileName)
 		{
 			var fullWritePath = GetFilePath(fileName);
-			StatusUpdated(this, $"[FILE_EXISTS] Requested for {fullWritePath}.");
+			LighthouseContainer.Log(Logging.LogLevel.Debug, Logging.LogType.Info, this, $"[FILE_EXISTS] Requested for {fullWritePath}.");			
 			return File.Exists(fullWritePath);
 		}
 
