@@ -13,7 +13,7 @@ namespace Lighthouse.Core.Events.Logging
 		private Warehouse Warehouse { get; set; }
 
 		// this is a bit of a hack, to automatically rollover logs daily. 
-		private string LOG_NAME => $"{LighthouseContainer.GetTime().ToString("MMddyyyy")}_LOG";
+		private string LOG_NAME => $"{LighthouseContainer.GetNow().ToString("MMddyyyy")}_LOG";
 		private IList<LoadingDockPolicy> LoadingDockPolicies => new[] { LoadingDockPolicy.Ephemeral };		
 		
 		public List<string> AllLogRecords => Warehouse.Retrieve<string>( new WarehouseKey(LOG_NAME, this)).ToList();
@@ -35,7 +35,7 @@ namespace Lighthouse.Core.Events.Logging
 		protected override void OnInit()
 		{				
 			Warehouse = new Warehouse();			
-			Warehouse.Store(new WarehouseKey(LOG_NAME, this), new[] { $"[{LighthouseContainer.GetTime()}] Log Starting" }, LoadingDockPolicies);
+			Warehouse.Store(new WarehouseKey(LOG_NAME, this), new[] { $"[{LighthouseContainer.GetNow()}] Log Starting" }, LoadingDockPolicies);
 		}
 	}
 }

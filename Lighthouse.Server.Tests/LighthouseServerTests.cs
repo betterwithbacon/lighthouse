@@ -5,11 +5,13 @@ using Lighthouse.Core.Configuration.Providers;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Events;
 using Lighthouse.Core.Events.Queueing;
+using Lighthouse.Core.Hosting;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -19,22 +21,36 @@ namespace Lighthouse.Server.Tests
     {
 		protected readonly ITestOutputHelper Output;
 		protected readonly ConcurrentBag<string> ContainerMessages = new ConcurrentBag<string>();
-		protected LighthouseServer Container { get; private set; }
+		private LighthouseServer container;
+		protected LighthouseServer Container
+		{
+			get
+			{
+				if (container == null)
+					GivenAContainer();
+
+				return container;
+			}
+			private set
+			{
+				container = value;
+			}
+		}
 
 		public LighthouseServerTests(ITestOutputHelper output)
 		{
 			this.Output = output;
 		}
 
-		protected LighthouseServer GivenAContainer(
+		protected void GivenAContainer(
 			IWorkQueue<IEvent> workQueue = null,
 			double defaultScheduleTimeIntervalInMilliseconds = LighthouseServer.DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS,
 			IAppConfigurationProvider launchConfiguration = null, 
 			string workingDirectory = null,
 			IWorkQueue<IEvent> eventQueue = null)
 		{
-			Container = new LighthouseServer(
-				(m) =>
+			container = new LighthouseServer(
+				localLogger: (m) =>
 				{
 					ContainerMessages.Add(m);
 					Output.WriteLine(m);
@@ -44,7 +60,6 @@ namespace Lighthouse.Server.Tests
 				eventQueue: workQueue,
 				defaultScheduleTimeIntervalInMilliseconds: defaultScheduleTimeIntervalInMilliseconds
 			);
-			return Container;
 		}
 
 		#region Logging
@@ -54,7 +69,7 @@ namespace Lighthouse.Server.Tests
 		public void Log_ShouldLog()
 		{
 			var testGuid = Guid.NewGuid().ToString();
-			GivenAContainer().Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, Container, testGuid);
+			Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, Container, testGuid);
 			ContainerMessages.Should().Contain((rec) => rec.Contains(testGuid));
 		}
 		#endregion
@@ -64,28 +79,43 @@ namespace Lighthouse.Server.Tests
 		[Trait("Tag", "Logging")]
 		[Trait("Category", "Unit")]
 		public void FindServices_ShouldFindService()
-		{
-			var container = GivenAContainer();
-			container.Start();
-			container.Launch(new TestApp());
-			var foundTestApp = container.FindServices<TestApp>();
+		{	
+			Container.Start();
+			Container.Launch(new TestApp());
+			var foundTestApp = Container.FindServices<TestApp>();
 			foundTestApp.Should().NotBeEmpty();
 		}
 
 		[Fact]
-		[Trait("Tag", "Logging")]
+		[Trait("Tag", "ServiceDiscovery")]
 		[Trait("Category", "Unit")]
 		public void FindRemoteServices_ShouldFindService()
-		{
+		{			
+			var otherContainer = new LighthouseServer(serverName: "Lighthouse Server #2", localLogger:(message) => Output.WriteLine($"Lighthouse Server #2: {message}"));
+
+			// inform the first Container about the other
+			Container.RegisterRemotePeer(new LocalLighthouseServiceContainerConnection(otherContainer));
+
+			// start both Containers
+			Container.Start();
+			otherContainer.Start();
+
+			// launch the app in the "other"
+			otherContainer.Launch(new TestApp());
+
+			// the local Container should be able to find the service running in the other one
+			var foundTestApp = Container.FindRemoteServices<TestApp>();
+			foundTestApp.Should().NotBeEmpty();
 		}
 		#endregion
 		
 		#region Utils
 		[Fact]
-		[Trait("Tag", "Logging")]
+		[Trait("Tag", "Util")]
 		[Trait("Category", "Unit")]
 		public void GetTime_ShouldFindDate()
 		{
+			Container.GetNow().Date.Should().Be(DateTime.Today);
 		}
 		#endregion
 
@@ -129,7 +159,8 @@ namespace Lighthouse.Server.Tests
 		{
 			var reached = false;
 
-			GivenAContainer().Do((c) => { reached = true; } );
+			Container.Do((c) => { reached = true; } );
+			Thread.Sleep(50);
 
 			reached.Should().BeTrue();
 		}
@@ -141,7 +172,8 @@ namespace Lighthouse.Server.Tests
 		[Trait("Category", "Unit")]
 		public void AddScheduledAction_ScheduleAdded()
 		{
-
+			Container.AddScheduledAction(new Core.Scheduling.Schedule(Core.Scheduling.ScheduleFrequency.Hourly, 1, "Test"), (_) => { });
+			Container.GetSchedules().Where(schedule => schedule.Name == "Test").Should().NotBeEmpty();
 		}
 		#endregion
 
@@ -190,9 +222,9 @@ namespace Lighthouse.Server.Tests
 
 	public class TestEvent : IEvent
 	{
-		public TestEvent(ILighthouseServiceContainer container, DateTime? time = null)
+		public TestEvent(ILighthouseServiceContainer Container, DateTime? time = null)
 		{
-			LighthouseContainer = container;
+			LighthouseContainer = Container;
 			Time = time ?? DateTime.Now;
 		}
 
@@ -203,18 +235,18 @@ namespace Lighthouse.Server.Tests
 
 	public static class LighthouseServerConfigurationExtensions
 	{
-		public static LighthouseServer AssertLaunchConfigurationExists(this LighthouseServer container)
+		public static LighthouseServer AssertLaunchConfigurationExists(this LighthouseServer Container)
 		{
-			Assert.NotNull(container.LaunchConfiguration);
-			return container;
+			Assert.NotNull(Container.LaunchConfiguration);
+			return Container;
 		}
 
-		public static LighthouseServer AssertLaunchRequestsExists(this LighthouseServer container, Func<ServiceLaunchRequest, bool> filter = null )
+		public static LighthouseServer AssertLaunchRequestsExists(this LighthouseServer Container, Func<ServiceLaunchRequest, bool> filter = null )
 		{
-			container.AssertLaunchConfigurationExists();
-			container.LaunchConfiguration.GetServiceLaunchRequests().Where(slr => filter?.Invoke(slr) ?? true).Should().NotBeEmpty();
+			Container.AssertLaunchConfigurationExists();
+			Container.LaunchConfiguration.GetServiceLaunchRequests().Where(slr => filter?.Invoke(slr) ?? true).Should().NotBeEmpty();
 			
-			return container;
+			return Container;
 		}
 	}
 }

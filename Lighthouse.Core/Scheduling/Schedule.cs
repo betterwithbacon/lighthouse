@@ -10,10 +10,27 @@ namespace Lighthouse.Core.Scheduling
 	/// </summary>
 	public class Schedule
 	{
+		public string Name { get; private set; }
 		public ScheduleFrequency Frequency { get; set; }
 		public DateTime TimeToRun { get; set; }		
 		public double FrequencyUnit { get; set; }
 		
+		public Schedule(ScheduleFrequency frequency,  double frequencyUnit, string name = null)
+		{
+			Frequency = frequency;
+			FrequencyUnit = frequencyUnit;
+			
+			// TODO: improve the quality of these name
+			Name = name ?? $"Every {FrequencyUnit} {Frequency}";
+		}
+
+		public Schedule(DateTime timeToRun, string name = null)
+		{
+			TimeToRun = timeToRun;
+			Frequency = ScheduleFrequency.Once;
+			Name = name ?? TimeToRun.ToString("g");
+		}
+
 		public DateTime GetNextRunTime(DateTime? lastRun, DateTime now)
 		{
 			// never run again

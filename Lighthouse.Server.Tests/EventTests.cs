@@ -28,57 +28,56 @@ namespace Lighthouse.Server.Tests
 		public void QueueEventProducerShouldRetrieveEventAndPutIntocontainer()
 		{
 			var memQueue = new MemoryEventQueue();
-			var container = GivenAContainer(memQueue);
+			GivenAContainer(memQueue);
 
-			container.Start();
+			Container.Start();
 
-			var testEvent = new TestEvent(container);
+			var testEvent = new TestEvent(Container);
 
 			// raise the event
-			//container.EmitEvent(testEvent, null);
+			//Container.EmitEvent(testEvent, null);
 			memQueue.Enqueue(testEvent);
 
 			// give the system enough time to react to the event showing up
 			Thread.Sleep(200);
 
 			// look for non-time events
-			container.AssertEventExists<TestEvent>();
+			Container.AssertEventExists<TestEvent>();
 		}
 
 		[Fact]
 		[Trait("Category", "Unit")]
 		public void TimeEventShouldTriggerLogWriteEventWhichShouldThenWriteToLog()
 		{
-			// create the orchestrator
-			var container = GivenAContainer();
+			// create the orchestrator			
 			var time = DateTime.Parse("01/01/2018 10:00AM");
 
 			// create a consumer that when it receives a time event, that matches it's schedule, it will trigger a log write event
 			var timeEventConsumer = new TimeEventConsumer();
-			timeEventConsumer.EventAction = (triggerTime) => container.EmitEvent(
-				new LogEvent(container, timeEventConsumer)
+			timeEventConsumer.EventAction = (triggerTime) => Container.EmitEvent(
+				new LogEvent(Container, timeEventConsumer)
 				{
 					Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}",
-					Time = container.GetTime()
+					Time = Container.GetNow()
 				}, timeEventConsumer
 			);
 
 			// create a schedule that will only fire the Action when the time matches the event time
-			timeEventConsumer.AddSchedule(new Schedule { Frequency = ScheduleFrequency.Daily, TimeToRun = time });
+			timeEventConsumer.AddSchedule(new Schedule(time));
 
 			// create a consumer that will see the evenets and write to the log
 			var logWriteConsumer = new LogEventConsumer();
 
-			container.RegisterEventConsumer<TimeEvent>(timeEventConsumer);
-			container.RegisterEventConsumer<LogEvent>(logWriteConsumer);
+			Container.RegisterEventConsumer<TimeEvent>(timeEventConsumer);
+			Container.RegisterEventConsumer<LogEvent>(logWriteConsumer);
 
 			// run and ensure the listeners are all responding
-			container.Start();
+			Container.Start();
 
-			container.EmitEvent(new TimeEvent(container, time), null);
+			Container.EmitEvent(new TimeEvent(Container, time), null);
 			Thread.Sleep(50); // just wait a bit for the events to be handled
-			container.AssertEventExists<TimeEvent>();
-			container.AssertEventExists<LogEvent>();
+			Container.AssertEventExists<TimeEvent>();
+			Container.AssertEventExists<LogEvent>();
 
 			Output.WriteLine(Environment.NewLine + "Warehouse Contents");
 			logWriteConsumer.AllLogRecords.ForEach(Output.WriteLine);
@@ -90,42 +89,42 @@ namespace Lighthouse.Server.Tests
 		public async Task TimeEventShouldTriggerOneAndOnlyOneSchedule()
 		{
 			// create the orchestrator
-			var container = GivenAContainer();
+			;
 
 			var time = DateTime.Parse("01/01/2018 10:00AM");
 
 			// create a consumer that when it receives a time event, that matches it's schedule, it will trigger a log write event
 			var timeEventConsumer = new TimeEventConsumer();
-			timeEventConsumer.EventAction = (triggerTime) => container.EmitEvent(
-				new LogEvent(container, timeEventConsumer)
+			timeEventConsumer.EventAction = (triggerTime) => Container.EmitEvent(
+				new LogEvent(Container, timeEventConsumer)
 				{
 					Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}",
-					Time = container.GetTime()
+					Time = Container.GetNow()
 				}, timeEventConsumer
 			);
 
 			// create a schedule that will only fire the Action when the time matches the event time
-			timeEventConsumer.AddSchedule(new Schedule { Frequency = ScheduleFrequency.Daily, TimeToRun = time });
+			timeEventConsumer.AddSchedule(new Schedule(time));
 
 			// create a consumer that will see the evenets and write to the log
 			var logWriteConsumer = new LogEventConsumer();
 
-			container.RegisterEventConsumer<TimeEvent>(timeEventConsumer);
-			container.RegisterEventConsumer<LogEvent>(logWriteConsumer);
+			Container.RegisterEventConsumer<TimeEvent>(timeEventConsumer);
+			Container.RegisterEventConsumer<LogEvent>(logWriteConsumer);
 
 			// run and ensure the listeners are all responding
-			container.Start();
+			Container.Start();
 
-			container.EmitEvent(new TimeEvent(container, time), null);
-			container.EmitEvent(new TimeEvent(container, time.AddDays(-10)), null);
-			container.EmitEvent(new TimeEvent(container, time.AddDays(10)), null);			
-			await container.Stop();
+			Container.EmitEvent(new TimeEvent(Container, time), null);
+			Container.EmitEvent(new TimeEvent(Container, time.AddDays(-10)), null);
+			Container.EmitEvent(new TimeEvent(Container, time.AddDays(10)), null);			
+			await Container.Stop();
 
 			Thread.Sleep(500); // just wait a bit for the events to be handled
 			
 
-			container.AssertEventExists<TimeEvent>(3);
-			//container.AssertEventExists<LogEvent>(atLeast: 3);
+			Container.AssertEventExists<TimeEvent>(3);
+			//Container.AssertEventExists<LogEvent>(atLeast: 3);
 
 			Output.WriteLine(Environment.NewLine + "Warehouse Contents:");
 			logWriteConsumer.AllLogRecords.ForEach(Output.WriteLine);

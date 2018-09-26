@@ -27,34 +27,32 @@ namespace Lighthouse.Server.Tests.Performance
 		[Trait("Category", "Performance")]
 		public async Task PerformanceTest_HundredsOfHeterogeneousEventsFinishesInAFewSeconds()
 		{
-			// create the orchestrator
-			var container = GivenAContainer();
-
+			// create the orchestrator			
 			var time = DateTime.Parse("01/01/2018 10:00AM");
 
 			// create a consumer that when it receives a time event, that matches it's schedule, it will trigger a log write event
 			var timeEventConsumer = new TimeEventConsumer();
-			timeEventConsumer.EventAction = (triggerTime) => container.EmitEvent(
-				new LogEvent(container, timeEventConsumer)
+			timeEventConsumer.EventAction = (triggerTime) => Container.EmitEvent(
+				new LogEvent(Container, timeEventConsumer)
 				{
 					Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}",
-					Time = container.GetTime()
+					Time = Container.GetNow()
 				}, timeEventConsumer
 			);
 
 			// create a schedule that will only fire the Action when the time matches the event time
-			timeEventConsumer.AddSchedule(new Schedule { Frequency = ScheduleFrequency.Daily, TimeToRun = time });
+			timeEventConsumer.AddSchedule(new Schedule(time));
 
 			var totalEventsSent = 10_000;
 
 			// create a consumer that will see the evenets and write to the log
 			var logWriteConsumer = new LogEventConsumer();
 
-			container.RegisterEventConsumer<TimeEvent>(timeEventConsumer);
-			container.RegisterEventConsumer<LogEvent>(logWriteConsumer);
+			Container.RegisterEventConsumer<TimeEvent>(timeEventConsumer);
+			Container.RegisterEventConsumer<LogEvent>(logWriteConsumer);
 
 			// run and ensure the listeners are all responding
-			container.Start();
+			Container.Start();
 
 			var stopwatch = new Stopwatch();
 
@@ -62,7 +60,7 @@ namespace Lighthouse.Server.Tests.Performance
 			stopwatch.Start();
 
 			Parallel.ForEach(Enumerable.Range(1, totalEventsSent), new ParallelOptions { MaxDegreeOfParallelism = 10 },
-				(index) => { } //container.EmitEvent(new TimeEvent(container, time.AddDays(-1 * index)), null)				
+				(index) => { } //Container.EmitEvent(new TimeEvent(Container, time.AddDays(-1 * index)), null)				
 			);
 
 			stopwatch.Stop();
@@ -73,7 +71,7 @@ namespace Lighthouse.Server.Tests.Performance
 			stopwatch.Restart();
 
 			var tasks = Enumerable.Range(1, totalEventsSent)
-				.Select(index => Task.Run(() => container.EmitEvent(new TimeEvent(container, time.AddDays(-1 * index)), null)));
+				.Select(index => Task.Run(() => Container.EmitEvent(new TimeEvent(Container, time.AddDays(-1 * index)), null)));
 
 			await Task.WhenAll(tasks);
 
@@ -91,41 +89,40 @@ namespace Lighthouse.Server.Tests.Performance
 		[Trait("Category", "Performance")]
 		public async Task PerformanceTest_HundredsOfTimingEventsFinishesInAFewSeconds()
 		{
-			// create the orchestrator
-			var container = GivenAContainer();
+			// create the orchestrator			
 			var time = DateTime.Parse("01/01/2018 10:00AM");
 
 			// create a consumer that when it receives a time event, that matches it's schedule, it will trigger a log write event
 			var timeEventConsumer = new TimeEventConsumer();
-			timeEventConsumer.EventAction = (triggerTime) => container.EmitEvent(
-				new LogEvent(container, timeEventConsumer)
+			timeEventConsumer.EventAction = (triggerTime) => Container.EmitEvent(
+				new LogEvent(Container, timeEventConsumer)
 				{
 					Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}",
-					Time = container.GetTime()
+					Time = Container.GetNow()
 				}, timeEventConsumer
 			);
 
 			// create a schedule that will only fire the Action when the time matches the event time
-			timeEventConsumer.AddSchedule(new Schedule { Frequency = ScheduleFrequency.Daily, TimeToRun = time });
+			timeEventConsumer.AddSchedule(new Schedule(time));
 
 			var totalEventsSent = 100;
 
 			// create a consumer that will see the evenets and write to the log
 			var logWriteConsumer = new LogEventConsumer();
 
-			container.RegisterEventConsumer<TimeEvent>(timeEventConsumer);
-			container.RegisterEventConsumer<LogEvent>(logWriteConsumer);
+			Container.RegisterEventConsumer<TimeEvent>(timeEventConsumer);
+			Container.RegisterEventConsumer<LogEvent>(logWriteConsumer);
 
 			// run and ensure the listeners are all responding
-			container.Start();
+			Container.Start();
 
 			var tasks = Enumerable.Range(1, totalEventsSent)
-				.Select(index => Task.Run(() => container.EmitEvent(new TimeEvent(container, time.AddDays(-1 * index)), null)));
+				.Select(index => Task.Run(() => Container.EmitEvent(new TimeEvent(Container, time.AddDays(-1 * index)), null)));
 
 			await Task.WhenAll(tasks);
 
-			container.AssertEventExists<TimeEvent>(totalEventsSent);
-			container.AssertEventExists<LogEvent>(totalEventsSent);
+			Container.AssertEventExists<TimeEvent>(totalEventsSent);
+			Container.AssertEventExists<LogEvent>(totalEventsSent);
 
 			Output.WriteLine(Environment.NewLine + "Warehouse Contents:");
 

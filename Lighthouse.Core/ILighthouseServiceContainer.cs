@@ -1,4 +1,5 @@
 ﻿using Lighthouse.Core.Events;
+using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using Lighthouse.Core.Scheduling;
@@ -9,6 +10,8 @@ namespace Lighthouse.Core
 {
 	public interface ILighthouseServiceContainer : ILighthouseLogSource
 	{
+		string ServerName { get; }
+
 		/// <summary>
 		/// A generic way to log messages. These messages should be emitted as events in the Context as well as any internal logging.
 		/// </summary>
@@ -37,7 +40,7 @@ namespace Lighthouse.Core
 		/// The current time, based on the lighthouse service.
 		/// </summary>
 		/// <returns></returns>
-		DateTime GetTime();
+		DateTime GetNow();
 
 		/// <summary>
 		/// Exposes low-level server local resources, such as the disk, network, or specific hardware devices.		
@@ -85,5 +88,7 @@ namespace Lighthouse.Core
 		void EmitEvent(IEvent ev, ILighthouseLogSource source = null);
 
 		IEnumerable<IEvent> GetAllReceivedEvents(PointInTime since = null);
+		
+		void RegisterRemotePeer(ILighthouseServiceContainerConnection connection);
 	}
 }

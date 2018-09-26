@@ -6,6 +6,7 @@ using Lighthouse.Core.Events;
 using Lighthouse.Core.Events.Logging;
 using Lighthouse.Core.Events.Queueing;
 using Lighthouse.Core.Events.Time;
+using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using Lighthouse.Core.Scheduling;
@@ -45,7 +46,7 @@ namespace Lighthouse.Server
 		private readonly Action<string> LogLocally;		
 		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
 		public event StatusUpdatedEventHandler StatusUpdated;
-
+		private readonly ConcurrentBag<Schedule> Schedules = new ConcurrentBag<Schedule>();
 		public bool IsRunning { get; private set; }			
 		public string Identifier => throw new NotImplementedException();
 		public string WorkingDirectory { get; private set; } = @"C:\";
@@ -63,22 +64,29 @@ namespace Lighthouse.Server
 		#region Fields - Events
 		public IWorkQueue<IEvent> EventQueue { get; }
 		IWorkQueue<IEvent> WorkQueue { get; set; }
+
+		public string ServerName { get; }
+
 		readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
 		readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
 		readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
 		Timer Timer;
 		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 60 * 1000;
+		readonly List<ILighthouseServiceContainerConnection> RemoteContainerConnections = new List<ILighthouseServiceContainerConnection>();
 		#endregion
 
 		#region Constructors
-		public LighthouseServer(Action<string> localLogger = null,			
+		public LighthouseServer(
+			string serverName = "Lighthouse Server",
+			Action<string> localLogger = null,			
 			IAppConfigurationProvider launchConfiguration = null, 
 			string workingDirectory = null,
 			IWorkQueue<IEvent> eventQueue = null, 
 			double defaultScheduleTimeIntervalInMilliseconds = DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS,
 			TimeEventProducer globalClock = null)
 		{
-			LogLocally = localLogger;			
+			ServerName = serverName;
+			LogLocally = localLogger ?? Console.WriteLine;
 			ServiceRepositories = new List<IServiceRepository>();
 			LaunchConfiguration = launchConfiguration ?? new MemoryAppConfigurationProvider(DEFAULT_APP_NAME, this); // if no config is passed in, start with a blank one
 
@@ -354,7 +362,7 @@ namespace Lighthouse.Server
 
 		public IEnumerable<T> FindRemoteServices<T>() where T : ILighthouseService
 		{
-			return Enumerable.Empty<T>();
+			return RemoteContainerConnections.Where(conn => conn.IsConnected).SelectMany(conn => conn.LighthouseServiceContainer.FindServices<T>());
 		}
 		#endregion
 
@@ -396,7 +404,7 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Utils
-		public DateTime GetTime()
+		public DateTime GetNow()
 		{
 			// for now, just use local time, but this should eventually use UTC
 			return DateTime.Now;
@@ -404,13 +412,19 @@ namespace Lighthouse.Server
 
 		public override string ToString()
 		{
-			return "Lighthouse Server";
+			return ServerName;
 		}
 		#endregion
 
 		#region Scheduling
+		public IEnumerable<Schedule> GetSchedules()
+		{
+			return Schedules.ToArray();
+		}
+
 		public void AddScheduledAction(Schedule schedule, Action<DateTime> actionToPerform)
 		{
+			Schedules.Add(schedule);
 			var consumer = new TimeEventConsumer();
 			consumer.AddSchedule(schedule);
 			consumer.EventAction = (time) => actionToPerform(time);
@@ -541,6 +555,16 @@ namespace Lighthouse.Server
 		public IEnumerable<T> FindComponent<T>() where T : ILighthouseComponent
 		{
 			return null;
+		}
+		#endregion
+
+		#region  Hosting		
+		public void RegisterRemotePeer(ILighthouseServiceContainerConnection connection)
+		{
+			// add it to the list
+			RemoteContainerConnections.Add(connection);
+
+			Log(LogLevel.Info, LogType.Info, this, $"Adding remote lighthouse container: {connection}");
 		}
 		#endregion
 	}

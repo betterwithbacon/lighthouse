@@ -12,7 +12,7 @@ namespace Lighthouse.Server
 			//	.AddLocalLogger((message) => Console.WriteLine(message))
 			//	.Build();
 
-			var server = new LighthouseServer((message) => Console.WriteLine(message));
+			var server = new LighthouseServer(localLogger: (message) => Console.WriteLine(message));
 			//server.AddLocalLogger((message) => Console.WriteLine(message));
 				
 			// start the server
