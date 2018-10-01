@@ -24,4 +24,25 @@ namespace Lighthouse.Core.Configuration.ServiceDiscovery.Local
 			return ServiceDescriptors;
 		}
 	}
+
+	// a repository which returns all services within memory
+	public class MemoryServiceRepository : IServiceRepository
+	{
+		readonly ConcurrentBag<ILighthouseServiceDescriptor> ServiceDescriptors = new ConcurrentBag<ILighthouseServiceDescriptor>();
+
+		public MemoryServiceRepository()
+		{
+			
+		}
+
+		public void AddServiceDescriptor(ILighthouseServiceDescriptor serviceDescriptor)
+		{
+			ServiceDescriptors.Add(serviceDescriptor);
+		}
+
+		public IEnumerable<ILighthouseServiceDescriptor> GetServiceDescriptors()
+		{
+			return ServiceDescriptors;
+		}
+	}
 }

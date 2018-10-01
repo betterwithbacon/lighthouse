@@ -125,6 +125,7 @@ namespace Lighthouse.Server.Tests
 		[Trait("Category", "Unit")]
 		public void GetFileSystemProviders_ShouldFindProvider()
 		{
+			Container.GetFileSystemProviders().Should().NotBeEmpty();
 		}
 
 		[Fact]
@@ -132,6 +133,7 @@ namespace Lighthouse.Server.Tests
 		[Trait("Category", "Unit")]
 		public void GetNetworkProviders_ShouldFindProvider()
 		{
+			Container.GetNetworkProviders().Should().NotBeEmpty();
 		}
 
 		[Fact]
@@ -139,6 +141,7 @@ namespace Lighthouse.Server.Tests
 		[Trait("Category", "Unit")]
 		public void WorkingDirectory_ShouldMatchEnvironment()
 		{
+			Container.WorkingDirectory.Should().Be(Environment.CurrentDirectory);
 		}
 		#endregion
 
@@ -148,6 +151,7 @@ namespace Lighthouse.Server.Tests
 		[Trait("Category", "Unit")]
 		public void RegisterComponent_ComponentShouldBeRegistered()
 		{
+
 		}
 		#endregion
 

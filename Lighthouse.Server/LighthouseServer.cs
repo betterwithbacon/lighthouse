@@ -2,6 +2,7 @@
 using Lighthouse.Core.Configuration.Providers;
 using Lighthouse.Core.Configuration.Providers.Local;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
+using Lighthouse.Core.Configuration.ServiceDiscovery.Local;
 using Lighthouse.Core.Events;
 using Lighthouse.Core.Events.Logging;
 using Lighthouse.Core.Events.Queueing;
@@ -42,6 +43,7 @@ namespace Lighthouse.Server
 
 		#region Fields
 		public const string DEFAULT_APP_NAME = "Lighthouse Server";
+		
 		private readonly ConcurrentBag<LighthouseServiceRun> ServiceThreads = new ConcurrentBag<LighthouseServiceRun>();		
 		private readonly Action<string> LogLocally;		
 		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
@@ -78,8 +80,8 @@ namespace Lighthouse.Server
 		#region Constructors
 		public LighthouseServer(
 			string serverName = "Lighthouse Server",
-			Action<string> localLogger = null,			
-			IAppConfigurationProvider launchConfiguration = null, 
+			Action<string> localLogger = null,
+			//IAppConfigurationProvider launchConfiguration = null, 
 			string workingDirectory = null,
 			IWorkQueue<IEvent> eventQueue = null, 
 			double defaultScheduleTimeIntervalInMilliseconds = DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS,
@@ -88,12 +90,12 @@ namespace Lighthouse.Server
 			ServerName = serverName;
 			LogLocally = localLogger ?? Console.WriteLine;
 			ServiceRepositories = new List<IServiceRepository>();
-			LaunchConfiguration = launchConfiguration ?? new MemoryAppConfigurationProvider(DEFAULT_APP_NAME, this); // if no config is passed in, start with a blank one
+			//LaunchConfiguration = launchConfiguration ?? new MemoryAppConfigurationProvider(DEFAULT_APP_NAME, this); // if no config is passed in, start with a blank one
 
 			//TODO: this seems a little hacky, but I DO want to eventually enforce graph participation by components
 			// e.g.: if a component tries to log, it needs to be registered with this container
-			if (LaunchConfiguration.LighthouseContainer != this)
-				RegisterComponent(LaunchConfiguration);
+			//if (LaunchConfiguration.LighthouseContainer != this)
+			//	RegisterComponent(LaunchConfiguration);
 
 			EventQueue = eventQueue ?? new MemoryEventQueue();
 			GlobalClock = globalClock ?? new TimeEventProducer(defaultScheduleTimeIntervalInMilliseconds);
@@ -138,21 +140,31 @@ namespace Lighthouse.Server
 		{
 			// TODO: right now, it's one, but it COULD be more, what's that like?!
 			
-			// reigster all of the service requests, from the config providers.
-			foreach (var request in LaunchConfiguration.GetServiceLaunchRequests())
-			{
-				Log(LogLevel.Debug,LogType.Info,this, $"Registering service request: {request}");
-				LighthouseMonitor.RegisterServiceRequest(request);
+			//// reigster all of the service requests, from the config providers.
+			//foreach (var request in ServiceLaunchRequests)
+			//{
+			//	Log(LogLevel.Debug,LogType.Info,this, $"Registering service request: {request}");
+			//	LighthouseMonitor.RegisterServiceRequest(request);
 
-				// launch the service
-				Launch(request);
-			}
+			//	// launch the service
+			//	Launch(request);
+			//}
 		}
 
 		public void LoadConfiguration()
 		{
 			// TODO: there should probably be only one local appconfig resource
 			LaunchConfiguration = GetResourceProviders<IAppConfigurationProvider>().FirstOrDefault();
+		}
+
+		public void AddServiceRepository(IServiceRepository serviceRepository)
+		{
+
+		}
+
+		public void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest)
+		{
+
 		}
 
 		public async Task Stop()
@@ -383,7 +395,7 @@ namespace Lighthouse.Server
 			else if (OS == OSPlatform.Linux)
 				RegisterComponent(new UnixFileSystemProvider());
 
-			// TODO: add network support
+			RegisterComponent(new InternetNetworkProvider(this));
 		}
 
 		public IEnumerable<T> GetResourceProviders<T>()
@@ -462,7 +474,7 @@ namespace Lighthouse.Server
 				);
 		}
 
-		public void AssertProducerIsReady(IEventProducer producer)
+		private void AssertProducerIsReady(IEventProducer producer)
 		{
 			// if the containers aren't equal, this the producer's not ready.	
 			if (producer.LighthouseContainer != this)

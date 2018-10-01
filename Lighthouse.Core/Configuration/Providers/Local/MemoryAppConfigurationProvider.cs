@@ -10,21 +10,16 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 	/// Represents an in-memory, non-persisted configuration provider 
 	/// </summary>
 	public class MemoryAppConfigurationProvider : IAppConfigurationProvider
-	{
-		public ILighthouseServiceContainer LighthouseContainer { get; }
-
+	{		
 		public string Name { get; }
 
 		public LighthouseConfigType ConfigType { get; }
 
-		public event StatusUpdatedEventHandler StatusUpdated;
 		private readonly ConcurrentBag<ServiceLaunchRequest> ServiceLaunchRequests;
 		private readonly ConcurrentBag<IServiceRepository> ServiceRepositories;
 
-		public MemoryAppConfigurationProvider(string appName, ILighthouseServiceContainer container)
-		{
-			LighthouseContainer = container;			
-			LighthouseContainer.RegisterComponent(this);
+		public MemoryAppConfigurationProvider(string appName)
+		{	
 			Name = appName;
 			ConfigType = LighthouseConfigType.App;
 

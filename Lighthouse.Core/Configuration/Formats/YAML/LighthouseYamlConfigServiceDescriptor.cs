@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Lighthouse.Core.Configuration.Formats.YAML
 {
-	public class LighthouseYamlConfigServiceDescriptor
+	public class LighthouseYamlConfigServiceDescriptor : ILighthouseServiceDescriptor
 	{
 		public string Name { get; set; }
 		public string Type { get; set; }
