@@ -4,13 +4,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using WarehouseCore;
+using Lighthouse.Storage;
 
 namespace Lighthouse.Core.Events.Logging
 {
     public class LogEventConsumer : BaseEventConsumer
     {
-		private Warehouse Warehouse { get; set; }
+		private IWarehouse Warehouse { get; set; }
 
 		// this is a bit of a hack, to automatically rollover logs daily. 
 		private string LOG_NAME => $"{LighthouseContainer.GetNow().ToString("MMddyyyy")}_LOG";
@@ -34,7 +34,8 @@ namespace Lighthouse.Core.Events.Logging
 
 		protected override void OnInit()
 		{				
-			Warehouse = new Warehouse();			
+
+			Warehouse = LighthouseContainer.ResolveService<Warehouse>();			
 			Warehouse.Store(new WarehouseKey(LOG_NAME, this), new[] { $"[{LighthouseContainer.GetNow()}] Log Starting" }, LoadingDockPolicies);
 		}
 	}

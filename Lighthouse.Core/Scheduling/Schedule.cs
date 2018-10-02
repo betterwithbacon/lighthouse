@@ -15,7 +15,7 @@ namespace Lighthouse.Core.Scheduling
 		public DateTime TimeToRun { get; set; }		
 		public double FrequencyUnit { get; set; }
 		
-		public Schedule(ScheduleFrequency frequency,  double frequencyUnit, string name = null)
+		public Schedule(ScheduleFrequency frequency,  double frequencyUnit = 1, string name = null)
 		{
 			Frequency = frequency;
 			FrequencyUnit = frequencyUnit;

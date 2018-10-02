@@ -23,14 +23,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lighthouse Apps", "Lighthou
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Server.Tests", "Lighthouse.Server.Tests\Lighthouse.Server.Tests.csproj", "{70AAA9AC-EF43-44B7-9D84-ACB44EB9B6F7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Core.Apps", "Lighthouse.Core.Apps\Lighthouse.Core.Apps.csproj", "{27519058-DB2A-4281-AE69-637396F2FA7A}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Warehouse", "Warehouse", "{AB445DEA-8ADF-4EEA-908A-92ED306390CF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dependencies", "dependencies", "{5D7712C8-606E-4133-9FEE-F27BF1C085C6}"
-	ProjectSection(SolutionItems) = preProject
-		dependencies\WarehouseCore.dll = dependencies\WarehouseCore.dll
-	EndProjectSection
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lighthouse.Storage", "Lighthouse.Storage\Lighthouse.Storage.csproj", "{97B20529-51C0-4410-B664-173E70733A20}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Core.Apps.Tests", "Lighthouse.Core.Apps.Tests\Lighthouse.Core.Apps.Tests.csproj", "{4E3DBD56-EE43-47FD-85A8-735063937F4E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lighthouse.Storage.Tests", "Lighthouse.Storage.Tests\Lighthouse.Storage.Tests.csproj", "{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -66,14 +63,14 @@ Global
 		{70AAA9AC-EF43-44B7-9D84-ACB44EB9B6F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{70AAA9AC-EF43-44B7-9D84-ACB44EB9B6F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{70AAA9AC-EF43-44B7-9D84-ACB44EB9B6F7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{27519058-DB2A-4281-AE69-637396F2FA7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{27519058-DB2A-4281-AE69-637396F2FA7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{27519058-DB2A-4281-AE69-637396F2FA7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{27519058-DB2A-4281-AE69-637396F2FA7A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4E3DBD56-EE43-47FD-85A8-735063937F4E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4E3DBD56-EE43-47FD-85A8-735063937F4E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4E3DBD56-EE43-47FD-85A8-735063937F4E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4E3DBD56-EE43-47FD-85A8-735063937F4E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97B20529-51C0-4410-B664-173E70733A20}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97B20529-51C0-4410-B664-173E70733A20}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97B20529-51C0-4410-B664-173E70733A20}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97B20529-51C0-4410-B664-173E70733A20}.Release|Any CPU.Build.0 = Release|Any CPU
+		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -86,8 +83,8 @@ Global
 		{811ABEE8-704A-4317-B05D-A8B234A2EAE8} = {DC617E2E-BF48-479D-9C95-AE389B1BC150}
 		{A9CA9414-ECFB-4918-B0A0-D8F7794149C7} = {DC617E2E-BF48-479D-9C95-AE389B1BC150}
 		{70AAA9AC-EF43-44B7-9D84-ACB44EB9B6F7} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
-		{27519058-DB2A-4281-AE69-637396F2FA7A} = {DC733B74-11BC-465A-95A6-2425D0A99550}
-		{4E3DBD56-EE43-47FD-85A8-735063937F4E} = {DC733B74-11BC-465A-95A6-2425D0A99550}
+		{97B20529-51C0-4410-B664-173E70733A20} = {AB445DEA-8ADF-4EEA-908A-92ED306390CF}
+		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA} = {AB445DEA-8ADF-4EEA-908A-92ED306390CF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5FBA757F-7196-4268-9D53-512991999DA1}

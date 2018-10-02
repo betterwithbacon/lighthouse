@@ -324,14 +324,19 @@ namespace Lighthouse.Server
 		public void RegisterComponent(ILighthouseComponent component)
 		{
 			Log(LogLevel.Debug,LogType.Info,this, $"Added component: {component}.");
-			//component.StatusUpdated += Service_StatusUpdated;
+			
+			
+			if(component is ILighthouseService service)
+				service.Initialize(this);
+		}
 
+		public void RegisterResource(IResourceProvider component)
+		{
+			Log(LogLevel.Debug, LogType.Info, this, $"Added resource: {component}.");
+			
 			// subclass specific operations
 			if (component is IResourceProvider rs)
 				Resources.Add(rs);
-
-			if(component is ILighthouseService service)
-				service.Initialize(this);
 		}
 		#endregion
 
@@ -391,11 +396,11 @@ namespace Lighthouse.Server
 			// TODO: factor out how the "root" directory is found. This probably needs to be an environment config option
 			// File System providers
 			if (OS == OSPlatform.Windows)
-				RegisterComponent(new WindowsFileSystemProvider(WorkingDirectory, this));
+				RegisterResource(new WindowsFileSystemProvider(WorkingDirectory, this));
 			else if (OS == OSPlatform.Linux)
-				RegisterComponent(new UnixFileSystemProvider());
+				RegisterResource(new UnixFileSystemProvider());
 
-			RegisterComponent(new InternetNetworkProvider(this));
+			RegisterResource(new InternetNetworkProvider(this));
 		}
 
 		public IEnumerable<T> GetResourceProviders<T>()

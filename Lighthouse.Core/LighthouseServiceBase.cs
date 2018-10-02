@@ -5,27 +5,22 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Core
 {
-    public abstract class LighthouseServiceBase : ILighthouseService
-    {	
+	public abstract class LighthouseServiceBase : ILighthouseService
+	{
 		public string Id { get; private set; }
 		public LighthouseServiceRunState RunState { get; protected set; }
 		public ILighthouseServiceContainer LighthouseContainer { get; private set; }
-
-		public event StatusUpdatedEventHandler StatusUpdated;		
+		public event StatusUpdatedEventHandler StatusUpdated;
 		private readonly List<Action<ILighthouseServiceContainer>> StartupActions = new List<Action<ILighthouseServiceContainer>>();
-		
+		protected virtual bool IsInitialized { get; }
+
 		protected void AddStartupTask(Action<ILighthouseServiceContainer> task)
 		{
 			StartupActions.Add(task);
 		}
 
-		protected void AddScheduledTask(Schedule schedule, Action<DateTime> taskToPerform)
-		{
-			LighthouseContainer.AddScheduledAction(schedule, taskToPerform);
-		}
-
 		public virtual void Start()
-        {
+		{
 			if (LighthouseContainer == null)
 				throw new InvalidOperationException("Service not initialized. (No container set)");
 
@@ -39,13 +34,14 @@ namespace Lighthouse.Core
 		{
 			// the context, will do the work for us
 			// this is useful, because if some of the things you want to do will be emitting Events, then they'll be picked up
-			StartupActions.ForEach(LighthouseContainer.Do);			
+			StartupActions.ForEach(LighthouseContainer.Do);
 		}
 
+		#region Service Lifecycle Events
 		protected virtual void OnStart()
 		{
 		}
-		
+
 		protected virtual void OnAfterStart()
 		{
 		}
@@ -61,6 +57,8 @@ namespace Lighthouse.Core
 		protected virtual void OnStop()
 		{
 		}
+		#endregion
+
 
 		protected void RaiseStatusUpdated(LighthouseServiceRunState newState)
 		{
@@ -70,14 +68,22 @@ namespace Lighthouse.Core
 
 		protected void RaiseStatusUpdated(string message)
 		{
-			StatusUpdated?.Invoke(this, message);			
+			StatusUpdated?.Invoke(this, message);
 		}
 
 		public void Initialize(ILighthouseServiceContainer context)
 		{
+			if (IsInitialized)
+				return;
+
 			LighthouseContainer = context;
-			//Id = EventContext.GenerateSessionIdentifier(this);
+			OnInit();
 			RaiseStatusUpdated(LighthouseServiceRunState.PendingStart);
+		}
+
+		protected virtual void OnInit()
+		{
+
 		}
 
 		public override string ToString()
