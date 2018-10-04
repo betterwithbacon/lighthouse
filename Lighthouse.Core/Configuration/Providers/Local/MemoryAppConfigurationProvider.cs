@@ -51,5 +51,10 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 		{
 			return "In-Memory AppConfig";
 		}
+
+		public void Load()
+		{
+			// it's always ready
+		}
 	}
 }

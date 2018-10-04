@@ -1,11 +1,13 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Configuration.Formats.Memory;
+using Lighthouse.Core.Configuration.Formats.YAML;
 using Lighthouse.Core.Configuration.Providers.Local;
 using Lighthouse.Core.Configuration.ServiceDiscovery.Local;
+using Lighthouse.Core.Hosting;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using WarehouseCore;
+using System.Threading;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -18,6 +20,94 @@ namespace Lighthouse.Server.Tests.Integration
 		public CommonUseCasesIntegrationTests(ITestOutputHelper output)
 		{
 			Output = output;
+		}
+
+		[Fact]
+		public void LocalMachineFolderSyncToServerTest()
+		{
+			// clientNode server config			
+			var clientConfig = @"---
+name: 'Lighthouse Node'
+version: '0.1'
+maxThreadCount: '1'
+
+serviceRepositories:    
+    -   name: global
+        uri: 'lighthouse:global_service_repo'
+
+services:             
+    -   name: folder_sync";
+
+			// create remote environment
+			//var clientNode = 
+			//	LighthouseServer
+			//		.Create("Client Lighthouse")
+			//		.AddLocalLogger()
+			//		.Build();
+
+			var clientNode = new LighthouseServer(
+				serverName: "Client Lighthouse",
+				preLoadOperations: (server) => { server.LoadConfigurationAppYaml(clientConfig); }
+			);
+			clientNode.AddLocalLogger((message) => Output.WriteLine($"Client: {message}"));
+			//clientNode.LoadConfigurationAppYaml(clientConfig);
+			
+			// serverNode server config			
+			// this server will use the integrated Warehouse, to do the warehouse server component.
+			// however, it will also provide the app config for the client to download the "foldersync" app
+			var serverConfig = @"---
+name: 'Lighthouse Server'
+version: '0.1'
+maxThreadCount: '4'
+
+serviceRepositories:
+    -   name: local
+
+services:
+    -   name: service_repo  
+        type: Lighthouse.Core.Apps,ServiceRepo
+        alias: global_service_repo";
+
+			// create server environment
+			var serverNode = new LighthouseServer(
+				serverName: "Server Lighthouse",
+				preLoadOperations: (server) => { server.LoadConfigurationAppYaml(serverConfig); }
+			);
+			serverNode.AddLocalLogger((message) => Output.WriteLine($"Server: {message}"));
+
+			// for purposes of this test, all of the ocnfig data will come from here
+			//serverNode.LoadConfigurationAppYaml(serverConfig);
+
+			// start both servers
+			serverNode.Start();
+			clientNode.Start();
+
+			// enform the client about the remote peer
+			// The server won't necessarily be able to "connect" back, so it will be all inbound
+			// this line of code will be called on service startup
+			clientNode.RegisterRemotePeer(new LocalLighthouseServiceContainerConnection(serverNode, false));
+
+			// at this point, what we should have are:
+			// a server
+			//		- a warehouse running on it
+			//		- a local file system, that exposes some drives
+			// a client
+			//		- a warehouse running on it, with access to the local file system
+			//		- a "FileSync" service running on the local machine
+
+			Thread.Sleep(100);
+
+			Output.WriteLine("Running Client Services:");
+			foreach(var service in clientNode.GetRunningServices())
+			{
+				Output.WriteLine($"service running: {service}");
+			}
+
+			Output.WriteLine("Running Server Services:");
+			foreach (var service in serverNode.GetRunningServices())
+			{
+				Output.WriteLine($"service running: {service}");
+			}
 		}
 
 		//[Fact]
@@ -38,11 +128,11 @@ namespace Lighthouse.Server.Tests.Integration
 
 		//	// register the service, it might not be found by the Server
 		//	container.RegisterService("ifttt", typeof(IFTTT));
-			
+
 		//	// now begin building the container, adding services into the container, and they will start up automatically
 		//	container.AddService(typeof(Warehouse));
 		//	container.AddService("ifttt");
-			
+
 		//	// start the server
 		//	container.Start();
 

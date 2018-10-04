@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Lighthouse.Core.Logging;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace Lighthouse.Core
 {
-    public interface IResourceProvider
+    public interface IResourceProvider : ILighthouseLogSource
 	{
     }
 }

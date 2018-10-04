@@ -1,6 +1,5 @@
 ﻿using FluentAssertions;
 using Lighthouse.Core;
-using Lighthouse.Core.Apps;
 using Lighthouse.Core.Configuration.Providers;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Events;
@@ -10,14 +9,21 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using Xunit;
 using Xunit.Abstractions;
+using static Lighthouse.Core.Tests.LighthouseServiceTests;
 
 namespace Lighthouse.Server.Tests
 {
-    public class LighthouseServerTests
+	public class TestApp : LighthouseServiceBase
+	{
+		public string MockProperty { get; }
+		public List<Action> StartupActions = new List<Action>();
+		public List<Action> ScheduledTasks = new List<Action>();
+	}
+
+	public class LighthouseServerTests
     {
 		protected readonly ITestOutputHelper Output;
 		protected readonly ConcurrentBag<string> ContainerMessages = new ConcurrentBag<string>();
@@ -55,7 +61,7 @@ namespace Lighthouse.Server.Tests
 					ContainerMessages.Add(m);
 					Output.WriteLine(m);
 				},
-				launchConfiguration: launchConfiguration, 
+				//launchConfiguration: launchConfiguration, 
 				workingDirectory: workingDirectory,								
 				eventQueue: workQueue,
 				defaultScheduleTimeIntervalInMilliseconds: defaultScheduleTimeIntervalInMilliseconds
@@ -107,8 +113,33 @@ namespace Lighthouse.Server.Tests
 			var foundTestApp = Container.FindRemoteServices<TestApp>();
 			foundTestApp.Should().NotBeEmpty();
 		}
+
+		[Fact]
+		[Trait("Tag", "ServiceDiscovery")]
+		[Trait("Category", "Unit")]
+		public void FindRemoteService_ShouldProxyCommandsCorrectly()
+		{
+			var otherContainer = new LighthouseServer(serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"));
+
+			// inform the first Container about the other
+			Container.RegisterRemotePeer(new LocalLighthouseServiceContainerConnection(otherContainer));
+
+			// start both Containers
+			Container.Start();
+			otherContainer.Start();
+
+			// launch the app in the "other" container
+			otherContainer.Launch(typeof(TestApp));
+
+			// the local Container should be able to find the service running in the other one
+			var foundTestApp = Container.FindRemoteServices<TestApp>();
+			foundTestApp.Should().NotBeEmpty();
+
+			
+		}
+
 		#endregion
-		
+
 		#region Utils
 		[Fact]
 		[Trait("Tag", "Util")]
@@ -241,14 +272,14 @@ namespace Lighthouse.Server.Tests
 	{
 		public static LighthouseServer AssertLaunchConfigurationExists(this LighthouseServer Container)
 		{
-			Assert.NotNull(Container.LaunchConfiguration);
+			//Assert.NotNull(Container.LaunchConfiguration);
 			return Container;
 		}
 
 		public static LighthouseServer AssertLaunchRequestsExists(this LighthouseServer Container, Func<ServiceLaunchRequest, bool> filter = null )
 		{
 			Container.AssertLaunchConfigurationExists();
-			Container.LaunchConfiguration.GetServiceLaunchRequests().Where(slr => filter?.Invoke(slr) ?? true).Should().NotBeEmpty();
+			Container.ServiceLaunchRequests.Where(slr => filter?.Invoke(slr) ?? true).Should().NotBeEmpty();
 			
 			return Container;
 		}

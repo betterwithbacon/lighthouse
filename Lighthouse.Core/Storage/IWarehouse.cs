@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Lighthouse.Core.Storage
 {
-	public interface IWarehouse : ILighthouseComponent // : IDictionary<WarehouseKey, TData><-- one day!
+	public interface IWarehouse : ILighthouseComponent // : IDictionary<StorageKey, TData><-- one day!
 	{
 		/// <summary>
 		/// Places the warehouse in a state where it can store and retrieve data
@@ -40,11 +40,11 @@ namespace Lighthouse.Core.Storage
 		IEnumerable<T> Retrieve<T>(StorageKey key);
 
 		/// <summary>
-		/// Returns all of the available metadata for a given WarehouseKey.
+		/// Returns all of the available metadata for a given StorageKey.
 		/// </summary>
 		/// <param name="key"></param>
 		/// <param name="scope"></param>
 		/// <returns></returns>
-		WarehouseKeyManifest GetManifest(StorageKey key);
+		StorageKeyManifest GetManifest(StorageKey key);
 	}
 }

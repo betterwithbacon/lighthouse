@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Lighthouse.Core;
 using Lighthouse.Core.Scheduling;
+using Lighthouse.Core.Storage;
 using Lighthouse.Storage.Memory;
 
 namespace Lighthouse.Storage
@@ -122,14 +123,14 @@ namespace Lighthouse.Storage
 
 				// this is where an network discovery will occur. to reach other points, not local to this lighthouse runtime.
 				// currently, this isn't implemented, but ideally
-				foreach (var remoteWarehouse in LighthouseContainer.FindRemoteServices<Warehouse>())
+				foreach (var remoteWarehouseProxy in LighthouseContainer.FindRemoteServices<Warehouse>())
 				{
-					// skip THIS service.
-					if (remoteWarehouse.Id == this.Id)
-						continue;
+					//// skip THIS service.
+					//if (remoteWarehouseProxy.Service.Id == this.Id)
+					//	continue;
 
-					RemoteWarehouses.Add(remoteWarehouse);
-					LighthouseContainer.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Remote warehouse {remoteWarehouse} was added.");
+					//RemoteWarehouses.Add(remoteWarehouse);
+					//LighthouseContainer.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Remote warehouse {remoteWarehouse} was added.");
 				}
 			}
 		}
@@ -138,13 +139,13 @@ namespace Lighthouse.Storage
 		{
 		}
 
-		public Receipt Store<T>(WarehouseKey key, IEnumerable<T> data, IEnumerable<LoadingDockPolicy> loadingDockPolicies)
+		public Receipt Store<T>(StorageKey key, IEnumerable<T> data, IEnumerable<StoragePolicy> loadingDockPolicies)
 		{
 			ThrowIfNotInitialized();
 
 			var uuid = Guid.NewGuid();
 
-			ConcurrentBag<LoadingDockPolicy> enforcedPolicies = new ConcurrentBag<LoadingDockPolicy>();
+			ConcurrentBag<StoragePolicy> enforcedPolicies = new ConcurrentBag<StoragePolicy>();
 
 			// resolve the appropriate store, based on the policy
 			Parallel.ForEach(ResolveShelves<T>(loadingDockPolicies), (shelf) =>
@@ -169,7 +170,7 @@ namespace Lighthouse.Storage
 			return receipt;
 		}
 
-		public void Append<T>(WarehouseKey key, IEnumerable<T> data, IEnumerable<LoadingDockPolicy> loadingDockPolicies)
+		public void Append<T>(StorageKey key, IEnumerable<T> data, IEnumerable<StoragePolicy> loadingDockPolicies)
 		{
 			ThrowIfNotInitialized();
 			
@@ -179,7 +180,7 @@ namespace Lighthouse.Storage
 			});
 		}
 
-		public IEnumerable<T> Retrieve<T>(WarehouseKey key)
+		public IEnumerable<T> Retrieve<T>(StorageKey key)
 		{
 			ThrowIfNotInitialized();
 			return 
@@ -192,15 +193,10 @@ namespace Lighthouse.Storage
 				?? Enumerable.Empty<T>();
 		}
 
-		public IEnumerable<IShelf<T>> ResolveShelves<T>(IEnumerable<LoadingDockPolicy> loadingDockPolicies)
+		public IEnumerable<IShelf<T>> ResolveShelves<T>(IEnumerable<StoragePolicy> loadingDockPolicies)
 		{
 			return Shelves.OfType<IShelf<T>>().Where(s => s.CanEnforcePolicies(loadingDockPolicies));
 		}
-
-		//public IEnumerable<IShelf> ResolveLocalShelves(IEnumerable<LoadingDockPolicy> loadingDockPolicies)
-		//{
-		//	return ResolveShelves(loadingDockPolicies);
-		//}
 
 		void ThrowIfNotInitialized()
 		{
@@ -231,7 +227,7 @@ namespace Lighthouse.Storage
 			return CalculateChecksum(input).Equals(hash);
 		}
 
-		public WarehouseKeyManifest GetManifest(WarehouseKey key)
+		public StorageKeyManifest GetManifest(StorageKey key)
 		{
 			// right now, we just return the data that was sent when it was created
 			var policies = SessionReceipts.FirstOrDefault(sr => sr.Key == key.Id)?.Policies;
@@ -239,9 +235,9 @@ namespace Lighthouse.Storage
 			// if there aren't any receipts for this, the warehouse has no idea where they're stored. 
 			// TODO: ideally, the warehouse will eventually be able to resolve the receipts from their state
 			if (policies == null)
-				return new WarehouseKeyManifest();
+				return new StorageKeyManifest();
 				
-			return new WarehouseKeyManifest
+			return new StorageKeyManifest
 			{
 				// TODO: where do we get the type from? is it passed in? Why should it matter here?
 				StorageShelvesManifests = ResolveShelves<object>(policies).Where(s => s.CanRetrieve(key)).Select( shelf => shelf.GetManifest(key)).ToList(),

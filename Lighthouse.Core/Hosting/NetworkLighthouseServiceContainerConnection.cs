@@ -16,6 +16,8 @@ namespace Lighthouse.Core.Hosting
 		public IList<LighthouseServiceContainerConnectionStatus> ConnectionHistory { get; } =
 			new List<LighthouseServiceContainerConnectionStatus>();
 
+		public bool IsBidrectional => false; // for now, this will NOT provide bidirectional communication, because all sorts of networking implications will be in place
+
 		public bool TryConnect()
 		{
 			IsConnected = false;

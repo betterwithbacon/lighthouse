@@ -6,7 +6,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using WarehouseCore;
+using Lighthouse.Core.Storage;
 
 namespace Lighthouse.Core.Events
 {

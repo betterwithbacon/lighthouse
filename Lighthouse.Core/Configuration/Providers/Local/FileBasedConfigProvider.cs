@@ -11,42 +11,88 @@ using Lighthouse.Core.Configuration.ServiceDiscovery;
 
 namespace Lighthouse.Core.Configuration.Providers.Local
 {
+	public interface IFileContentProvider
+	{
+		string GetContent();
+	}
+
+	public class MemoryContentProvider : IFileContentProvider
+	{
+		private readonly string content;
+		public MemoryContentProvider(string content)
+		{
+			this.content = content;
+		}
+
+		public string GetContent()
+		{
+			return content;
+		}
+	}
+
+	public class FileSystemContentProvider : IFileContentProvider
+	{
+		readonly ILighthouseServiceContainer lighthouseContainer;
+		readonly string filePath;
+
+		public string GetContent()
+		{
+			return lighthouseContainer.GetFileSystemProviders().FirstOrDefault()?.ReadStringFromFileSystem(filePath) ?? "";
+		}
+
+		public FileSystemContentProvider(ILighthouseServiceContainer lighthouseContainer, string filePath)
+		{
+			this.lighthouseContainer = lighthouseContainer;
+			this.filePath = filePath;
+		}
+
+		public override string ToString()
+		{
+			return filePath;
+		}
+	}
+
 	public class FileBasedConfigProvider<T> : IConfigurationProvider
 		where T : LighthouseYamlBaseConfig
 	{
 		private readonly string ConfigFilePath;
 		public ILighthouseServiceContainer LighthouseContainer { get; }
-		public event StatusUpdatedEventHandler StatusUpdated;
-		protected string RawConfigData { get; set; }
 		public string Name { get; private set; }
 		public LighthouseConfigType ConfigType { get; private set; }
+		private IFileContentProvider FileContentProvider { get; }
 		
-		Dictionary<LighthouseConfigType, Type> ConfigTypeTypeMappings = new Dictionary<LighthouseConfigType, Type>
-		{
-			{ LighthouseConfigType.App, typeof(LighthouseYamlAppConfig)}
-		};
+		//Dictionary<LighthouseConfigType, Type> ConfigTypeTypeMappings = new Dictionary<LighthouseConfigType, Type>
+		//{
+		//	{ LighthouseConfigType.App, typeof(LighthouseYamlAppConfig)}
+		//};
 
-		public FileBasedConfigProvider(ILighthouseServiceContainer lighthouseContainer, string configFilePath = null)			
+		public FileBasedConfigProvider(ILighthouseServiceContainer lighthouseContainer, IFileContentProvider fileContentProvider)
 		{
-			LighthouseContainer = lighthouseContainer ?? throw new ArgumentNullException(nameof(lighthouseContainer));
-			ConfigFilePath = configFilePath; // this can override the path
-
-			LoadFile();			
+			LighthouseContainer = lighthouseContainer ?? throw new ArgumentNullException(nameof(lighthouseContainer));			
+			FileContentProvider = fileContentProvider ?? throw new ArgumentNullException(nameof(fileContentProvider));
+			//Load();
 		}
 
-		private void LoadFile()
+		public FileBasedConfigProvider(ILighthouseServiceContainer lighthouseContainer, string configFilePath = null)
 		{
-			// TODO: this is a complete mess right now, as it makes A LOT OF assumptions, about what files will be used and from where ,but this is just step 1.
-			var completeConfigFilePath = ConfigFilePath ?? Path.Combine(LighthouseContainer.WorkingDirectory, LighthouseYamlBaseConfig.DEFAULT_CONFIG_FILENAME);
-			RawConfigData = LighthouseContainer.GetFileSystemProviders().FirstOrDefault()?.ReadStringFromFileSystem(completeConfigFilePath) ?? "";
+			LighthouseContainer = lighthouseContainer ?? throw new ArgumentNullException(nameof(lighthouseContainer));
+			ConfigFilePath = configFilePath ?? Path.Combine(lighthouseContainer.WorkingDirectory, LighthouseYamlBaseConfig.DEFAULT_CONFIG_FILENAME); //  cache this off
+			FileContentProvider = new FileSystemContentProvider(lighthouseContainer, configFilePath);
+			//Load();
+		}
 
-			if (RawConfigData != null)
+		public void Load()
+		{
+			var data = FileContentProvider.GetContent();
+
+			// TODO: this is a complete mess right now, as it makes A LOT OF assumptions, about what files will be used and from where ,but this is just step 1.
+			if (data != null)
 			{
 				var deserializer = new DeserializerBuilder()
 					.WithNamingConvention(new CamelCaseNamingConvention())
 					.Build();
 
-				var config = deserializer.Deserialize<T>(RawConfigData);
+				var config = deserializer.Deserialize<T>(data);
 
 				// Process the common elements of a config file
 				Name = config.Name;
@@ -57,7 +103,7 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 			}
 			else
 			{
-				throw new ApplicationException($"No data was present in configuration file: {ConfigFilePath ?? "<unknown path>"}");
+				throw new ApplicationException($"No data was present in configuration input: {FileContentProvider}");
 			}
 		}
 

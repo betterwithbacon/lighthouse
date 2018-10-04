@@ -10,6 +10,7 @@ namespace Lighthouse.Core.Configuration.Providers
 	{
 		string Name { get; }
 		LighthouseConfigType ConfigType { get; }
+		void Load();
 	}
 
 	public interface IAppConfigurationProvider :IConfigurationProvider

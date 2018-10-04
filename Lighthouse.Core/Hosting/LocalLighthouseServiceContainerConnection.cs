@@ -13,9 +13,12 @@ namespace Lighthouse.Core.Hosting
 		public IList<LighthouseServiceContainerConnectionStatus> ConnectionHistory { get; } =
 			new List<LighthouseServiceContainerConnectionStatus>();
 
-		public LocalLighthouseServiceContainerConnection(ILighthouseServiceContainer lighthouseServiceContainer)
+		public bool IsBidrectional { get; }
+
+		public LocalLighthouseServiceContainerConnection(ILighthouseServiceContainer lighthouseServiceContainer, bool isBidirectional = true)
 		{
-			LighthouseServiceContainer = lighthouseServiceContainer;			
+			LighthouseServiceContainer = lighthouseServiceContainer;
+			IsBidrectional = isBidirectional;
 		}
 
 		public bool TryConnect()
@@ -26,7 +29,7 @@ namespace Lighthouse.Core.Hosting
 
 		public override string ToString()
 		{
-			return $"Local Service Container {LighthouseServiceContainer?.ServerName}";
+			return $"Local Service Container '{LighthouseServiceContainer?.ServerName}'";
 		}
 	}
 }

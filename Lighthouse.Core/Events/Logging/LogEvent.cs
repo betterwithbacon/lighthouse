@@ -18,7 +18,7 @@ namespace Lighthouse.Core.Events.Logging
 
 		public override string ToString()
 		{
-			return $"LogEvent: {Message?.ToLogSummary(50) ?? "<no message>"}";
+			return $"LogEvent: {Message?.ToLogSummary(100) ?? "<no message>"}";
 		}
 	}
 }

@@ -11,9 +11,11 @@ using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using Lighthouse.Core.Scheduling;
+using Lighthouse.Core.Storage;
 using Lighthouse.Core.Utils;
 using Lighthouse.Monitor;
 using Lighthouse.Server.Utils;
+using Lighthouse.Storage;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -24,7 +26,7 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Server
 {
-    public class LighthouseServer : ILighthouseServiceContainer, ILighthouseLogSource
+    public class LighthouseServer : ILighthouseServiceContainer
 	{
 		#region LighthouseServiceRun
 		public class LighthouseServiceRun
@@ -41,40 +43,48 @@ namespace Lighthouse.Server
 		}
 		#endregion
 
-		#region Fields
+		#region Fields - Server Metadata
+		public string ServerName { get; }
 		public const string DEFAULT_APP_NAME = "Lighthouse Server";
-		
-		private readonly ConcurrentBag<LighthouseServiceRun> ServiceThreads = new ConcurrentBag<LighthouseServiceRun>();		
-		private readonly Action<string> LogLocally;		
-		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
-		public event StatusUpdatedEventHandler StatusUpdated;
-		private readonly ConcurrentBag<Schedule> Schedules = new ConcurrentBag<Schedule>();
-		public bool IsRunning { get; private set; }			
-		public string Identifier => throw new NotImplementedException();
+		public string Identifier => ServerName;
 		public string WorkingDirectory { get; private set; } = @"C:\";
-		TimeEventProducer GlobalClock { get; set; } // raise an event every minute, like a clock (a not very good clock)
 		public readonly OSPlatform OS;
+		#endregion
+
+		#region Fields - Log
+		private readonly ConcurrentBag<Action<string>> LocalLoggers;
+		public event StatusUpdatedEventHandler StatusUpdated;
+		#endregion
+
+		#region Fields - Task Management		
+		private readonly ConcurrentBag<LighthouseServiceRun> ServiceThreads = new ConcurrentBag<LighthouseServiceRun>();				
+		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();		
+		private readonly ConcurrentBag<Schedule> Schedules = new ConcurrentBag<Schedule>();
+		public bool IsRunning { get; private set; }
 		#endregion
 		
 		#region Fields - Configuration
-		public IAppConfigurationProvider LaunchConfiguration { get; private set; }
+		private IAppConfigurationProvider AppConfiguration { get; set; }
 		// Local cache of ALL repositories. this will likely include more than the initial config
-		private IList<IServiceRepository> ServiceRepositories { get; set; }
+		public IList<IServiceRepository> ServiceRepositories { get; set; }
+		public IList<ServiceLaunchRequest> ServiceLaunchRequests { get; set; }
 		public LighthouseMonitor LighthouseMonitor { get; private set; }
 		#endregion
 
 		#region Fields - Events
 		public IWorkQueue<IEvent> EventQueue { get; }
-		IWorkQueue<IEvent> WorkQueue { get; set; }
-
-		public string ServerName { get; }
-
+		private IWorkQueue<IEvent> InternalWorkQueue { get; set; }
 		readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
 		readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
 		readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
 		Timer Timer;
-		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 60 * 1000;
+		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 10 * 10; // per minute
 		readonly List<ILighthouseServiceContainerConnection> RemoteContainerConnections = new List<ILighthouseServiceContainerConnection>();
+		#endregion
+
+		#region Fields - Resources
+		TimeEventProducer GlobalClock { get; set; } // raise an event every minute, like a clock (a not very good clock)
+		public IWarehouse Warehouse { get; }
 		#endregion
 
 		#region Constructors
@@ -85,11 +95,17 @@ namespace Lighthouse.Server
 			string workingDirectory = null,
 			IWorkQueue<IEvent> eventQueue = null, 
 			double defaultScheduleTimeIntervalInMilliseconds = DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS,
-			TimeEventProducer globalClock = null)
+			TimeEventProducer globalClock = null,
+			Action<LighthouseServer> preLoadOperations = null)
 		{
 			ServerName = serverName;
-			LogLocally = localLogger ?? Console.WriteLine;
+			LocalLoggers = new ConcurrentBag<Action<string>>();
+
+
+			AddLocalLogger(localLogger ?? Console.WriteLine) ; // always have at least ONE local logger
 			ServiceRepositories = new List<IServiceRepository>();
+			ServiceLaunchRequests = new List<ServiceLaunchRequest>();
+
 			//LaunchConfiguration = launchConfiguration ?? new MemoryAppConfigurationProvider(DEFAULT_APP_NAME, this); // if no config is passed in, start with a blank one
 
 			//TODO: this seems a little hacky, but I DO want to eventually enforce graph participation by components
@@ -97,29 +113,39 @@ namespace Lighthouse.Server
 			//if (LaunchConfiguration.LighthouseContainer != this)
 			//	RegisterComponent(LaunchConfiguration);
 
-			EventQueue = eventQueue ?? new MemoryEventQueue();
 			GlobalClock = globalClock ?? new TimeEventProducer(defaultScheduleTimeIntervalInMilliseconds);
 			
 			// set the local environment state
 			OS = RuntimeServices.GetOS();
 			WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory;
 
+			// for now just expose the memory
+			Warehouse = new Warehouse();
+
 			Log(LogLevel.Debug,LogType.Info, this, "Lighthouse server initializing...");
 
-			// load up the providers
+			// load up the providers, includes the configuration providers
 			LoadProviders();
 
-			// load up the local resources						
-			// look for the local service config
-			LoadConfiguration();
+			// perform some operations before the server loads it's configuration, the most likely operations are actually adding support for loading the configuration.
+			preLoadOperations?.Invoke(this);
+
+			// laod up app specific details
+			LoadAppConfiguration();
 		}
 		#endregion
 
-		#region Server Lifecycle		
-		public void Start()
+		#region Server Lifecycle	
+		public void AddLocalLogger(Action<string> logAction)
 		{
-			Log(LogLevel.Debug,LogType.Info,this, "Lighthouse server starting");
+			if(logAction != null)
+				LocalLoggers.Add(logAction);
+		}
 
+		public void Start()
+		{			
+			Log(LogLevel.Debug,LogType.Info,this, "Lighthouse server starting");
+			
 			// start the Mointor service. This will make sure everything is working correctly.
 			StartMonitor();
 
@@ -127,44 +153,64 @@ namespace Lighthouse.Server
 			IsRunning = true;
 
 			// configure a producer, that will periodically read from an event stream, and emit those events within the context.			
-			RegisterEventProducer(new QueueEventProducer(EventQueue, 1000));
+			if(EventQueue != null)
+				RegisterEventProducer(new QueueEventProducer(EventQueue, 1000));
+
+			// always add the global clock. this clock will be used to drive scheduled events
 			RegisterEventProducer(GlobalClock);
 
 			// TODO: lets just make this be a hook to add queues, to avoid this being overused
 			// the internal queue, is a ideally a way to create durability of this process, NOT a way to provide inter-lighthouse communication
-
 			LaunchConfiguredServices();
 		}
 
 		private void LaunchConfiguredServices()
 		{
 			// TODO: right now, it's one, but it COULD be more, what's that like?!
-			
-			//// reigster all of the service requests, from the config providers.
-			//foreach (var request in ServiceLaunchRequests)
-			//{
-			//	Log(LogLevel.Debug,LogType.Info,this, $"Registering service request: {request}");
-			//	LighthouseMonitor.RegisterServiceRequest(request);
 
-			//	// launch the service
-			//	Launch(request);
-			//}
+			//// reigster all of the service requests, from the config providers.
+			foreach (var request in ServiceLaunchRequests)
+			{
+				Log(LogLevel.Debug, LogType.Info, this, $"Preparing to start {request}");
+				LighthouseMonitor.RegisterServiceRequest(request);
+
+				// launch the service
+				Launch(request);
+			}
 		}
 
-		public void LoadConfiguration()
+		private void LoadAppConfiguration()
 		{
-			// TODO: there should probably be only one local appconfig resource
-			LaunchConfiguration = GetResourceProviders<IAppConfigurationProvider>().FirstOrDefault();
+			var allConfigs = GetResourceProviders<IAppConfigurationProvider>();
+
+			if (!allConfigs.Any())
+				throw new InvalidOperationException("No  app config provider found.");
+
+			if (allConfigs.Count() > 1)
+				throw new InvalidOperationException("Too many app configuration providers found. There should onl e one");
+
+			AppConfiguration = allConfigs.Single();
+
+			Log(LogLevel.Debug, LogType.Info, this, $"Loading config file data {AppConfiguration}");
+			AppConfiguration.Load();
+
+			foreach (var slr in AppConfiguration.GetServiceRepositories())			
+				AddServiceRepository(slr);
+
+			foreach (var slr in AppConfiguration.GetServiceLaunchRequests().Where(s => s != null))
+				AddServiceLaunchRequest(slr);			
 		}
 
 		public void AddServiceRepository(IServiceRepository serviceRepository)
 		{
-
+			Log(LogLevel.Debug, LogType.Info, this, $"Loading service launch request: {serviceRepository}");
+			ServiceRepositories.Add(serviceRepository);
 		}
 
 		public void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest)
 		{
-
+			Log(LogLevel.Debug, LogType.Info, this, $"Loading service launch request: {launchRequest}");
+			ServiceLaunchRequests.Add(launchRequest);
 		}
 
 		public async Task Stop()
@@ -288,6 +334,8 @@ namespace Lighthouse.Server
 
 		private ILighthouseService ResolveService(string serviceName)
 		{
+			// iterate over all of the repos and find the name by service
+			// TODO: how do we handle ambiguity
 			throw new NotImplementedException();
 		}
 
@@ -321,22 +369,35 @@ namespace Lighthouse.Server
 			ServiceThreads.Add(new LighthouseServiceRun(service, startedTask));
 		}
 
+		/// <summary>
+		/// Initializes a copy of this component in the current container.
+		/// </summary>
+		/// <param name="component"></param>
 		public void RegisterComponent(ILighthouseComponent component)
 		{
 			Log(LogLevel.Debug,LogType.Info,this, $"Added component: {component}.");
-			
 			
 			if(component is ILighthouseService service)
 				service.Initialize(this);
 		}
 
-		public void RegisterResource(IResourceProvider component)
+		///// <summary>
+		///// Registers this new type with the local service repository. This type will now be available for other apps and 
+		///// </summary>
+		///// <param name="type"></param>
+		//public void RegisterComponentType<T>()
+		//{
+		//	Log(LogLevel.Debug, LogType.Info, this, $"Registered component: {typeof(T)}.");
+		//	var localRepo = 
+			
+		//}
+
+		public void RegisterResourceProvider(IResourceProvider resourceProvider)
 		{
-			Log(LogLevel.Debug, LogType.Info, this, $"Added resource: {component}.");
+			Log(LogLevel.Debug, LogType.Info, this, $"Added resource: {resourceProvider}.");
 			
 			// subclass specific operations
-			if (component is IResourceProvider rs)
-				Resources.Add(rs);
+			Resources.Add(resourceProvider);
 		}
 		#endregion
 
@@ -362,9 +423,18 @@ namespace Lighthouse.Server
 			StatusUpdated?.Invoke(null, message);
 
 			// emit a log event so that other places can view it	
-			// but don't emit debug logs
-			if(emitEvent)
-				EmitEvent(new LogEvent(this, sender as ILighthouseComponent) { Message = message ?? $"{level}:{logType} {sender} {exception}"}, sender);
+			//// but don't emit debug logs
+			//if(emitEvent)
+			//	EmitEvent(new LogEvent(this, sender as ILighthouseComponent) { Message = message ?? $"{level}:{logType} {sender} {exception}"}, sender);
+		}
+
+		private void LogLocally(string log)
+		{
+			// TODO: do this in parallel?			
+			foreach(var logger in LocalLoggers)
+			{
+				Do((_) => logger(log));
+			}
 		}
 		#endregion
 
@@ -377,7 +447,7 @@ namespace Lighthouse.Server
 			return ServiceThreads.Select(st => st.Service).OfType<T>();
 		}
 
-		public IEnumerable<T> FindRemoteServices<T>() where T : ILighthouseService
+		public IEnumerable<LighthouseServiceProxy<T>> FindRemoteServices<T>() where T : ILighthouseService
 		{
 			return RemoteContainerConnections.Where(conn => conn.IsConnected).SelectMany(conn => conn.LighthouseServiceContainer.FindServices<T>());
 		}
@@ -396,11 +466,11 @@ namespace Lighthouse.Server
 			// TODO: factor out how the "root" directory is found. This probably needs to be an environment config option
 			// File System providers
 			if (OS == OSPlatform.Windows)
-				RegisterResource(new WindowsFileSystemProvider(WorkingDirectory, this));
+				RegisterResourceProvider(new WindowsFileSystemProvider(WorkingDirectory, this));
 			else if (OS == OSPlatform.Linux)
-				RegisterResource(new UnixFileSystemProvider());
+				RegisterResourceProvider(new UnixFileSystemProvider());
 
-			RegisterResource(new InternetNetworkProvider(this));
+			RegisterResourceProvider(new InternetNetworkProvider(this));
 		}
 
 		public IEnumerable<T> GetResourceProviders<T>()
@@ -464,7 +534,7 @@ namespace Lighthouse.Server
 				new Timer((context) => {					
 					try
 					{
-						var ev = WorkQueue.Dequeue(1).FirstOrDefault();
+						var ev = InternalWorkQueue.Dequeue(1).FirstOrDefault();
 						if (ev != null)
 						{
 							HandleEvent(ev);
@@ -476,7 +546,7 @@ namespace Lighthouse.Server
 						throw;
 					}
 				}, this, 100, 1000
-				);
+			);
 		}
 
 		private void AssertProducerIsReady(IEventProducer producer)
@@ -582,6 +652,11 @@ namespace Lighthouse.Server
 			RemoteContainerConnections.Add(connection);
 
 			Log(LogLevel.Info, LogType.Info, this, $"Adding remote lighthouse container: {connection}");
+		}
+
+		IEnumerable<LighthouseServiceProxy<T>> ILighthouseServiceContainer.FindRemoteServices<T>()
+		{
+			throw new NotImplementedException();
 		}
 		#endregion
 	}

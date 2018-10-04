@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Lighthouse.Core.Storage;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,9 +27,9 @@ namespace Lighthouse.Storage.Tests
 			var warehouse = new Warehouse();
 			var payload = new[] { "Test Test test" };
 			var scope = new ApplicationScope("TestApp");
-			var key = new WarehouseKey($"key", scope);
+			var key = new StorageKey($"key", scope);
 
-			var receipt = warehouse.Store(key, payload, new[] { LoadingDockPolicy.Ephemeral });
+			var receipt = warehouse.Store(key, payload, new[] { StoragePolicy.Ephemeral });
 
 			var returnedValue = warehouse.Retrieve<string>(key).ToList();
 
@@ -43,12 +44,12 @@ namespace Lighthouse.Storage.Tests
 			var payload = Enumerable.Range(1, 500).Select(i => $"record{i}-{Guid.NewGuid()}").ToArray();
 
 			var scope = new ApplicationScope("TestApp");
-			var key = new WarehouseKey($"key", scope);
+			var key = new StorageKey($"key", scope);
 
 			Stopwatch timer = new Stopwatch();
 
 			timer.Start();
-			var receipt = warehouse.Store(key, payload, new[] { LoadingDockPolicy.Ephemeral });
+			var receipt = warehouse.Store(key, payload, new[] { StoragePolicy.Ephemeral });
 			var returnedValue = warehouse.Retrieve<string>(key).ToList();
 			Warehouse.VerifyChecksum(returnedValue, receipt.SHA256Checksum).Should().BeTrue();
 			timer.Stop();
@@ -66,9 +67,9 @@ namespace Lighthouse.Storage.Tests
 			var warehouse = new Warehouse();
 			var payload = new[] { "Test Test test" };
 			var scope = new ApplicationScope("TestApp");
-			var key = new WarehouseKey($"key", scope);
+			var key = new StorageKey($"key", scope);
 
-			var receipt = warehouse.Store(key, payload, new[] { LoadingDockPolicy.Ephemeral });
+			var receipt = warehouse.Store(key, payload, new[] { StoragePolicy.Ephemeral });
 
 			var returnedValue = warehouse.Retrieve<string>(key).ToList();
 
@@ -83,9 +84,9 @@ namespace Lighthouse.Storage.Tests
 			var warehouse = new Warehouse();
 			var payload = new List<string>() { "Test Test test" };
 			var scope = new ApplicationScope("TestApp");
-			var key = new WarehouseKey($"key", scope);
+			var key = new StorageKey($"key", scope);
 
-			var receipt = warehouse.Store(key, payload, new[] { LoadingDockPolicy.Ephemeral });
+			var receipt = warehouse.Store(key, payload, new[] { StoragePolicy.Ephemeral });
 
 			var returnedValue = warehouse.Retrieve<string>(key).ToList();
 
@@ -112,8 +113,8 @@ namespace Lighthouse.Storage.Tests
 				new ParallelOptions { MaxDegreeOfParallelism = 10 },
 				(index) => {
 					var payload = new[] { index.ToString() };
-					var key = new WarehouseKey($"key_{index}", appScope);
-					warehouse.Store(key, payload, new[] { LoadingDockPolicy.Ephemeral });
+					var key = new StorageKey($"key_{index}", appScope);
+					warehouse.Store(key, payload, new[] { StoragePolicy.Ephemeral });
 					output.WriteLine($"Index stored: {index}");
 					warehouse.Retrieve<string>(key).Should().Contain(payload);
 				});
@@ -133,9 +134,9 @@ namespace Lighthouse.Storage.Tests
 				(index) => {
 					var payload = new[] { index.ToString() };
 					var additionalPayload = new[] { (index + 100).ToString() };
-					var key = new WarehouseKey($"key_{index}", appScope);
-					warehouse.Store(key, payload, new[] { LoadingDockPolicy.Ephemeral });
-					warehouse.Append(key, additionalPayload, new[] { LoadingDockPolicy.Ephemeral });
+					var key = new StorageKey($"key_{index}", appScope);
+					warehouse.Store(key, payload, new[] { StoragePolicy.Ephemeral });
+					warehouse.Append(key, additionalPayload, new[] { StoragePolicy.Ephemeral });
 					output.WriteLine($"Index stored: {index}");
 					warehouse.Retrieve<string>(key).Should().Contain(payload.Concat(additionalPayload));
 				});
@@ -148,14 +149,14 @@ namespace Lighthouse.Storage.Tests
 		{
 			var warehouse = new Warehouse();
 			var appScope = new ApplicationScope("Test");
-			var key = new WarehouseKey("key", appScope);
+			var key = new StorageKey("key", appScope);
 			var payload = new[] { "initial" };
-			warehouse.Store(key, payload, new[] { LoadingDockPolicy.Ephemeral });
+			warehouse.Store(key, payload, new[] { StoragePolicy.Ephemeral });
 
 			Parallel.ForEach(Enumerable.Range(1, 100),
 				new ParallelOptions { MaxDegreeOfParallelism = 10 },
 				(index) => {
-					warehouse.Append(key, new[] { (index + 100).ToString() }, new[] { LoadingDockPolicy.Ephemeral });
+					warehouse.Append(key, new[] { (index + 100).ToString() }, new[] { StoragePolicy.Ephemeral });
 					output.WriteLine($"Index stored: {index}");
 
 				});
@@ -166,7 +167,7 @@ namespace Lighthouse.Storage.Tests
 		[Fact]
 		[Trait("Function", "StoreAndRetrieve")]
 		[Trait("Category", "Performance")]
-		public void GetGetManifest_SizeAndPoliciesMatches()
+		public void GetManifest_SizeAndPoliciesMatches()
 		{
 			Assert.False(true);
 		}

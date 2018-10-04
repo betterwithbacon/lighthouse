@@ -1,4 +1,5 @@
 ﻿using Lighthouse.Core.IO;
+using Lighthouse.Core.Storage;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,29 +11,26 @@ namespace Lighthouse.Storage.Disk
 {
 	public class LocalDiskShelf : IShelf<string>
 	{
-		public static readonly List<LoadingDockPolicy> SupportedPolicies = new List<LoadingDockPolicy> { LoadingDockPolicy.Persistent };
+		private readonly Dictionary<StorageKey, string> FileNames = new Dictionary<StorageKey, string>();
+
+		public static readonly List<StoragePolicy> SupportedPolicies = new List<StoragePolicy> { StoragePolicy.Persistent };
 		public string Identifier => Guid.NewGuid().ToString();
 		public IWarehouse Warehouse { get; private set; }
 		public IStorageScope Scope { get; private set; }
-		private readonly Dictionary<WarehouseKey, string> FileNames;
+		
 		public IFileSystemProvider FileSystemProvider { get; private set; }
-
-		public LocalDiskShelf()
-		{
-			FileNames = new Dictionary<WarehouseKey, string>();			
-		}
-
-		public void Append(WarehouseKey key, IEnumerable<string> additionalPayload)
+		
+		public void Append(StorageKey key, IEnumerable<string> additionalPayload)
 		{
 			throw new NotImplementedException();
 		}
 
-		public bool CanEnforcePolicies(IEnumerable<LoadingDockPolicy> loadingDockPolicies)
+		public bool CanEnforcePolicies(IEnumerable<StoragePolicy> loadingDockPolicies)
 		{
 			return loadingDockPolicies.Intersect(SupportedPolicies).Any();
 		}
 
-		public bool CanRetrieve(WarehouseKey key)
+		public bool CanRetrieve(StorageKey key)
 		{
 			var file = GetFilePath(key);
 			return FileSystemProvider.FileExists(file);
@@ -48,10 +46,10 @@ namespace Lighthouse.Storage.Disk
 			return obj?.Identifier.GetHashCode() ?? -1;
 		}
 
-		public ShelfManifest GetManifest(WarehouseKey key)
+		public ShelfManifest GetManifest(StorageKey key)
 		{
 			// we can't support returning this data for real yet. It'd be good to pull this data from the file system			
-			var manifest = new ShelfManifest(new[] { LoadingDockPolicy.Persistent }, -1);
+			var manifest = new ShelfManifest(new[] { StoragePolicy.Persistent }, -1);
 
 			// TODO: pull some metadata from File system
 			return manifest;
@@ -68,7 +66,7 @@ namespace Lighthouse.Storage.Disk
 				throw new ApplicationException("No filesystem could be located.");
 		}
 
-		public IEnumerable<string> Retrieve(WarehouseKey key)
+		public IEnumerable<string> Retrieve(StorageKey key)
 		{
 			// TODO: don't do this asynchronously YET. I'm delaying converting everything to async, but not yet.
 			var rawData = FileSystemProvider.ReadFromFileSystem(GetFilePath(key)).Result;
@@ -85,7 +83,7 @@ namespace Lighthouse.Storage.Disk
 			}
 		}
 
-		public void Store(WarehouseKey key, IEnumerable<string> payload, IProducerConsumerCollection<LoadingDockPolicy> enforcedPolicies)
+		public void Store(StorageKey key, IEnumerable<string> payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)
 		{
 			var convertedPayload = new List<byte>();
 			foreach(var rec in payload)
@@ -98,7 +96,7 @@ namespace Lighthouse.Storage.Disk
 			FileSystemProvider.WriteToFileSystem($"\\{key.Scope.Identifier}\\{key.Id}", convertedPayload.ToArray());
 		}
 
-		string GetFilePath(WarehouseKey key)
+		string GetFilePath(StorageKey key)
 		{
 			return $"\\{key.Scope.Identifier}\\{key.Id}";
 		}

@@ -6,7 +6,7 @@ using System.Text;
 
 namespace Lighthouse.Core.Configuration.Providers.Local
 {
-	public class FileBasedAppConfigProvider : FileBasedConfigProvider<LighthouseYamlAppConfig>
+	public class FileBasedAppConfigProvider : FileBasedConfigProvider<LighthouseYamlAppConfig>, IAppConfigurationProvider
 	{
 		private IList<IServiceRepository> ServiceRepositories { get; set; } = new List<IServiceRepository>();
 		private IList<ServiceLaunchRequest> ServiceLaunchRequests { get; set; } = new List<ServiceLaunchRequest>();
@@ -14,6 +14,11 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 
 		public int MaxThreadCount { get; private set; }
 		public string Version { get; private set; }
+
+		public FileBasedAppConfigProvider(ILighthouseServiceContainer lighthouseContainer, IFileContentProvider fileContentProvider)
+			: base(lighthouseContainer, fileContentProvider)
+		{
+		}
 
 		public FileBasedAppConfigProvider(ILighthouseServiceContainer lighthouseContainer, string configFilePath = null)
 			: base(lighthouseContainer, configFilePath)

@@ -16,12 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Lighthouse.Core\Lighthouse.Core.csproj" />
     <ProjectReference Include="..\Lighthouse.Monitor\Lighthouse.Monitor.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="WarehouseCore">
-      <HintPath>..\dependencies\WarehouseCore.dll</HintPath>
-    </Reference>
+    <ProjectReference Include="..\Lighthouse.Storage\Lighthouse.Storage.csproj" />
   </ItemGroup>
 
 </Project>

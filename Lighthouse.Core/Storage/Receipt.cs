@@ -8,7 +8,7 @@ namespace Lighthouse.Core.Storage
 		public Guid UUID { get; set; }
 		public string Key { get; set; }
 		public IList<StoragePolicy> Policies { get; set; }
-		public IStorageScope Scope { get; internal set; }
+		public IStorageScope Scope { get; set; }
 		public string SHA256Checksum { get; set; }
 		public bool WasSuccessful { get; private set; }
 

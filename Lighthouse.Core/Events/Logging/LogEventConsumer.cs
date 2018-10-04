@@ -1,42 +1,29 @@
 ﻿using Lighthouse.Core.Logging;
-using Lighthouse.Core.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Lighthouse.Storage;
+using Lighthouse.Core.Storage;
 
 namespace Lighthouse.Core.Events.Logging
 {
     public class LogEventConsumer : BaseEventConsumer
-    {
-		private IWarehouse Warehouse { get; set; }
-
+    {		
 		// this is a bit of a hack, to automatically rollover logs daily. 
-		private string LOG_NAME => $"{LighthouseContainer.GetNow().ToString("MMddyyyy")}_LOG";
-		private IList<LoadingDockPolicy> LoadingDockPolicies => new[] { LoadingDockPolicy.Ephemeral };		
-		
-		public List<string> AllLogRecords => Warehouse.Retrieve<string>( new WarehouseKey(LOG_NAME, this)).ToList();
-		
+		private string LOG_NAME { get; set; }
+		private IList<StoragePolicy> LoadingDockPolicies => new[] { StoragePolicy.Ephemeral };				
+		public List<string> AllLogRecords => LighthouseContainer.Warehouse.Retrieve<string>( new StorageKey(LOG_NAME, this)).ToList();		
 		public override IList<Type> Consumes => new[] { typeof(LogEvent) };
 
-		public void HandleEvent(LogEvent ev)
+		public void HandleEvent(LogEvent logEvent)
 		{
-			this.ThrowIfInvalidEvent(ev);
-			
-			if (ev is LogEvent logEvent)
-			{
-				// record that a log event was received
-				LighthouseContainer.Log(LogLevel.Debug, LogType.EventReceived, this, message: logEvent.ToString());
-				Warehouse.Append(new WarehouseKey(LOG_NAME, this), new[] { $"[{logEvent.Time}] {logEvent.Message}" }, LoadingDockPolicies);
-			}
+			LighthouseContainer.Log(LogLevel.Debug, LogType.EventReceived, this, message: logEvent.ToString());
+			LighthouseContainer.Warehouse.Append(new StorageKey(LOG_NAME, this), new[] { $"[{logEvent.Time}] {logEvent.Message}" }, LoadingDockPolicies);			
 		}
 
 		protected override void OnInit()
-		{				
-
-			Warehouse = LighthouseContainer.ResolveService<Warehouse>();			
-			Warehouse.Store(new WarehouseKey(LOG_NAME, this), new[] { $"[{LighthouseContainer.GetNow()}] Log Starting" }, LoadingDockPolicies);
+		{
+			LOG_NAME = $"{LighthouseContainer.GetNow().ToString("MMddyyyy")}_LOG";
+			LighthouseContainer.Warehouse.Store(new StorageKey(LOG_NAME, this), new[] { $"[{LighthouseContainer.GetNow()}] Log Starting" }, LoadingDockPolicies);
 		}
 	}
 }

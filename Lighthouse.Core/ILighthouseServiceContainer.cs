@@ -1,8 +1,10 @@
-﻿using Lighthouse.Core.Events;
+﻿using Lighthouse.Core.Configuration.ServiceDiscovery;
+using Lighthouse.Core.Events;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using Lighthouse.Core.Scheduling;
+using Lighthouse.Core.Storage;
 using System;
 using System.Collections.Generic;
 
@@ -30,11 +32,21 @@ namespace Lighthouse.Core
 		IEnumerable<T> FindServices<T>() where T : ILighthouseService;
 
 		/// <summary>
+		/// Returns remote services from other attached contexts. Will NOT return services from this context. 
+		/// Any command issued on the local object. will be forwarded to the other service, executed, and results returned.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
+		IEnumerable<LighthouseServiceProxy<T>> FindRemoteServices<T>() where T : ILighthouseService;
+
+		/// <summary>
 		/// Returns Lighthouser services that are hosted outside of this service container
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		IEnumerable<T> FindRemoteServices<T>() where T : ILighthouseService;
+		//LighthouseComponentDescriptor<T> RetrieveRemoteComponent<T>(string uri = null) where T : ILighthouseComponent;
+
+		//T FindRemoteServiceDescriptor<T>() where T : ILighthouseServiceDescriptor;
 
 		/// <summary>
 		/// The current time, based on the lighthouse service.
@@ -57,6 +69,8 @@ namespace Lighthouse.Core
 		/// </summary>
 		/// <returns></returns>
 		IEnumerable<INetworkProvider> GetNetworkProviders();
+
+		void RegisterResourceProvider(IResourceProvider resourceProvider);
 
 		/// <summary>
 		/// Registers any component passed to it. This is the best way to ensure logging and resource access is availabe
@@ -90,5 +104,10 @@ namespace Lighthouse.Core
 		IEnumerable<IEvent> GetAllReceivedEvents(PointInTime since = null);
 		
 		void RegisterRemotePeer(ILighthouseServiceContainerConnection connection);
+
+		/// <summary>
+		/// A common warehouse, where abstracted storage interfaces are exposed. Otherwarehouses might be attached to this container, but this is a container guaranteed to exist, and expose local resources.
+		/// </summary>
+		IWarehouse Warehouse { get; }
 	}
 }

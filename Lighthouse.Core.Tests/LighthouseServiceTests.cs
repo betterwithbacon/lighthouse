@@ -14,7 +14,7 @@ namespace Lighthouse.Core.Tests
 		{
 		}
 
-		protected class TestApp : LighthouseServiceBase
+		public class TestApp : LighthouseServiceBase
 		{
 			public List<Action> StartupActions = new List<Action>();
 			public List<Action> ScheduledTasks = new List<Action>();

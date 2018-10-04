@@ -3,8 +3,7 @@ version: '0.1'
 maxThreadCount: '4'
 type: app
 
-service_repositories:
-    -   name: local
+service_repositories:    
     -   name: global
         uri: 'lighthouse:global_service_repo'
 

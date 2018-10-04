@@ -36,6 +36,9 @@ Represents a common implementation of a lighthouse service that will run many sm
 #### Startup
 1) Monitor Starts
 2) Load Configuration Providers
+    - There might be multiple config providers, each providing different config elements.
+    - When Load Config is called, it will look for an App config, of which there should only be one
+        - When a traditional server is started, it will look for a config YAML in it's working directory first
 3) Load Service Repositories
 4) Launch Services
     - Load service metadata

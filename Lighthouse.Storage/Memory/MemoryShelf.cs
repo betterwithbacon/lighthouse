@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lighthouse.Core.Storage;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,34 +11,34 @@ namespace Lighthouse.Storage.Memory
 	public class MemoryShelf : IShelf<string>
 	{
 		private static readonly ConcurrentDictionary<MemoryShelfKey, List<string>> Records = new ConcurrentDictionary<MemoryShelfKey, List<string>>();
-		public static readonly IList<LoadingDockPolicy> SupportedPolicies = new[] {  LoadingDockPolicy.Ephemeral };
+		public static readonly IList<StoragePolicy> SupportedPolicies = new[] {  StoragePolicy.Ephemeral };
 		public string Identifier => Guid.NewGuid().ToString();
 		public IWarehouse Warehouse { get; private set; }
 		public IStorageScope Scope { get; private set; }
 
-		public bool CanRetrieve(WarehouseKey key)
+		public bool CanRetrieve(StorageKey key)
 		{
 			return Records.Keys.Contains(new MemoryShelfKey(key.Scope, key.Id));
 		}
 
-		public IEnumerable<string> Retrieve(WarehouseKey key)
+		public IEnumerable<string> Retrieve(StorageKey key)
 		{
 			return Records.GetValueOrDefault(new MemoryShelfKey(key.Scope, key.Id), new List<string>());
 		}
 
-		public void Append(WarehouseKey key, IEnumerable<string> additionalPayload)
+		public void Append(StorageKey key, IEnumerable<string> additionalPayload)
 		{
 			Records.AddOrUpdate(new MemoryShelfKey(key.Scope, key.Id), additionalPayload.ToList(), (k, a) => a.Concat(additionalPayload).ToList());
 		}
 
-		public void Store(WarehouseKey key, IEnumerable<string> payload, IProducerConsumerCollection<LoadingDockPolicy> enforcedPolicies)
+		public void Store(StorageKey key, IEnumerable<string> payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)
 		{
 			Records.AddOrUpdate(new MemoryShelfKey(key.Scope, key.Id), payload.ToList(),(k,a) => payload.ToList());
 			foreach(var pol in SupportedPolicies)
 				enforcedPolicies.TryAdd(pol);
 		}
 
-		public bool CanEnforcePolicies(IEnumerable<LoadingDockPolicy> loadingDockPolicies)
+		public bool CanEnforcePolicies(IEnumerable<StoragePolicy> loadingDockPolicies)
 		{
 			return SupportedPolicies.Any(
 				sp => loadingDockPolicies.Any(
@@ -57,7 +58,7 @@ namespace Lighthouse.Storage.Memory
 			return obj.Identifier.GetHashCode();
 		}
 
-		public ShelfManifest GetManifest(WarehouseKey key)
+		public ShelfManifest GetManifest(StorageKey key)
 		{
 			if(CanRetrieve(key))
 			{
