@@ -16,13 +16,14 @@ namespace Lighthouse.Core.Tests.Hosting
 		}
 
 		[Fact]
-		public void BasicProxy_PropertyReturns()
+		public void BasicProxy_ProxiedClassReturns()
 		{
 			//var baseClass = new ClassToProxy();
 
-			//var id = baseClass.Id;
-						
-			var proxy = new LighthouseServiceProxy<ClassToProxy>();
+			// create a connection, for the purpose of this test, we're going to connect to a local container
+			var connection = new LocalLighthouseServiceContainerConnection(Container, true);
+
+			var proxy = new LighthouseServiceProxy<ClassToProxy>(connection);
 
 			proxy.Service.Should().NotBeNull();
 			proxy.Service.Id.Should().NotBeEmpty(because:"the proxied object should still be set.");

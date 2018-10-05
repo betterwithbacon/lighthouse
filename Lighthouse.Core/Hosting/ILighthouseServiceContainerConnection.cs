@@ -4,7 +4,7 @@ using System.Net;
 
 namespace Lighthouse.Core.Hosting
 {
-	public interface ILighthouseServiceContainerConnection
+	public interface ILighthouseServiceContainerConnection : ILighthouseComponent
 	{
 		// indicates if the container is still connected. it's up to the connection itself to determine "connected" whether by a ping or connection history, so this flag might be innacurate or out of date for ephemeral connections.
 		bool IsConnected { get; }
@@ -19,12 +19,12 @@ namespace Lighthouse.Core.Hosting
 		/// All connections made TO a server container, are unidirectionally inbound, but this flag indicates if the connectee can respond BACK to the service outside of a request.
 		/// </summary>
 		/// <returns></returns>
-		bool IsBidrectional { get; }
+		bool IsBidirectional { get; }
 
-		ILighthouseServiceContainer LighthouseServiceContainer { get; }
+		ILighthouseServiceContainer RemoteContainer { get; }
 		IList<LighthouseServiceContainerConnectionStatus> ConnectionHistory { get; }
-
-		IEnumerable<LighthouseServiceProxy<T>> FindServices<T>() where T : ILighthouseService;
+		IEnumerable<LighthouseServiceProxy<T>> FindServices<T>()
+			where T : class, ILighthouseService;
 	}
 
 	public struct LighthouseServiceContainerConnectionStatus

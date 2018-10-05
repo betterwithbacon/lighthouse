@@ -1,24 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Lighthouse.Core.Hosting
 {
 	public class LocalLighthouseServiceContainerConnection : ILighthouseServiceContainerConnection
 	{
-		public bool IsConnected => LighthouseServiceContainer != null;
+		public bool IsConnected => RemoteContainer != null;
 
-		public ILighthouseServiceContainer LighthouseServiceContainer { get; }
-		
+		public ILighthouseServiceContainer RemoteContainer { get; }
+
 		public IList<LighthouseServiceContainerConnectionStatus> ConnectionHistory { get; } =
 			new List<LighthouseServiceContainerConnectionStatus>();
 
-		public bool IsBidrectional { get; }
+		public bool IsBidirectional { get; }
 
-		public LocalLighthouseServiceContainerConnection(ILighthouseServiceContainer lighthouseServiceContainer, bool isBidirectional = true)
+		public ILighthouseServiceContainer LighthouseContainer { get; }
+
+		public LocalLighthouseServiceContainerConnection(ILighthouseServiceContainer localContainer, ILighthouseServiceContainer remoteContainer, bool isBidirectional = true)
 		{
-			LighthouseServiceContainer = lighthouseServiceContainer;
-			IsBidrectional = isBidirectional;
+			LighthouseContainer = localContainer;
+			RemoteContainer = remoteContainer;
+			IsBidirectional = isBidirectional;
 		}
 
 		public bool TryConnect()
@@ -29,7 +33,14 @@ namespace Lighthouse.Core.Hosting
 
 		public override string ToString()
 		{
-			return $"Local Service Container '{LighthouseServiceContainer?.ServerName}'";
+			return $"Local Service Container '{RemoteContainer?.ServerName}'";
+		}
+
+		public IEnumerable<LighthouseServiceProxy<T>> FindServices<T>()
+			where T : class, ILighthouseService
+		{
+			// this container is local, so we're sharing the same memory pool,
+			return RemoteContainer.FindServices<T>().OfType<T>().Select(s => new LighthouseServiceProxy<T>(this, s));
 		}
 	}
 }

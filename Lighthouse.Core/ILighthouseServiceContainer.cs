@@ -37,7 +37,7 @@ namespace Lighthouse.Core
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		IEnumerable<LighthouseServiceProxy<T>> FindRemoteServices<T>() where T : ILighthouseService;
+		IEnumerable<LighthouseServiceProxy<T>> FindRemoteServices<T>() where T : class, ILighthouseService;
 
 		/// <summary>
 		/// Returns Lighthouser services that are hosted outside of this service container

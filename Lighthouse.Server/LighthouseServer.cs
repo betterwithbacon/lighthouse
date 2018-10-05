@@ -43,6 +43,11 @@ namespace Lighthouse.Server
 		}
 		#endregion
 
+		#region Fields - Server Defaults
+		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 10 * 10; // per minute
+		public const int DEFAULT_SERVER_PORT = 54545;
+		#endregion
+
 		#region Fields - Server Metadata
 		public string ServerName { get; }
 		public const string DEFAULT_APP_NAME = "Lighthouse Server";
@@ -77,8 +82,7 @@ namespace Lighthouse.Server
 		readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
 		readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
 		readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
-		Timer Timer;
-		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 10 * 10; // per minute
+		Timer InternalWorkQueueProcessorTimer;		
 		readonly List<ILighthouseServiceContainerConnection> RemoteContainerConnections = new List<ILighthouseServiceContainerConnection>();
 		#endregion
 
@@ -96,7 +100,8 @@ namespace Lighthouse.Server
 			IWorkQueue<IEvent> eventQueue = null, 
 			double defaultScheduleTimeIntervalInMilliseconds = DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS,
 			TimeEventProducer globalClock = null,
-			Action<LighthouseServer> preLoadOperations = null)
+			Action<LighthouseServer> preLoadOperations = null,
+			int serverPort = DEFAULT_SERVER_PORT)
 		{
 			ServerName = serverName;
 			LocalLoggers = new ConcurrentBag<Action<string>>();
@@ -127,7 +132,7 @@ namespace Lighthouse.Server
 			// load up the providers, includes the configuration providers
 			LoadProviders();
 
-			// perform some operations before the server loads it's configuration, the most likely operations are actually adding support for loading the configuration.
+			// perform some operations before the server loads it's configuration, the most likely operations are actually adding support for loading the configuration.			
 			preLoadOperations?.Invoke(this);
 
 			// laod up app specific details
@@ -184,7 +189,11 @@ namespace Lighthouse.Server
 			var allConfigs = GetResourceProviders<IAppConfigurationProvider>();
 
 			if (!allConfigs.Any())
-				throw new InvalidOperationException("No  app config provider found.");
+			{
+				// if no config, just leave, and use the "base" config
+				// throw new InvalidOperationException("No  app config provider found.");
+				return;
+			}
 
 			if (allConfigs.Count() > 1)
 				throw new InvalidOperationException("Too many app configuration providers found. There should onl e one");
@@ -447,9 +456,12 @@ namespace Lighthouse.Server
 			return ServiceThreads.Select(st => st.Service).OfType<T>();
 		}
 
-		public IEnumerable<LighthouseServiceProxy<T>> FindRemoteServices<T>() where T : ILighthouseService
+		public IEnumerable<LighthouseServiceProxy<T>> FindRemoteServices<T>()
+			where T : class, ILighthouseService
 		{
-			return RemoteContainerConnections.Where(conn => conn.IsConnected).SelectMany(conn => conn.LighthouseServiceContainer.FindServices<T>());
+			return RemoteContainerConnections
+				.Where(conn => conn.IsConnected)
+				.SelectMany(conn => conn.FindServices<T>());
 		}
 		#endregion
 
@@ -530,7 +542,7 @@ namespace Lighthouse.Server
 		{
 			// kick off the timer
 			// TODO: the creation of the handler should be somewhere else probably
-			Timer = 
+			InternalWorkQueueProcessorTimer = 
 				new Timer((context) => {					
 					try
 					{

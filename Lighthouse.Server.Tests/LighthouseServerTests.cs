@@ -9,6 +9,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using Xunit;
 using Xunit.Abstractions;
@@ -18,9 +19,19 @@ namespace Lighthouse.Server.Tests
 {
 	public class TestApp : LighthouseServiceBase
 	{
-		public string MockProperty { get; }
-		public List<Action> StartupActions = new List<Action>();
-		public List<Action> ScheduledTasks = new List<Action>();
+		Action actionToPerform;
+		public void SetAction(Action action)
+		{
+			actionToPerform = action;
+		}
+
+		public void PerformAction()
+		{
+			if (actionToPerform == null)
+				throw new InvalidOperationException("No action is set to perform.");
+
+			actionToPerform();
+		}
 	}
 
 	public class LighthouseServerTests
@@ -117,10 +128,9 @@ namespace Lighthouse.Server.Tests
 		[Fact]
 		[Trait("Tag", "ServiceDiscovery")]
 		[Trait("Category", "Unit")]
-		public void FindRemoteService_ShouldProxyCommandsCorrectly()
+		public void FindRemoteService_LocalConnection_ShouldProxyCommandsCorrectly()
 		{
 			var otherContainer = new LighthouseServer(serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"));
-
 			// inform the first Container about the other
 			Container.RegisterRemotePeer(new LocalLighthouseServiceContainerConnection(otherContainer));
 
@@ -130,12 +140,65 @@ namespace Lighthouse.Server.Tests
 
 			// launch the app in the "other" container
 			otherContainer.Launch(typeof(TestApp));
+			bool hit = false;
+
+			var originalApp = otherContainer.FindServices<TestApp>().First();
+
+			// configure what this program will "do"
+			originalApp.SetAction(() => { hit = true; originalApp.LighthouseContainer.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info,originalApp, "This action was hit"); } );
 
 			// the local Container should be able to find the service running in the other one
 			var foundTestApp = Container.FindRemoteServices<TestApp>();
 			foundTestApp.Should().NotBeEmpty();
+			var proxy = foundTestApp.Single();
 
-			
+			// so in this case, the proxy should wrap the call, and perform it on the remote target
+			proxy.Service.PerformAction();
+
+			// this means that the proxy 
+			hit.Should().BeTrue();
+		}
+
+		[Fact]
+		[Trait("Tag", "ServiceDiscovery")]
+		[Trait("Category", "Unit")]
+		public void FindRemoteService_NetworkConnection_ShouldProxyCommandsCorrectly()
+		{
+			var serverPort = 54545;
+
+			var otherContainer = new LighthouseServer(
+				serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"),
+				serverPort: serverPort
+			);
+
+			var otherContainerAddress = $"127.0.0.1:{serverPort}";
+
+			// inform the first Container about the other
+			Container.RegisterRemotePeer(new NetworkLighthouseServiceContainerConnection(Container, IPAddress.Parse(otherContainerAddress)));
+
+			// start both Containers
+			Container.Start();
+			otherContainer.Start();
+
+			// launch the app in the "other" container
+			otherContainer.Launch(typeof(TestApp));
+			bool hit = false;
+
+			var originalApp = otherContainer.FindServices<TestApp>().First();
+
+			// configure what this program will "do"
+			originalApp.SetAction(() => { hit = true; originalApp.LighthouseContainer.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, originalApp, "This action was hit"); });
+
+			// the local Container should be able to find the service running in the other one
+			var foundTestApp = Container.FindRemoteServices<TestApp>();
+			foundTestApp.Should().NotBeEmpty();
+			var proxy = foundTestApp.Single();
+
+			// so in this case, the proxy should wrap the call, and perform it on the remote target
+			proxy.Service.PerformAction();
+
+			// this means that the proxy 
+			hit.Should().BeTrue();
 		}
 
 		#endregion
