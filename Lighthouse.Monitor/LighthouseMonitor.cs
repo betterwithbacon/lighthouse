@@ -7,7 +7,7 @@ namespace Lighthouse.Monitor
 {
 	public class LighthouseMonitor : ILighthouseComponent
 	{
-		public ILighthouseServiceContainer LighthouseContainer => throw new NotImplementedException();
+		public ILighthouseServiceContainer Container => throw new NotImplementedException();
 
 		public event StatusUpdatedEventHandler StatusUpdated;
 

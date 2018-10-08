@@ -111,7 +111,7 @@ namespace Lighthouse.Server.Tests
 			var otherContainer = new LighthouseServer(serverName: "Lighthouse Server #2", localLogger:(message) => Output.WriteLine($"Lighthouse Server #2: {message}"));
 
 			// inform the first Container about the other
-			Container.RegisterRemotePeer(new LocalLighthouseServiceContainerConnection(otherContainer));
+			Container.RegisterRemotePeer(new LocalLighthouseServiceContainerConnection(Container,otherContainer));
 
 			// start both Containers
 			Container.Start();
@@ -132,7 +132,7 @@ namespace Lighthouse.Server.Tests
 		{
 			var otherContainer = new LighthouseServer(serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"));
 			// inform the first Container about the other
-			Container.RegisterRemotePeer(new LocalLighthouseServiceContainerConnection(otherContainer));
+			Container.RegisterRemotePeer(new LocalLighthouseServiceContainerConnection(Container, otherContainer));
 
 			// start both Containers
 			Container.Start();
@@ -145,7 +145,7 @@ namespace Lighthouse.Server.Tests
 			var originalApp = otherContainer.FindServices<TestApp>().First();
 
 			// configure what this program will "do"
-			originalApp.SetAction(() => { hit = true; originalApp.LighthouseContainer.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info,originalApp, "This action was hit"); } );
+			originalApp.SetAction(() => { hit = true; originalApp.Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info,originalApp, "This action was hit"); } );
 
 			// the local Container should be able to find the service running in the other one
 			var foundTestApp = Container.FindRemoteServices<TestApp>();
@@ -167,14 +167,17 @@ namespace Lighthouse.Server.Tests
 			var serverPort = 54545;
 
 			var otherContainer = new LighthouseServer(
-				serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"),
-				serverPort: serverPort
+				serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}")				
 			);
 
-			var otherContainerAddress = $"127.0.0.1:{serverPort}";
+			// this server will listen on this port for other lighthouse containers
+			otherContainer.BindServicePort(serverPort);
+
+			var otherContainerAddress = $"127.0.0.1"; // :{serverPort}
 
 			// inform the first Container about the other
-			Container.RegisterRemotePeer(new NetworkLighthouseServiceContainerConnection(Container, IPAddress.Parse(otherContainerAddress)));
+			Container.RegisterRemotePeer(
+				new NetworkLighthouseServiceContainerConnection(Container, IPAddress.Parse(otherContainerAddress)));
 
 			// start both Containers
 			Container.Start();
@@ -187,7 +190,7 @@ namespace Lighthouse.Server.Tests
 			var originalApp = otherContainer.FindServices<TestApp>().First();
 
 			// configure what this program will "do"
-			originalApp.SetAction(() => { hit = true; originalApp.LighthouseContainer.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, originalApp, "This action was hit"); });
+			originalApp.SetAction(() => { hit = true; originalApp.Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, originalApp, "This action was hit"); });
 
 			// the local Container should be able to find the service running in the other one
 			var foundTestApp = Container.FindRemoteServices<TestApp>();

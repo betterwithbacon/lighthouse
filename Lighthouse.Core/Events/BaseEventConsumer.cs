@@ -14,7 +14,7 @@ namespace Lighthouse.Core.Events
 	{		
 		public abstract IList<Type> Consumes { get; }
 
-		public ILighthouseServiceContainer LighthouseContainer { get; protected set; }
+		public ILighthouseServiceContainer Container { get; protected set; }
 
 		public string ScopeName => Identifier;
 
@@ -54,9 +54,9 @@ namespace Lighthouse.Core.Events
 
 		public void Init(ILighthouseServiceContainer container)
 		{
-			LighthouseContainer = container;
+			Container = container;
 			Identifier = Utils.LighthouseComponentLifetime.GenerateSessionIdentifier(this);
-			LighthouseContainer.Log(LogLevel.Debug, LogType.ConsumerStartup, this);
+			Container.Log(LogLevel.Debug, LogType.ConsumerStartup, this);
 			OnInit();
 		}
 

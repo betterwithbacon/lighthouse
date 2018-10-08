@@ -29,12 +29,12 @@ namespace Lighthouse.Core.Events.Time
 		/// <param name="timeEvent"></param>
 		public void HandleEvent(TimeEvent timeEvent)
 		{
-			LighthouseContainer.Log(LogLevel.Debug, LogType.EventReceived, this, timeEvent.ToString());
+			Container.Log(LogLevel.Debug, LogType.EventReceived, this, timeEvent.ToString());
 
 			// evaluate all of the schedules to see if one is a hit, if so, then run the action configured for this consumer
 			if (Schedules.Any(s => s.Key.IsMatch(Schedules[s.Key], timeEvent.Time)))
 			{
-				LighthouseContainer.Do((o) => EventAction(timeEvent.Time));
+				Container.Do((o) => EventAction(timeEvent.Time));
 			}
 		}
 
@@ -48,7 +48,7 @@ namespace Lighthouse.Core.Events.Time
 		{
 			if (ScheduleHistoryRepository == null)
 			{
-				ScheduleHistoryRepository = LighthouseContainer.FindServices<IScheduleHistoryRepository>().FirstOrDefault();
+				ScheduleHistoryRepository = Container.FindServices<IScheduleHistoryRepository>().FirstOrDefault();
 			}
 		}
 	}

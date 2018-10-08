@@ -13,7 +13,7 @@ namespace Lighthouse.Core
 		/// <summary>
 		/// This is the runtime environment that hosts this component. It provides all of the context for the component.
 		/// </summary>
-		ILighthouseServiceContainer LighthouseContainer { get; }
+		ILighthouseServiceContainer Container { get; }
 
 		/// <summary>
 		/// A simple ID that will last for the lifetime of this component in memory. Use <see cref="Utils.LighthouseComponentLifetime.GenerateSessionIdentifier"/> to aid in generation.

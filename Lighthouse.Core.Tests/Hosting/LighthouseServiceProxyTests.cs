@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.Utils;
+using Lighthouse.Server;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,10 +19,10 @@ namespace Lighthouse.Core.Tests.Hosting
 		[Fact]
 		public void BasicProxy_ProxiedClassReturns()
 		{
-			//var baseClass = new ClassToProxy();
+			var otherContainer = new LighthouseServer();
 
 			// create a connection, for the purpose of this test, we're going to connect to a local container
-			var connection = new LocalLighthouseServiceContainerConnection(Container, true);
+			var connection = new LocalLighthouseServiceContainerConnection(Container, otherContainer, true);
 
 			var proxy = new LighthouseServiceProxy<ClassToProxy>(connection);
 
@@ -37,7 +38,7 @@ namespace Lighthouse.Core.Tests.Hosting
 
 		public LighthouseServiceRunState RunState => LighthouseServiceRunState.Running;
 
-		public ILighthouseServiceContainer LighthouseContainer { get; private set; }
+		public ILighthouseServiceContainer Container { get; private set; }
 
 		public ClassToProxy()
 		{
@@ -46,7 +47,7 @@ namespace Lighthouse.Core.Tests.Hosting
 
 		public void Initialize(ILighthouseServiceContainer context)
 		{
-			LighthouseContainer = context;
+			Container = context;
 		}
 
 		public void Start()

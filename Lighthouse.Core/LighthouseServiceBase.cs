@@ -9,7 +9,7 @@ namespace Lighthouse.Core
 	{
 		public string Id { get; private set; }
 		public LighthouseServiceRunState RunState { get; protected set; }
-		public ILighthouseServiceContainer LighthouseContainer { get; private set; }
+		public ILighthouseServiceContainer Container { get; private set; }
 		public event StatusUpdatedEventHandler StatusUpdated;
 		private readonly List<Action<ILighthouseServiceContainer>> StartupActions = new List<Action<ILighthouseServiceContainer>>();
 		protected virtual bool IsInitialized { get; }
@@ -21,7 +21,7 @@ namespace Lighthouse.Core
 
 		public virtual void Start()
 		{
-			if (LighthouseContainer == null)
+			if (Container == null)
 				throw new InvalidOperationException("Service not initialized. (No container set)");
 
 			OnStart();
@@ -34,7 +34,7 @@ namespace Lighthouse.Core
 		{
 			// the context, will do the work for us
 			// this is useful, because if some of the things you want to do will be emitting Events, then they'll be picked up
-			StartupActions.ForEach(LighthouseContainer.Do);
+			StartupActions.ForEach(Container.Do);
 		}
 
 		#region Service Lifecycle Events
@@ -76,7 +76,7 @@ namespace Lighthouse.Core
 			if (IsInitialized)
 				return;
 
-			LighthouseContainer = context;
+			Container = context;
 			OnInit();
 			RaiseStatusUpdated(LighthouseServiceRunState.PendingStart);
 		}

@@ -10,11 +10,11 @@ namespace Lighthouse.Core.Configuration.ServiceDiscovery.Local
 	{
 		readonly ConcurrentBag<ILighthouseServiceDescriptor> ServiceDescriptors = new ConcurrentBag<ILighthouseServiceDescriptor>();
 		
-		public ILighthouseServiceContainer LighthouseContainer { get; }
+		public ILighthouseServiceContainer Container { get; }
 
 		public LocalServiceRepository(ILighthouseServiceContainer serviceContainer)
 		{
-			LighthouseContainer = serviceContainer;
+			Container = serviceContainer;
 			LoadServices();
 		}
 
@@ -33,11 +33,11 @@ namespace Lighthouse.Core.Configuration.ServiceDiscovery.Local
 	public class MemoryServiceRepository : IServiceRepository
 	{
 		readonly ConcurrentBag<ILighthouseServiceDescriptor> ServiceDescriptors = new ConcurrentBag<ILighthouseServiceDescriptor>();
-		public ILighthouseServiceContainer LighthouseContainer { get; }
+		public ILighthouseServiceContainer Container { get; }
 
 		public MemoryServiceRepository(ILighthouseServiceContainer serviceContainer)
 		{
-			LighthouseContainer = serviceContainer;
+			Container = serviceContainer;
 		}
 
 		public void AddServiceDescriptor(ILighthouseServiceDescriptor serviceDescriptor)
@@ -55,12 +55,12 @@ namespace Lighthouse.Core.Configuration.ServiceDiscovery.Local
 	{
 		readonly ConcurrentBag<ILighthouseServiceDescriptor> ServiceDescriptors = new ConcurrentBag<ILighthouseServiceDescriptor>();
 		private readonly string URI;
-		public ILighthouseServiceContainer LighthouseContainer { get; }
+		public ILighthouseServiceContainer Container { get; }
 
 		public RemoteServiceRepository(ILighthouseServiceContainer serviceContainer, string uri)
 		{
 			URI = uri;
-			LighthouseContainer = serviceContainer;
+			Container = serviceContainer;
 			RetrieveServiceDescriptors();
 		}
 

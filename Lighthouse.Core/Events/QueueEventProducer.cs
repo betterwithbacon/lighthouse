@@ -34,10 +34,10 @@ namespace Lighthouse.Core.Events
 					}
 					catch (Exception e)
 					{
-						LighthouseContainer.Log(Core.Logging.LogLevel.Error, Core.Logging.LogType.Error, this, exception: e);
+						Container.Log(Core.Logging.LogLevel.Error, Core.Logging.LogType.Error, this, exception: e);
 						throw;
 					}
-				}, LighthouseContainer, 100, 1000
+				}, Container, 100, 1000
 			);
 		}
 	}

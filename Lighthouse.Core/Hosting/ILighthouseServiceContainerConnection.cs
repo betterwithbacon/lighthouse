@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Core.Hosting
 {
@@ -13,7 +14,7 @@ namespace Lighthouse.Core.Hosting
 		/// Attempts to connect to the service container. If the connection is unsuccessful then it should log that to the history.
 		/// </summary>
 		/// <returns></returns>
-		bool TryConnect();
+		Task<bool> TryConnect();
 		
 		/// <summary>
 		/// All connections made TO a server container, are unidirectionally inbound, but this flag indicates if the connectee can respond BACK to the service outside of a request.
@@ -22,18 +23,28 @@ namespace Lighthouse.Core.Hosting
 		bool IsBidirectional { get; }
 
 		ILighthouseServiceContainer RemoteContainer { get; }
+		
+		/// <summary>
+		/// A listing of the connection history. This information can be used when negotiating which connection to use, and for diagnostic purposes.
+		/// </summary>
 		IList<LighthouseServiceContainerConnectionStatus> ConnectionHistory { get; }
+
+		/// <summary>
+		/// This should resolve a service running/present in the remote container.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <returns></returns>
 		IEnumerable<LighthouseServiceProxy<T>> FindServices<T>()
 			where T : class, ILighthouseService;
 	}
 
 	public struct LighthouseServiceContainerConnectionStatus
 	{
-		DateTime EffectiveDate { get; }
-		bool WasConnected { get; }
-		Exception Exception { get; }
+		public DateTime EffectiveDate { get; }
+		public bool WasConnected { get; }
+		public Exception Exception { get; }
 
-		public LighthouseServiceContainerConnectionStatus (DateTime effectiveDate, bool wasConnected, Exception exception)
+		public LighthouseServiceContainerConnectionStatus (DateTime effectiveDate, bool wasConnected, Exception exception = null)
 		{
 			EffectiveDate = effectiveDate;
 			WasConnected = wasConnected;

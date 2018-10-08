@@ -85,7 +85,7 @@ services:
 			// enform the client about the remote peer
 			// The server won't necessarily be able to "connect" back, so it will be all inbound
 			// this line of code will be called on service startup
-			clientNode.RegisterRemotePeer(new LocalLighthouseServiceContainerConnection(serverNode, false));
+			clientNode.RegisterRemotePeer(new LocalLighthouseServiceContainerConnection(serverNode, clientNode, false));
 
 			// at this point, what we should have are:
 			// a server

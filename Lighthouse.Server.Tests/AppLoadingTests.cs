@@ -169,7 +169,7 @@ namespace Lighthouse.Server.Tests
 			public TimerApp() // we don't have ways to bootstrap apps with launcher, to the constructor arguments
 			{
 				Timer = new System.Timers.Timer(10);
-				Timer.Elapsed += (o, e) => LighthouseContainer.Log(LogLevel.Info, LogType.Info, this, "event" + DateTime.Now.ToLighthouseLogString());
+				Timer.Elapsed += (o, e) => Container.Log(LogLevel.Info, LogType.Info, this, "event" + DateTime.Now.ToLighthouseLogString());
 			}
 
 			protected override void OnStart()

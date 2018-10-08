@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Core.Hosting
 {
@@ -16,19 +17,19 @@ namespace Lighthouse.Core.Hosting
 
 		public bool IsBidirectional { get; }
 
-		public ILighthouseServiceContainer LighthouseContainer { get; }
+		public ILighthouseServiceContainer Container { get; }
 
 		public LocalLighthouseServiceContainerConnection(ILighthouseServiceContainer localContainer, ILighthouseServiceContainer remoteContainer, bool isBidirectional = true)
 		{
-			LighthouseContainer = localContainer;
+			Container = localContainer;
 			RemoteContainer = remoteContainer;
 			IsBidirectional = isBidirectional;
 		}
 
-		public bool TryConnect()
+		public Task<bool> TryConnect()
 		{
 			// it's always connected
-			return true;
+			return Task.FromResult(true);
 		}
 
 		public override string ToString()

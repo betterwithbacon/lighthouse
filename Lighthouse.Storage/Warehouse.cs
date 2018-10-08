@@ -70,7 +70,7 @@ namespace Lighthouse.Storage
 		protected override void OnAfterStart()
 		{
 			// schedule server maintainence to be done each hour
-			LighthouseContainer.AddScheduledAction(schedule: new Schedule(ScheduleFrequency.Hourly) , taskToPerform: (time) => { PerformStorageMaintenance(time); });
+			Container.AddScheduledAction(schedule: new Schedule(ScheduleFrequency.Hourly) , taskToPerform: (time) => { PerformStorageMaintenance(time); });
 
 			// populate the remote warehouses			
 			LoadRemoteWarehouses();
@@ -106,24 +106,24 @@ namespace Lighthouse.Storage
 		private void LoadRemoteWarehouses()
 		{
 			// the container is how remote lighthouse resources are found
-			if (LighthouseContainer != null)
+			if (Container != null)
 			{
-				LighthouseContainer.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, "Loading remote warehouses.");
+				Container.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, "Loading remote warehouses.");
 
 				// the Lighthouse context should know about the other services that are running
-				foreach (var remoteWarehouse in LighthouseContainer.FindServices<Warehouse>())
+				foreach (var remoteWarehouse in Container.FindServices<Warehouse>())
 				{
 					// skip THIS service.
 					if (remoteWarehouse.Id == this.Id)
 						continue;
 
 					RemoteWarehouses.Add(remoteWarehouse);
-					LighthouseContainer.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Container local warehouse {remoteWarehouse} was added.");
+					Container.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Container local warehouse {remoteWarehouse} was added.");
 				}
 
 				// this is where an network discovery will occur. to reach other points, not local to this lighthouse runtime.
 				// currently, this isn't implemented, but ideally
-				foreach (var remoteWarehouseProxy in LighthouseContainer.FindRemoteServices<Warehouse>())
+				foreach (var remoteWarehouseProxy in Container.FindRemoteServices<Warehouse>())
 				{
 					//// skip THIS service.
 					//if (remoteWarehouseProxy.Service.Id == this.Id)

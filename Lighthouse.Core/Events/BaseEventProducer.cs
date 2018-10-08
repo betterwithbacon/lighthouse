@@ -8,13 +8,13 @@ namespace Lighthouse.Core.Events
 	{
 		public string Identifier { get; private set; }
 
-		public ILighthouseServiceContainer LighthouseContainer { get; protected set; }
+		public ILighthouseServiceContainer Container { get; protected set; }
 
 		public void Init(ILighthouseServiceContainer container)
 		{
-			LighthouseContainer = container;
+			Container = container;
 			Identifier = LighthouseComponentLifetime.GenerateSessionIdentifier(this);
-			LighthouseContainer.Log(LogLevel.Debug, LogType.ProducerStartup,this);
+			Container.Log(LogLevel.Debug, LogType.ProducerStartup,this);
 			Start();
 		}
 
@@ -22,7 +22,7 @@ namespace Lighthouse.Core.Events
 
 		protected virtual void AssertIsReady()
 		{
-			if (LighthouseContainer == null)
+			if (Container == null)
 				throw new InvalidOperationException("Context is not set.");
 		}
 

@@ -15,7 +15,7 @@ namespace Lighthouse.Core.Events.Time
 
 		private void Timer_Elapsed(object sender, ElapsedEventArgs e)
 		{
-			LighthouseContainer.EmitEvent(new TimeEvent(LighthouseContainer, e.SignalTime), this);
+			Container.EmitEvent(new TimeEvent(Container, e.SignalTime), this);
 		}
 
 		public override void Start()

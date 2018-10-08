@@ -44,8 +44,7 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Fields - Server Defaults
-		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 10 * 10; // per minute
-		public const int DEFAULT_SERVER_PORT = 54545;
+		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 10 * 10; // per minute		
 		#endregion
 
 		#region Fields - Server Metadata
@@ -74,6 +73,7 @@ namespace Lighthouse.Server
 		public IList<IServiceRepository> ServiceRepositories { get; set; }
 		public IList<ServiceLaunchRequest> ServiceLaunchRequests { get; set; }
 		public LighthouseMonitor LighthouseMonitor { get; private set; }
+		public int ServicePort { get; private set; }
 		#endregion
 
 		#region Fields - Events
@@ -87,6 +87,7 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Fields - Resources
+		private readonly ConcurrentBag<IResourceProvider> Resources = new ConcurrentBag<IResourceProvider>();
 		TimeEventProducer GlobalClock { get; set; } // raise an event every minute, like a clock (a not very good clock)
 		public IWarehouse Warehouse { get; }
 		#endregion
@@ -95,18 +96,12 @@ namespace Lighthouse.Server
 		public LighthouseServer(
 			string serverName = "Lighthouse Server",
 			Action<string> localLogger = null,
-			//IAppConfigurationProvider launchConfiguration = null, 
 			string workingDirectory = null,
-			IWorkQueue<IEvent> eventQueue = null, 
-			double defaultScheduleTimeIntervalInMilliseconds = DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS,
-			TimeEventProducer globalClock = null,
-			Action<LighthouseServer> preLoadOperations = null,
-			int serverPort = DEFAULT_SERVER_PORT)
+			Action<LighthouseServer> preLoadOperations = null)
 		{
 			ServerName = serverName;
 			LocalLoggers = new ConcurrentBag<Action<string>>();
-
-
+			
 			AddLocalLogger(localLogger ?? Console.WriteLine) ; // always have at least ONE local logger
 			ServiceRepositories = new List<IServiceRepository>();
 			ServiceLaunchRequests = new List<ServiceLaunchRequest>();
@@ -118,7 +113,7 @@ namespace Lighthouse.Server
 			//if (LaunchConfiguration.LighthouseContainer != this)
 			//	RegisterComponent(LaunchConfiguration);
 
-			GlobalClock = globalClock ?? new TimeEventProducer(defaultScheduleTimeIntervalInMilliseconds);
+			GlobalClock = new TimeEventProducer(DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS);
 			
 			// set the local environment state
 			OS = RuntimeServices.GetOS();
@@ -130,7 +125,7 @@ namespace Lighthouse.Server
 			Log(LogLevel.Debug,LogType.Info, this, "Lighthouse server initializing...");
 
 			// load up the providers, includes the configuration providers
-			LoadProviders();
+			//LoadProviders();
 
 			// perform some operations before the server loads it's configuration, the most likely operations are actually adding support for loading the configuration.			
 			preLoadOperations?.Invoke(this);
@@ -169,6 +164,15 @@ namespace Lighthouse.Server
 			LaunchConfiguredServices();
 		}
 
+		public void OverrideGlobalClock(TimeEventProducer time )
+		{
+			if (IsRunning)
+				throw new ApplicationException("Can't override clock after sevice starts");
+
+			// just set this
+			GlobalClock = time;
+		}
+
 		private void LaunchConfiguredServices()
 		{
 			// TODO: right now, it's one, but it COULD be more, what's that like?!
@@ -195,6 +199,8 @@ namespace Lighthouse.Server
 				return;
 			}
 
+			ServicePort = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT;
+
 			if (allConfigs.Count() > 1)
 				throw new InvalidOperationException("Too many app configuration providers found. There should onl e one");
 
@@ -208,6 +214,13 @@ namespace Lighthouse.Server
 
 			foreach (var slr in AppConfiguration.GetServiceLaunchRequests().Where(s => s != null))
 				AddServiceLaunchRequest(slr);			
+		}
+
+		public void BindServicePort(int servicePort)
+		{
+			ServicePort = servicePort;
+			
+			// TODO: Need to restart the listening I assume?
 		}
 
 		public void AddServiceRepository(IServiceRepository serviceRepository)
@@ -466,23 +479,22 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Resources
-		private readonly ConcurrentBag<IResourceProvider> Resources = new ConcurrentBag<IResourceProvider>();
+		
 
-		private void LoadProviders()
+		public void AddAvailableNetworkProviders()
 		{
-			Log(LogLevel.Debug, LogType.Info, this, $"WorkingDirectory: {WorkingDirectory}");
-			Log(LogLevel.Debug,LogType.Info,this, "Loading server-local resources...");
-			
-			// TODO: allow for a discovery of the various providers, using reflection
+			// add a basic internet network provider, that wraps the .Net libraries
+			RegisterResourceProvider(new InternetNetworkProvider(this));
+		}
 
+		public void AddAvailableFileSystemProviders()
+		{
 			// TODO: factor out how the "root" directory is found. This probably needs to be an environment config option
 			// File System providers
 			if (OS == OSPlatform.Windows)
 				RegisterResourceProvider(new WindowsFileSystemProvider(WorkingDirectory, this));
 			else if (OS == OSPlatform.Linux)
 				RegisterResourceProvider(new UnixFileSystemProvider());
-
-			RegisterResourceProvider(new InternetNetworkProvider(this));
 		}
 
 		public IEnumerable<T> GetResourceProviders<T>()
@@ -564,7 +576,7 @@ namespace Lighthouse.Server
 		private void AssertProducerIsReady(IEventProducer producer)
 		{
 			// if the containers aren't equal, this the producer's not ready.	
-			if (producer.LighthouseContainer != this)
+			if (producer.Container != this)
 				throw new ApplicationException($"Producer: {producer} is not ready.");
 		}
 

@@ -11,7 +11,7 @@ using Xunit.Abstractions;
 
 namespace Lighthouse.Core.Tests.IO
 {
-    public class WindowsFileSystemProviderTests : LighthouseTestsBase
+	public class WindowsFileSystemProviderTests : LighthouseTestsBase
 	{
 		protected readonly WindowsFileSystemProvider Provider;
 
