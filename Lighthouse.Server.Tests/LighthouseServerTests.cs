@@ -34,6 +34,7 @@ namespace Lighthouse.Server.Tests
 		}
 	}
 
+	[Collection("No parallel")]
 	public class LighthouseServerTests
     {
 		protected readonly ITestOutputHelper Output;
@@ -71,12 +72,15 @@ namespace Lighthouse.Server.Tests
 				{
 					ContainerMessages.Add(m);
 					Output.WriteLine(m);
-				},
-				//launchConfiguration: launchConfiguration, 
-				workingDirectory: workingDirectory,								
-				eventQueue: workQueue,
-				defaultScheduleTimeIntervalInMilliseconds: defaultScheduleTimeIntervalInMilliseconds
+				},				
+				workingDirectory: workingDirectory
 			);
+
+			if(defaultScheduleTimeIntervalInMilliseconds != LighthouseServer.DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS)
+				container.OverrideGlobalClock(fireEvery:defaultScheduleTimeIntervalInMilliseconds);
+
+			if(eventQueue != null)
+				container.AddEventQueue(eventQueue);
 		}
 
 		#region Logging

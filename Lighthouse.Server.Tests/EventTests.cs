@@ -88,9 +88,7 @@ namespace Lighthouse.Server.Tests
 		[Trait("Category", "Unit")]
 		public async Task TimeEventShouldTriggerOneAndOnlyOneSchedule()
 		{
-			// create the orchestrator
-			;
-
+			// create the orchestrator			
 			var time = DateTime.Parse("01/01/2018 10:00AM");
 
 			// create a consumer that when it receives a time event, that matches it's schedule, it will trigger a log write event

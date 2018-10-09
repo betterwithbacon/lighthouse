@@ -41,7 +41,7 @@ namespace Lighthouse.Storage.Tests
 		public void PayloadSigningShouldRoundtrip()
 		{
 			var warehouse = new Warehouse();
-			var payload = Enumerable.Range(1, 500).Select(i => $"record{i}-{Guid.NewGuid()}").ToArray();
+			var payload = Enumerable.Range(1, 10).Select(i => $"record{i}-{Guid.NewGuid()}").ToArray();
 
 			var scope = new ApplicationScope("TestApp");
 			var key = new StorageKey($"key", scope);
@@ -109,7 +109,7 @@ namespace Lighthouse.Storage.Tests
 		{
 			var warehouse = new Warehouse();
 			var appScope = new ApplicationScope("Test");
-			Parallel.ForEach(Enumerable.Range(1, 100),
+			Parallel.ForEach(Enumerable.Range(1, 10),
 				new ParallelOptions { MaxDegreeOfParallelism = 10 },
 				(index) => {
 					var payload = new[] { index.ToString() };
@@ -129,7 +129,7 @@ namespace Lighthouse.Storage.Tests
 			var warehouse = new Warehouse();
 			var appScope = new ApplicationScope("Test");
 
-			Parallel.ForEach(Enumerable.Range(1, 100),
+			Parallel.ForEach(Enumerable.Range(1, 10),
 				new ParallelOptions { MaxDegreeOfParallelism = 10 },
 				(index) => {
 					var payload = new[] { index.ToString() };
