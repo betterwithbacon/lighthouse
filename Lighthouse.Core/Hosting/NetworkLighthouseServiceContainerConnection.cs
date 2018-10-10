@@ -58,7 +58,7 @@ namespace Lighthouse.Core.Hosting
 					throw new ApplicationException("No local HTTP network providers found.");
 
 				UriBuilder uriBuilder = new UriBuilder("http", RemoteServerAddress.ToString(), RemoteServerPort);
-				uriBuilder.Path = LighthouseContainerCommunicationUtil.Paths.PING;
+				uriBuilder.Path = LighthouseContainerCommunicationUtil.Endpoints.PING;
 
 				var response = await networkProvider.GetStringAsync(uriBuilder.Uri);
 

@@ -3,6 +3,7 @@ using Lighthouse.Core.Events;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
+using Lighthouse.Core.Management;
 using Lighthouse.Core.Scheduling;
 using Lighthouse.Core.Storage;
 using System;
@@ -83,6 +84,8 @@ namespace Lighthouse.Core
 		/// </summary>
 		event StatusUpdatedEventHandler StatusUpdated;
 
+		
+
 		string WorkingDirectory { get; }
 
 		/// <summary>
@@ -109,5 +112,14 @@ namespace Lighthouse.Core
 		/// A common warehouse, where abstracted storage interfaces are exposed. Otherwarehouses might be attached to this container, but this is a container guaranteed to exist, and expose local resources.
 		/// </summary>
 		IWarehouse Warehouse { get; }
+
+		/// <summary>
+		/// Represents a way to introspect the state of the container for management purposes.
+		/// These APIs shouldn't be used by local services for operational purposes. merely for other containers and/or internal services
+		/// </summary>
+		/// <param name="routeName"></param>
+		/// <param name="payload"></param>
+		/// <returns></returns>
+		ManagementInterfaceResponse SubmitManagementRequest(ManagementRequestType routeName, string payload);
 	}
 }

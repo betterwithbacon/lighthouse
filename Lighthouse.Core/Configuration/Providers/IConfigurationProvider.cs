@@ -15,6 +15,9 @@ namespace Lighthouse.Core.Configuration.Providers
 
 	public interface IAppConfigurationProvider :IConfigurationProvider
 	{
+		string Version { get; }
+		int MaxThreadCount { get; }
+
 		IEnumerable<IServiceRepository> GetServiceRepositories();
 		IEnumerable<ServiceLaunchRequest> GetServiceLaunchRequests();
 	}		 

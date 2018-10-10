@@ -10,11 +10,12 @@ using Lighthouse.Core.Events.Time;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
+using Lighthouse.Core.Management;
 using Lighthouse.Core.Scheduling;
 using Lighthouse.Core.Storage;
 using Lighthouse.Core.Utils;
 using Lighthouse.Monitor;
-using Lighthouse.Server.API;
+using Lighthouse.Server.Management;
 using Lighthouse.Server.Utils;
 using Lighthouse.Storage;
 using System;
@@ -61,11 +62,11 @@ namespace Lighthouse.Server
 			}
 		}
 
-
 		#region LighthouseServiceRun
 		public class LighthouseServiceRun
 		{
 			public readonly ILighthouseService Service;
+			public readonly string ID;
 			public readonly IProducerConsumerCollection<Exception> Exceptions = new ConcurrentBag<Exception>();
 			internal readonly Task Task;
 
@@ -73,6 +74,7 @@ namespace Lighthouse.Server
 			{
 				Service = service;
 				Task = task;
+				ID = LighthouseComponentLifetime.GenerateSessionIdentifier(service);
 			}
 		}
 		#endregion
@@ -734,6 +736,29 @@ namespace Lighthouse.Server
 		{
 			throw new NotImplementedException();
 		}
+
+		public ManagementInterfaceResponse SubmitManagementRequest(ManagementRequestType requestType, string payload)
+		{
+			switch(requestType)
+			{
+				case ManagementRequestType.Ping:
+					return GetStatus().SerializeForManagementInterface().ToMIResponse();
+				case ManagementRequestType.GetServices:
+					return GetRunningServices().Select(lsr => new LighthouseServiceWrapper(lsr.ID, lsr.Service))
+
+			}
+
+			return new ManagementInterfaceResponse(false, "unknown error");
+		}
 		#endregion
+
+		public LighthouseServerStatus GetStatus()
+		{
+			return new LighthouseServerStatus(
+				new Version(AppConfiguration.Version), 
+				ServerName, 
+				GetNow()
+			);
+		}
 	}
 }
