@@ -2,15 +2,17 @@
 
 namespace Lighthouse.Server
 {
-	internal class LighthouseServiceWrapper
+	public class LighthouseServiceRemotingWrapper
 	{
-		private object iD;
-		private ILighthouseService service;
+		public readonly string ID;
+		public readonly string ServiceTypeName;
+		private readonly ILighthouseService service;
 
-		public LighthouseServiceWrapper(object iD, ILighthouseService service)
+		public LighthouseServiceRemotingWrapper(string ID, ILighthouseService service)
 		{
-			this.iD = iD;
+			this.ID = ID;
 			this.service = service;
+			ServiceTypeName = service.GetType().FullName;
 		}
 	}
 }

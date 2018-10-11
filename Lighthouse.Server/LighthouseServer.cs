@@ -744,8 +744,10 @@ namespace Lighthouse.Server
 				case ManagementRequestType.Ping:
 					return GetStatus().SerializeForManagementInterface().ToMIResponse();
 				case ManagementRequestType.GetServices:
-					return GetRunningServices().Select(lsr => new LighthouseServiceWrapper(lsr.ID, lsr.Service))
-
+					return GetRunningServices()
+						.Select(lsr => new LighthouseServiceRemotingWrapper(lsr.ID, lsr.Service))
+						.SerializeForManagementInterface()
+						.ToMIResponse();
 			}
 
 			return new ManagementInterfaceResponse(false, "unknown error");

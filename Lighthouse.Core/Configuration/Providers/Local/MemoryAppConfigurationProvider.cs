@@ -10,18 +10,24 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 	/// Represents an in-memory, non-persisted configuration provider 
 	/// </summary>
 	public class MemoryAppConfigurationProvider : IAppConfigurationProvider
-	{		
+	{
 		public string Name { get; }
 
 		public LighthouseConfigType ConfigType { get; }
 
+		public string Version { get; }
+
+		public int MaxThreadCount { get; }
+
 		private readonly ConcurrentBag<ServiceLaunchRequest> ServiceLaunchRequests;
 		private readonly ConcurrentBag<IServiceRepository> ServiceRepositories;
 
-		public MemoryAppConfigurationProvider(string appName)
+		public MemoryAppConfigurationProvider(string appName, string version, int maxThreadCount)
 		{	
 			Name = appName;
 			ConfigType = LighthouseConfigType.App;
+			Version = version;
+			MaxThreadCount = maxThreadCount;
 
 			ServiceLaunchRequests = new ConcurrentBag<ServiceLaunchRequest>();
 			ServiceRepositories = new ConcurrentBag<IServiceRepository>();
