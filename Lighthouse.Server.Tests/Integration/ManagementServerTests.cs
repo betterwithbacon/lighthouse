@@ -10,7 +10,7 @@ namespace Lighthouse.Server.Tests.Integration
 		public void PeerTest()
 		{
 			var managementServer = new HttpLighthouseManagementServer();
-
+			
 		}
 	}
 }

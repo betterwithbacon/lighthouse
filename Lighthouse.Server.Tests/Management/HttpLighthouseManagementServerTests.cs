@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -23,18 +24,24 @@ namespace Lighthouse.Server.Tests.Management
 		}
 
 		[Fact]
-		public void Ping_OkResponse()
+		public async Task Ping_OkResponse()
 		{
 			// start the server
 			ManagementServer.Start();
 			
-			var uri = new UriBuilder(Uri.UriSchemeHttp, "127.0.0.1", LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT, LighthouseContainerCommunicationUtil.Endpoints.PING).Uri;
+			var uri = new UriBuilder(
+				Uri.UriSchemeHttp,
+				LighthouseContainerCommunicationUtil.LOCAL_SERVER_ADDRESS, 
+				LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT, 
+				LighthouseContainerCommunicationUtil.Endpoints.PING
+			).Uri;
 			
 			var client = new HttpClient();
 
-			var response = client.GetAsync(uri).Result;
-
+			var response = await client.GetAsync(uri);
+			
 			response.StatusCode.Should().Be(HttpStatusCode.OK);
+
 			// the result of a PING should be the server time/version/and name
 			var serverResponse = response.Content.ReadAsStringAsync().Result;
 
@@ -45,14 +52,41 @@ namespace Lighthouse.Server.Tests.Management
 				status.ServerTime.Date.Should().Be(DateTime.Now.Date);
 			}
 			else
-				Assert.False(true, "The server response couldn't be parsed.");
-			
+				Assert.False(true, "The server response couldn't be parsed.");			
 		}
 
 		[Fact]
-		public void FindServiceProxies_ReturnsOneMessage()
+		public async Task FindServiceProxies_ReturnsOneMessage()
 		{
+			// start the server
+			ManagementServer.Start();
 
+			// just start 
+			Container.Start();			
+			Container.Launch(typeof(TestApp));
+
+			var uri = new UriBuilder(
+				Uri.UriSchemeHttp,
+				LighthouseContainerCommunicationUtil.LOCAL_SERVER_ADDRESS,
+				LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT,
+				LighthouseContainerCommunicationUtil.Endpoints.SERVICES
+			).Uri;
+
+			var client = new HttpClient();
+
+			var response = await client.GetAsync(uri);
+
+			response.StatusCode.Should().Be(HttpStatusCode.OK);
+				
+			// the result of a PING should be the server time/version/and name
+			var serverResponse = await response.Content.ReadAsStringAsync();
+			var runningServices = serverResponse.DeserializeForManagementInterface<List<LighthouseServiceRemotingWrapper>>();
+			if (runningServices != null)
+			{
+				runningServices.Count.Should().BeGreaterThan(0);				
+			}
+			else
+				Assert.False(true, "The server response couldn't be parsed: runningServices is null");
 		}
 	}
 }

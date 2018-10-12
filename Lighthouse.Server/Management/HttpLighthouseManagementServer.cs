@@ -1,9 +1,12 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.Management;
+using Lighthouse.Core.Utils;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,22 +16,48 @@ namespace Lighthouse.Server.Management
 	
 	public class HttpLighthouseManagementServer :  LighthouseServiceBase, ILighthouseManagementInterface
 	{
-		public HttpListener Listener { get; }
-		public 
-		//private readonly ConcurrentDictionary<string, Func<string, string>> RouteResponses = new ConcurrentDictionary<string, Func<string, string>>();
-		Thread ListeningThread; // TODO: I want ALL threads managed within the lighthouse, so instead of this thread being spawned here, I want the container to "own" it.
+		private HttpListener Listener { get; }
+		private Thread ListeningThread; // TODO: I want ALL threads managed within the lighthouse, so instead of this thread being spawned here, I want the container to "own" it.
 		private readonly ConcurrentBag<string> Routes = new ConcurrentBag<string>();
+		public int Port { get; } 
+		// the local IPs can be added as default routes to listen for other Lighthouse servers on the server
+		public IList<string> DefaultIPs = new[] { LighthouseContainerCommunicationUtil.LOCAL_SERVER_ADDRESS, "localhost"};
 
-		public HttpLighthouseManagementServer()
+		public HttpLighthouseManagementServer(
+			int port = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT, 
+			string[] ips = null, 
+			bool registerDefaultRoutes = true)
 		{
+			Port = port;
+
 			Listener = new HttpListener
 			{
 				AuthenticationSchemes = AuthenticationSchemes.Anonymous
 			};
 
-			//Routes.Add("");
-			//foreach (var uri in uris)
-			//	Listener.Prefixes.Add(uri);
+			if (ips != null)
+			{
+				foreach (var ip in ips.Where(NetworkUtil.IsIp).SelectMany((i) => GetListenerRoutesForIP(i, port)))
+				{
+					Listener.Prefixes.Add(ip);
+				}
+			}
+			
+			if(registerDefaultRoutes)
+			{
+				foreach(var route in DefaultIPs.SelectMany((i) => GetListenerRoutesForIP(i,port)))
+				{
+					Listener.Prefixes.Add(route);
+				}
+			}
+		}
+
+		public static IEnumerable<string> GetListenerRoutesForIP(string rawIp, int port)
+		{
+
+
+			// right now we only support HTTP for the listener, but if more 
+			yield return $"http://{rawIp}:{port}/";
 		}
 
 		//public void AddRoute(string route, Func<string, string> handler)
@@ -59,6 +88,9 @@ namespace Lighthouse.Server.Management
 			}
 		}
 
+		/// <summary>
+		/// Blocks the current thread until a request is received. That work is then queued separately, and then it waits again.
+		/// </summary>
 		private void ProcessRequest()
 		{
 			var result = Listener.BeginGetContext(ListenerCallback, Listener);
@@ -76,14 +108,21 @@ namespace Lighthouse.Server.Management
 
 			var payload = System.Web.HttpUtility.UrlDecode(requestPayload);
 
-			var route = context.Request.Url.AbsolutePath;
+			var route = CleanRoute(context.Request.Url.AbsolutePath);
 
 			Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Management server request received: Route: {route}. Payload: {payload}");
 
-			var response = Route(route, payload);
+			string response = null, errorText = null;
 			
-			//RouteResponses.TryGetValue(route, out var responseFunc);
-
+			try
+			{
+				response = Route(route, payload);
+			}
+			catch(Exception e)
+			{
+				errorText = e.Message;
+			}
+			
 			using (StreamWriter writer = new StreamWriter(context.Response.OutputStream))
 			{
 				// TODO: will probably need better handling around making the responses more formalized.
@@ -93,10 +132,18 @@ namespace Lighthouse.Server.Management
 					context.Response.StatusDescription = LighthouseContainerCommunicationUtil.Messages.OK;
 					writer.Write(response);
 				}
-				else
+				else if (errorText != null)
 				{
 					context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-					context.Response.StatusDescription = LighthouseContainerCommunicationUtil.Messages.OK;
+					context.Response.StatusDescription = LighthouseContainerCommunicationUtil.Messages.ERROR;
+					writer.Write(errorText);
+				}
+				else
+				{
+					// something has happened, that hasn't thrown an exception, but also provided no message
+					// this should be pretty uncommmon
+					context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+					context.Response.StatusDescription = LighthouseContainerCommunicationUtil.Messages.UNSUPPORTED;					
 				}
 			}
 
@@ -110,7 +157,7 @@ namespace Lighthouse.Server.Management
 			// my concern is, lets say we add 5 endpopints, and there's 3 management interfaces, I don't want them to have to do the mappinb, as well, just to sort of proxy it. 
 			// I think the management interfaces are purely abstractions for the 
 
-			if(Enum.TryParse<ManagementRequestType>(routeName, out var requestType))
+			if(Enum.TryParse<ManagementRequestType>(routeName,true, out var requestType))
 			{
 				var managementResponse = Container.SubmitManagementRequest(requestType, payload);
 				return managementResponse.Message;
@@ -119,6 +166,12 @@ namespace Lighthouse.Server.Management
 			{
 				return null;
 			}
+		}
+
+		public static string CleanRoute(string input)
+		{
+			// just replace the slashes
+			return input?.Replace("/", "");
 		}
 	}
 }

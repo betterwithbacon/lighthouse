@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -19,8 +20,16 @@ namespace Lighthouse.Core
 
 		public static bool TryParse(string input, out LighthouseServerStatus status)
 		{
-			status = null;
-			return false;
+			try
+			{
+				status = JsonConvert.DeserializeObject<LighthouseServerStatus>(input);
+				return true;
+			}
+			catch(Exception e)
+			{
+				status = null;
+				return false;
+			}			
 		}
 	}
 }

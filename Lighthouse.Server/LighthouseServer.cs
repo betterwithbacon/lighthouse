@@ -743,7 +743,7 @@ namespace Lighthouse.Server
 			{
 				case ManagementRequestType.Ping:
 					return GetStatus().SerializeForManagementInterface().ToMIResponse();
-				case ManagementRequestType.GetServices:
+				case ManagementRequestType.Services:
 					return GetRunningServices()
 						.Select(lsr => new LighthouseServiceRemotingWrapper(lsr.ID, lsr.Service))
 						.SerializeForManagementInterface()
@@ -756,8 +756,9 @@ namespace Lighthouse.Server
 
 		public LighthouseServerStatus GetStatus()
 		{
+			// TODO, this doesn't always work because
 			return new LighthouseServerStatus(
-				new Version(AppConfiguration.Version), 
+				new Version(AppConfiguration?.Version ?? "0.0.0.0"),
 				ServerName, 
 				GetNow()
 			);

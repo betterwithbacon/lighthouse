@@ -3,6 +3,6 @@
 	public enum ManagementRequestType
 	{
 		Ping,
-		GetServices
+		Services
 	}
 }
