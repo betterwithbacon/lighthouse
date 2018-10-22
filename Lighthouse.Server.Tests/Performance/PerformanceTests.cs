@@ -23,7 +23,7 @@ namespace Lighthouse.Server.Tests.Performance
 		{
 		}
 
-		[Fact]
+		[Fact(Skip ="perf")]
 		[Trait("Category", "Performance")]
 		public async Task PerformanceTest_HundredsOfHeterogeneousEventsFinishesInAFewSeconds()
 		{
@@ -85,7 +85,7 @@ namespace Lighthouse.Server.Tests.Performance
 			stopwatch.ElapsedMilliseconds.Should().BeLessThan(totalEventsSent * (long)2); // each event should never take longer trhan 1.5milliseconds to run
 		}
 
-		[Fact]
+		[Fact(Skip = "perf")]
 		[Trait("Category", "Performance")]
 		public async Task PerformanceTest_HundredsOfTimingEventsFinishesInAFewSeconds()
 		{

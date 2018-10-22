@@ -523,9 +523,11 @@ namespace Lighthouse.Server
 			return ServiceThreads.Select(st => st.Service).OfType<T>();
 		}
 
-		public IEnumerable<LighthouseServiceProxy<T>> FindRemoteServices<T>()
+		public async Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>()
 			where T : class, ILighthouseService
 		{
+			RemoteContainerConnections.ForEach(async (conn) => await conn.TryConnect());
+
 			return RemoteContainerConnections
 				.Where(conn => conn.IsConnected)
 				.SelectMany(conn => conn.FindServices<T>());

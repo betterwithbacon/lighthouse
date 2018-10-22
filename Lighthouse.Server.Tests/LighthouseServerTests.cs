@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using static Lighthouse.Core.Tests.LighthouseServiceTests;
@@ -110,7 +111,7 @@ namespace Lighthouse.Server.Tests
 		[Fact]
 		[Trait("Tag", "ServiceDiscovery")]
 		[Trait("Category", "Unit")]
-		public void FindRemoteServices_ShouldFindService()
+		public async Task FindRemoteServices_ShouldFindService()
 		{			
 			var otherContainer = new LighthouseServer(serverName: "Lighthouse Server #2", localLogger:(message) => Output.WriteLine($"Lighthouse Server #2: {message}"));
 
@@ -125,14 +126,14 @@ namespace Lighthouse.Server.Tests
 			otherContainer.Launch(new TestApp());
 
 			// the local Container should be able to find the service running in the other one
-			var foundTestApp = Container.FindRemoteServices<TestApp>();
+			var foundTestApp = await Container.FindRemoteServices<TestApp>();
 			foundTestApp.Should().NotBeEmpty();
 		}
 
 		[Fact]
 		[Trait("Tag", "ServiceDiscovery")]
 		[Trait("Category", "Unit")]
-		public void FindRemoteService_LocalConnection_ShouldProxyCommandsCorrectly()
+		public async Task FindRemoteService_LocalConnection_ShouldProxyCommandsCorrectly()
 		{
 			var otherContainer = new LighthouseServer(serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"));
 			// inform the first Container about the other
@@ -152,7 +153,7 @@ namespace Lighthouse.Server.Tests
 			originalApp.SetAction(() => { hit = true; originalApp.Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info,originalApp, "This action was hit"); } );
 
 			// the local Container should be able to find the service running in the other one
-			var foundTestApp = Container.FindRemoteServices<TestApp>();
+			var foundTestApp = await Container.FindRemoteServices<TestApp>();
 			foundTestApp.Should().NotBeEmpty();
 			var proxy = foundTestApp.Single();
 
@@ -177,7 +178,7 @@ namespace Lighthouse.Server.Tests
 			// this server will listen on this port for other lighthouse containers
 			otherContainer.BindServicePort(serverPort);
 
-			var otherContainerAddress = $"127.0.0.1"; // :{serverPort}
+			var otherContainerAddress = $"127.0.0.1";
 
 			// inform the first Container about the other
 			Container.RegisterRemotePeer(
