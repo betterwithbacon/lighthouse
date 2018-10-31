@@ -25,6 +25,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Async;
+using System.Net;
 
 namespace Lighthouse.Server
 {
@@ -142,7 +144,8 @@ namespace Lighthouse.Server
 			string serverName = "Lighthouse Server",
 			Action<string> localLogger = null,
 			string workingDirectory = null,
-			Action<LighthouseServer> preLoadOperations = null)
+			Action<LighthouseServer> preLoadOperations = null,
+			bool enableManagementService = false)
 		{
 			ServerName = serverName;
 			OS = RuntimeServices.GetOS();
@@ -165,7 +168,22 @@ namespace Lighthouse.Server
 		}
 		#endregion
 
-		#region Server Lifecycle	
+		#region Server Lifecycle
+		public void AddHttpManagementInterface(int port = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT)
+		{
+			// look for a conflicting interface
+			if(!ManagementInterfaces.OfType<IHttpManagementInterface>().Any(mi => mi.Port == port))
+			{
+				var management = new HttpLighthouseManagementServer(port);
+				AddManagementInterface(management);
+			}
+			else
+			{
+				throw new ApplicationException($"Management interface already bound to port {port}");
+			}
+			
+		}
+
 		public void AddManagementInterface(ILighthouseManagementInterface managementInterface)
 		{
 			if (managementInterface == null)
@@ -173,8 +191,13 @@ namespace Lighthouse.Server
 				throw new ArgumentNullException(nameof(managementInterface));
 			}
 
-			ManagementInterfaces.Add(managementInterface);
+			ManagementInterfaces.Add(managementInterface);			
 		}
+
+		//public ILighthouseManagementInterface GetManagementInterface()
+		//{
+
+		//}
 
 		public void AddLocalLogger(Action<string> logAction)
 		{
@@ -324,6 +347,12 @@ namespace Lighthouse.Server
 			Log(LogLevel.Debug,LogType.Info,this, "Lighthouse Monitor Started");
 
 			LighthouseMonitor = new LighthouseMonitor();
+
+			// startup the managment interfaces
+			foreach (var mi in ManagementInterfaces)
+			{
+				Do((container) => { mi.Start(); }, "")
+			}
 		}
 		#endregion
 
@@ -526,7 +555,8 @@ namespace Lighthouse.Server
 		public async Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>()
 			where T : class, ILighthouseService
 		{
-			RemoteContainerConnections.ForEach(async (conn) => await conn.TryConnect());
+			await RemoteContainerConnections.ParallelForEachAsync((conn) => conn.TryConnect());
+			//RemoteContainerConnections.ForEach(async (conn) => await );
 
 			return RemoteContainerConnections
 				.Where(conn => conn.IsConnected)
@@ -699,8 +729,10 @@ namespace Lighthouse.Server
 			Log(LogLevel.Debug, LogType.ConsumerRegistered, eventConsumer);
 		}
 
-		public void Do(Action<ILighthouseServiceContainer> action)
+		public void Do(Action<ILighthouseServiceContainer> action, string logMessage = "")
 		{
+			Log(LogLevel.Debug, LogType.Info,this, $"Performing action {logMessage ?? "<unknown>"}");
+
 			// just run all of the tasks			
 			// TOD: do all of the magic, that this method is supposed to do
 			Task.Run(() => action(this), CancellationTokenSource.Token).ContinueWith(

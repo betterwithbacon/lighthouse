@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 namespace Lighthouse.Server.Management
 {
 	
-	public class HttpLighthouseManagementServer :  LighthouseServiceBase, ILighthouseManagementInterface
+	public class HttpLighthouseManagementServer :  LighthouseServiceBase, IHttpManagementInterface
 	{
 		private HttpListener Listener { get; }
 		private Thread ListeningThread; // TODO: I want ALL threads managed within the lighthouse, so instead of this thread being spawned here, I want the container to "own" it.

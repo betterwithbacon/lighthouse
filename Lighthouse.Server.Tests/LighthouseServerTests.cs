@@ -167,13 +167,17 @@ namespace Lighthouse.Server.Tests
 		[Fact]
 		[Trait("Tag", "ServiceDiscovery")]
 		[Trait("Category", "Unit")]
-		public void FindRemoteService_NetworkConnection_ShouldProxyCommandsCorrectly()
+		public async Task FindRemoteService_NetworkConnection_ShouldProxyCommandsCorrectly()
 		{
-			var serverPort = 54545;
+			var serverPort = 54546;
+			Container.AddAvailableNetworkProviders();
 
 			var otherContainer = new LighthouseServer(
-				serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}")				
+				serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"),
+				enableManagementService: true
 			);
+			otherContainer.AddAvailableNetworkProviders();
+			otherContainer.AddHttpManagementInterface();
 
 			// this server will listen on this port for other lighthouse containers
 			otherContainer.BindServicePort(serverPort);
@@ -198,7 +202,7 @@ namespace Lighthouse.Server.Tests
 			originalApp.SetAction(() => { hit = true; originalApp.Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, originalApp, "This action was hit"); });
 
 			// the local Container should be able to find the service running in the other one
-			var foundTestApp = Container.FindRemoteServices<TestApp>();
+			var foundTestApp = await Container.FindRemoteServices<TestApp>();
 			foundTestApp.Should().NotBeEmpty();
 			var proxy = foundTestApp.Single();
 
