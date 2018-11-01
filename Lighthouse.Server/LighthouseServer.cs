@@ -64,23 +64,6 @@ namespace Lighthouse.Server
 			}
 		}
 
-		#region LighthouseServiceRun
-		public class LighthouseServiceRun
-		{
-			public readonly ILighthouseService Service;
-			public readonly string ID;
-			public readonly IProducerConsumerCollection<Exception> Exceptions = new ConcurrentBag<Exception>();
-			internal readonly Task Task;
-
-			public LighthouseServiceRun(ILighthouseService service, Task task)
-			{
-				Service = service;
-				Task = task;
-				ID = LighthouseComponentLifetime.GenerateSessionIdentifier(service);
-			}
-		}
-		#endregion
-
 		#region Fields - Server Defaults
 		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 10 * 10; // per minute		
 		#endregion
@@ -99,7 +82,7 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Fields - Task Management		
-		private readonly ConcurrentBag<LighthouseServiceRun> ServiceThreads = new ConcurrentBag<LighthouseServiceRun>();
+		private readonly ConcurrentBag<LighthouseServiceRun> RunningServices = new ConcurrentBag<LighthouseServiceRun>();
 
 		public void AddEventQueue(IWorkQueue<IEvent> eventQueue, int pollFrequencyInMilliseconds = QueueEventProducer.DEFAULT_POLLING_INTERVAL)
 		{
@@ -174,14 +157,13 @@ namespace Lighthouse.Server
 			// look for a conflicting interface
 			if(!ManagementInterfaces.OfType<IHttpManagementInterface>().Any(mi => mi.Port == port))
 			{
-				var management = new HttpLighthouseManagementServer(port);
-				AddManagementInterface(management);
+				var httpLighthouseManagementServer = new HttpLighthouseManagementServer(port);
+				AddManagementInterface(httpLighthouseManagementServer);
 			}
 			else
 			{
 				throw new ApplicationException($"Management interface already bound to port {port}");
 			}
-			
 		}
 
 		public void AddManagementInterface(ILighthouseManagementInterface managementInterface)
@@ -191,13 +173,14 @@ namespace Lighthouse.Server
 				throw new ArgumentNullException(nameof(managementInterface));
 			}
 
-			ManagementInterfaces.Add(managementInterface);			
+			ManagementInterfaces.Add(managementInterface);
+
+			// if the service is running already, go aheand and start running it
+			if (IsRunning)
+			{
+				Launch(managementInterface);
+			}
 		}
-
-		//public ILighthouseManagementInterface GetManagementInterface()
-		//{
-
-		//}
 
 		public void AddLocalLogger(Action<string> logAction)
 		{
@@ -208,12 +191,12 @@ namespace Lighthouse.Server
 		public void Start()
 		{			
 			Log(LogLevel.Debug,LogType.Info,this, "Lighthouse server starting");
-			
-			// start the Mointor service. This will make sure everything is working correctly.
-			StartMonitor();
 
 			// the service is now runnable
 			IsRunning = true;
+
+			// start the Mointor service. This will make sure everything is working correctly.
+			StartMonitor();
 
 			// configure a producer, that will periodically read from an event stream, and emit those events within the context.			
 			if(EventQueue != null)
@@ -315,7 +298,7 @@ namespace Lighthouse.Server
 		public async Task Stop()
 		{
 			// call stop on all of the services
-			ServiceThreads.ToList().ForEach(serviceRun => { serviceRun.Service.Stop(); });
+			RunningServices.ToList().ForEach(serviceRun => { serviceRun.Service.Stop(); });
 
 			int iter = 1;
 			
@@ -351,7 +334,11 @@ namespace Lighthouse.Server
 			// startup the managment interfaces
 			foreach (var mi in ManagementInterfaces)
 			{
-				Do((container) => { mi.Start(); }, "")
+				// management interfaces are ALSO lighthouse services so launch them.
+				var launchHandle = Launch(mi);
+
+				// The monitor will always ensure this service is running
+				LighthouseMonitor.Protect(mi.GetType(), launchHandle);
 			}
 		}
 		#endregion
@@ -371,7 +358,7 @@ namespace Lighthouse.Server
 			LighthouseServiceRun owner = null; 
 			if (serviceId != null)
 			{
-				owner = ServiceThreads.FirstOrDefault(ls => ls.Service.Id == serviceId);
+				owner = RunningServices.FirstOrDefault(ls => ls.Service.Id == serviceId);
 				owner?.Exceptions.TryAdd(e);
 			}
 
@@ -449,7 +436,7 @@ namespace Lighthouse.Server
 			return Enumerable.Empty<ServiceLaunchRequestValidationResult>();
 		}
 
-		public void Launch(ILighthouseService service)
+		public LighthouseServiceRun Launch(ILighthouseService service)
 		{
 			AssertIsRunning();
 
@@ -471,7 +458,9 @@ namespace Lighthouse.Server
 					}
 				}, CancellationTokenSource.Token); // fire and forget
 
-			ServiceThreads.Add(new LighthouseServiceRun(service, startedTask));
+			var serviceRun = new LighthouseServiceRun(service, startedTask);
+			RunningServices.Add(serviceRun);
+			return serviceRun;
 		}
 
 		/// <summary>
@@ -509,7 +498,7 @@ namespace Lighthouse.Server
 		#region Auditing/Logging
 		private void HandleTaskCompletion(Task task)
 		{
-			Log(LogLevel.Debug,LogType.Info,this, $"App completed successfully. {ServiceThreads.FirstOrDefault(lsr => lsr.Task.Id == task.Id)?.Service}", emitEvent:false);
+			Log(LogLevel.Debug,LogType.Info,this, $"App completed successfully. {RunningServices.FirstOrDefault(lsr => lsr.TaskId == task.Id)?.Service}", emitEvent:false);
 		}
 
 		private void Service_StatusUpdated(ILighthouseLogSource owner, string status)
@@ -535,21 +524,18 @@ namespace Lighthouse.Server
 
 		private void LogLocally(string log)
 		{
-			// TODO: do this in parallel?			
-			foreach(var logger in LocalLoggers)
-			{
-				Do((_) => logger(log));
-			}
+			// fire and forget		
+			LocalLoggers.ParallelForEachAsync((logger) => Task.Run(() => logger(log)));
 		}
 		#endregion
 
 		#region Service Discovery
 		public IEnumerable<LighthouseServiceRun> GetRunningServices()
-			=> ServiceThreads.Where(s => s.Service.RunState > LighthouseServiceRunState.PendingStart && s.Service.RunState < LighthouseServiceRunState.PendingStop);
+			=> RunningServices.Where(s => s.Service.RunState > LighthouseServiceRunState.PendingStart && s.Service.RunState < LighthouseServiceRunState.PendingStop);
 
 		public IEnumerable<T> FindServices<T>() where T : ILighthouseService
 		{
-			return ServiceThreads.Select(st => st.Service).OfType<T>();
+			return RunningServices.Select(st => st.Service).OfType<T>();
 		}
 
 		public async Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>()
@@ -729,9 +715,10 @@ namespace Lighthouse.Server
 			Log(LogLevel.Debug, LogType.ConsumerRegistered, eventConsumer);
 		}
 
-		public void Do(Action<ILighthouseServiceContainer> action, string logMessage = "")
+		public void Do(Action<ILighthouseServiceContainer> action, string logMessage = null)
 		{
-			Log(LogLevel.Debug, LogType.Info,this, $"Performing action {logMessage ?? "<unknown>"}");
+			if(logMessage != null)
+				Log(LogLevel.Debug, LogType.Info,this, $"Performing action {logMessage ?? "<unknown>"}");
 
 			// just run all of the tasks			
 			// TOD: do all of the magic, that this method is supposed to do
@@ -766,10 +753,10 @@ namespace Lighthouse.Server
 			Log(LogLevel.Info, LogType.Info, this, $"Adding remote lighthouse container: {connection}");
 		}
 
-		IEnumerable<LighthouseServiceProxy<T>> ILighthouseServiceContainer.FindRemoteServices<T>()
-		{
-			throw new NotImplementedException();
-		}
+		//IEnumerable<LighthouseServiceProxy<T>> ILighthouseServiceContainer.FindRemoteServices<T>()
+		//{
+		//	throw new NotImplementedException();
+		//}
 
 		public ManagementInterfaceResponse SubmitManagementRequest(ManagementRequestType requestType, string payload)
 		{

@@ -73,7 +73,7 @@ namespace Lighthouse.Storage
 			Container.AddScheduledAction(schedule: new Schedule(ScheduleFrequency.Hourly) , taskToPerform: (time) => { PerformStorageMaintenance(time); });
 
 			// populate the remote warehouses			
-			LoadRemoteWarehouses();
+			LoadRemoteWarehouses().RunSynchronously();
 		}
 
 		public IEnumerable<IShelf> DiscoverShelves()
@@ -103,7 +103,7 @@ namespace Lighthouse.Storage
 			//}
 		}
 
-		private void LoadRemoteWarehouses()
+		private async Task LoadRemoteWarehouses()
 		{
 			// the container is how remote lighthouse resources are found
 			if (Container != null)
@@ -123,7 +123,7 @@ namespace Lighthouse.Storage
 
 				// this is where an network discovery will occur. to reach other points, not local to this lighthouse runtime.
 				// currently, this isn't implemented, but ideally
-				foreach (var remoteWarehouseProxy in Container.FindRemoteServices<Warehouse>())
+				foreach (var remoteWarehouseProxy in await Container.FindRemoteServices<Warehouse>())
 				{
 					//// skip THIS service.
 					//if (remoteWarehouseProxy.Service.Id == this.Id)

@@ -15,5 +15,7 @@ namespace Lighthouse.Core.IO
 		Task<string> GetStringAsync(Uri uri);
 
 		Task<byte[]> GetByteArrayAsync(Uri uri);
+
+		Task<T> GetObjectAsync<T>(Uri uri, bool throwErrors = false);
 	}
 }

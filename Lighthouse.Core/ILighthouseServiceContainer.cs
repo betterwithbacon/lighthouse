@@ -8,6 +8,7 @@ using Lighthouse.Core.Scheduling;
 using Lighthouse.Core.Storage;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Core
 {
@@ -38,7 +39,7 @@ namespace Lighthouse.Core
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		IEnumerable<LighthouseServiceProxy<T>> FindRemoteServices<T>() where T : class, ILighthouseService;
+		Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>() where T : class, ILighthouseService;
 
 		/// <summary>
 		/// Returns Lighthouser services that are hosted outside of this service container
@@ -84,8 +85,9 @@ namespace Lighthouse.Core
 		/// </summary>
 		event StatusUpdatedEventHandler StatusUpdated;
 
-		
-
+		/// <summary>
+		/// The working directory of the Lighthouse runtime
+		/// </summary>
 		string WorkingDirectory { get; }
 
 		/// <summary>
@@ -93,7 +95,7 @@ namespace Lighthouse.Core
 		/// The work may be queued up, so items performed in parallel should simply be added sequentially.
 		/// </summary>
 		/// <param name="actions"></param>
-		void Do(Action<ILighthouseServiceContainer> action);
+		void Do(Action<ILighthouseServiceContainer> action, string logMessage = "");
 
 		void AddScheduledAction(Schedule schedule, Action<DateTime> taskToPerform);
 

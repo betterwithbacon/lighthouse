@@ -57,12 +57,14 @@ namespace Lighthouse.Core.Hosting
 				if (networkProvider == null)
 					throw new ApplicationException("No local HTTP network providers found.");
 
-				UriBuilder uriBuilder = new UriBuilder("http", RemoteServerAddress.ToString(), RemoteServerPort);
-				uriBuilder.Path = LighthouseContainerCommunicationUtil.Endpoints.PING;
+				UriBuilder uriBuilder = new UriBuilder("http", RemoteServerAddress.ToString(), RemoteServerPort)
+				{
+					Path = LighthouseContainerCommunicationUtil.Endpoints.PING
+				};
 
-				var response = await networkProvider.GetStringAsync(uriBuilder.Uri);
+				var serverStatus = networkProvider.GetObjectAsync<LighthouseServerStatus>(uriBuilder.Uri);
 
-				if (response == LighthouseContainerCommunicationUtil.Messages.OK)
+				if (serverStatus != null)
 				{
 					ConnectionHistory.Add(new LighthouseServiceContainerConnectionStatus(Container.GetNow(), true, null));
 
@@ -71,7 +73,7 @@ namespace Lighthouse.Core.Hosting
 					IsConnected = true; 
 				}
 				else
-					ConnectionHistory.Add(new LighthouseServiceContainerConnectionStatus(Container.GetNow(), false, new Exception(response))); // if the message is anything other than "OK" to a ping, then post the response or else a hard excption will be thrown.
+					ConnectionHistory.Add(new LighthouseServiceContainerConnectionStatus(Container.GetNow(), false, new Exception($"Could not contact server {uriBuilder.Uri}"))); // if the message is anything other than "OK" to a ping, then post the response or else a hard excption will be thrown.
 			}
 			catch(Exception e)
 			{

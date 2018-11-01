@@ -15,5 +15,10 @@ namespace Lighthouse.Monitor
 		{
 			
 		}
+
+		public void Protect(Type type, LighthouseServiceRun launchHandle)
+		{
+			// this doesn't do anything right now.
+		}
 	}
 }

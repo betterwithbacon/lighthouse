@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -30,6 +31,25 @@ namespace Lighthouse.Core.IO
 		{
 			var client = new HttpClient();
 			return client.GetByteArrayAsync(uri);
+		}
+
+		public async Task<T> GetObjectAsync<T>(Uri uri, bool throwErrors = false)
+		{
+			var rawText = await GetStringAsync(uri);
+			T result = default;
+			try
+			{
+				result = JsonConvert.DeserializeObject<T>(rawText);
+				return result;
+			}
+			// TODO: make this less generic Exception, just catch ones that try to deserialze
+			catch(Exception)
+			{
+				if (throwErrors)
+					throw;	
+			}
+
+			return result;
 		}
 	}
 }
