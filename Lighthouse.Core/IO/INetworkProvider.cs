@@ -17,5 +17,7 @@ namespace Lighthouse.Core.IO
 		Task<byte[]> GetByteArrayAsync(Uri uri);
 
 		Task<T> GetObjectAsync<T>(Uri uri, bool throwErrors = false);
+
+		Task<T> MakeRequest<T>(Uri uri, string content, bool throwErrors = false);
 	}
 }

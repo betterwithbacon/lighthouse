@@ -1,9 +1,13 @@
-﻿using Lighthouse.Core.Logging;
+﻿using Lighthouse.Core.Configuration.Formats.Memory;
+using Lighthouse.Core.Configuration.ServiceDiscovery;
+using Lighthouse.Core.IO;
+using Lighthouse.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -34,10 +38,70 @@ namespace Lighthouse.Core.Hosting
 			RemoteServerPort = port;
 		}
 
-		public IEnumerable<LighthouseServiceProxy<T>> FindServices<T>() 
+		public async Task<IEnumerable<LighthouseServiceProxy<T>>> FindServices<T>() 
 			where T : class, ILighthouseService
 		{
-			throw new NotImplementedException();
+			var networkProvider = GetNetworkProvider();
+
+			UriBuilder uriBuilder = new UriBuilder("http", RemoteServerAddress.ToString(), RemoteServerPort)
+			{
+				Path = LighthouseContainerCommunicationUtil.Endpoints.SERVICES
+			};
+
+			// create a message to send to the remote server
+			var findServiceResponse = await networkProvider.MakeRequest<ListServicesRequest, LighthouseServerResponse<List<LighthouseServiceRemotingWrapper>>>(
+					uriBuilder.Uri,
+					new ListServicesRequest
+					{
+						ServiceDescriptorToFind =
+							new ServiceDescriptor {
+								Name = typeof(T).Name,
+								Type = typeof(T).AssemblyQualifiedName // TODO: I'm doing this to keep compatability, but even minor changes in versions would break this, that might be an unintended "feature, but we probably want to beef this up
+							}
+					}
+				);
+
+			var proxies = new List<LighthouseServiceProxy<T>>();
+
+			// TODO: fail silently here, I guess <-- #pureLaziness
+			//if(findServiceResponse == null)
+			//{
+			//	return proxies;
+			//}
+
+			// convert service descriptors into proxies
+			foreach (var serviceDescriptor in findServiceResponse.Payload)
+			{
+				// TODO: add service resolution, to this. 
+				//Technically, I'm not sure how you could request a service without it also being local, so this is more of a sanity check I think.
+
+				var serviceType = Type.GetType(serviceDescriptor.ServiceTypeName, true);
+				var proxyType = Type.GetType($"Lighthouse.Core.Hosting.LighthouseServiceProxy`1[[{serviceDescriptor.ServiceTypeName}]], Lighthouse.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", true);
+				//var make Activator.CreateInstance(proxyType);
+				//Type[] typeArgs = { serviceType };
+				//var make = Act //MakeGenericType(serviceType);
+
+				// TODO: this is SUUUUPER edgy, lets clean this up, once we know it works
+				proxies.Add(Activator.CreateInstance(proxyType, this) as LighthouseServiceProxy<T>);
+			}
+
+			return proxies;
+		}
+
+		private INetworkProvider GetNetworkProvider()
+		{
+			var networkProvider = Container
+					.GetNetworkProviders()
+					.FirstOrDefault((np) =>
+						// find a network provider that can see the internal network AND communicate over HTTP
+						np.SupportedScopes.Contains(IO.NetworkScope.Local) &&
+						np.SupportedProtocols.Contains(IO.NetworkProtocol.HTTP)
+					);
+
+			if (networkProvider == null)
+				throw new ApplicationException("No local HTTP network providers found.");
+
+			return networkProvider;
 		}
 
 		public async Task<bool> TryConnect()
@@ -45,24 +109,15 @@ namespace Lighthouse.Core.Hosting
 			IsConnected = false;
 
 			try
-			{	
-				var networkProvider = Container
-					.GetNetworkProviders()
-					.FirstOrDefault((np) => 
-						// find a network provider that can see the internal network AND communicate over HTTP
-						np.SupportedScopes.Contains(IO.NetworkScope.Local) && 
-						np.SupportedProtocols.Contains(IO.NetworkProtocol.HTTP)
-					);
-
-				if (networkProvider == null)
-					throw new ApplicationException("No local HTTP network providers found.");
+			{
+				var networkProvider = GetNetworkProvider();
 
 				UriBuilder uriBuilder = new UriBuilder("http", RemoteServerAddress.ToString(), RemoteServerPort)
 				{
 					Path = LighthouseContainerCommunicationUtil.Endpoints.PING
 				};
 
-				var serverStatus = networkProvider.GetObjectAsync<LighthouseServerStatus>(uriBuilder.Uri);
+				var serverStatus = await networkProvider.GetObjectAsync<LighthouseServerStatus>(uriBuilder.Uri);
 
 				if (serverStatus != null)
 				{

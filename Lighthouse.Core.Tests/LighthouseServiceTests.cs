@@ -14,12 +14,6 @@ namespace Lighthouse.Core.Tests
 		{
 		}
 
-		public class TestApp : LighthouseServiceBase
-		{
-			public List<Action> StartupActions = new List<Action>();
-			public List<Action> ScheduledTasks = new List<Action>();
-		}
-
 		[Fact]
 		public void StartupTaskTests()
 		{
@@ -41,8 +35,11 @@ namespace Lighthouse.Core.Tests
 			// the app starts, and the startup tasks should run
 			app.Start();
 		}
-
     }
 
-
+	public class TestApp : LighthouseServiceBase
+	{
+		public List<Action> StartupActions = new List<Action>();
+		public List<Action> ScheduledTasks = new List<Action>();
+	}
 }

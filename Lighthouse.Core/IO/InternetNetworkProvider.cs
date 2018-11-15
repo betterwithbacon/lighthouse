@@ -36,6 +36,18 @@ namespace Lighthouse.Core.IO
 		public async Task<T> GetObjectAsync<T>(Uri uri, bool throwErrors = false)
 		{
 			var rawText = await GetStringAsync(uri);
+			return ConvertToTarget<T>(rawText, throwErrors);
+		}
+
+		public async Task<T> MakeRequest<T>(Uri uri, string content, bool throwErrors = false)
+		{
+			var client = new HttpClient();
+			var responseContent = (await client.SendAsync(new HttpRequestMessage(HttpMethod.Post, uri) { Content = new StringContent(content) })).Content;
+			return ConvertToTarget<T>(await responseContent.ReadAsStringAsync(), throwErrors);
+		}
+
+		private T ConvertToTarget<T>(string rawText, bool throwErrors = false)
+		{
 			T result = default;
 			try
 			{
@@ -43,12 +55,11 @@ namespace Lighthouse.Core.IO
 				return result;
 			}
 			// TODO: make this less generic Exception, just catch ones that try to deserialze
-			catch(Exception)
+			catch (Exception)
 			{
 				if (throwErrors)
-					throw;	
+					throw;
 			}
-
 			return result;
 		}
 	}

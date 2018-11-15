@@ -21,8 +21,6 @@ namespace Lighthouse.Core.Hosting
 		/// </summary>
 		/// <returns></returns>
 		bool IsBidirectional { get; }
-
-		ILighthouseServiceContainer RemoteContainer { get; }
 		
 		/// <summary>
 		/// A listing of the connection history. This information can be used when negotiating which connection to use, and for diagnostic purposes.
@@ -34,7 +32,7 @@ namespace Lighthouse.Core.Hosting
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <returns></returns>
-		IEnumerable<LighthouseServiceProxy<T>> FindServices<T>()
+		Task<IEnumerable<LighthouseServiceProxy<T>>> FindServices<T>()
 			where T : class, ILighthouseService;
 	}
 

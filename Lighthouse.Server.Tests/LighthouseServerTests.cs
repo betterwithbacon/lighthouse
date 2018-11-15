@@ -213,6 +213,48 @@ namespace Lighthouse.Server.Tests
 			hit.Should().BeTrue();
 		}
 
+		[Fact]
+		[Trait("Tag", "ServiceDiscovery")]
+		[Trait("Category", "Unit")]
+		public async Task FindRemoteService_NetworkConnection_ShouldFindOtherService()
+		{
+			var serverPort = 54546;
+			Container.AddAvailableNetworkProviders();
+
+			var otherContainer = new LighthouseServer(
+				serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"),
+				enableManagementService: true
+			);
+			otherContainer.AddAvailableNetworkProviders();
+			otherContainer.AddHttpManagementInterface();
+
+			// this server will listen on this port for other lighthouse containers
+			otherContainer.BindServicePort(serverPort);
+
+			var otherContainerAddress = $"127.0.0.1";
+
+			// inform the first Container about the other
+			Container.RegisterRemotePeer(
+				new NetworkLighthouseServiceContainerConnection(Container, IPAddress.Parse(otherContainerAddress)));
+
+			// start both Containers
+			Container.Start();
+			otherContainer.Start();
+
+			// launch the app in the "other" container
+			otherContainer.Launch(typeof(TestApp));
+			bool hit = false;
+
+			var originalApp = otherContainer.FindServices<TestApp>().First();
+
+			// configure what this program will "do"
+			originalApp.SetAction(() => { hit = true; originalApp.Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, originalApp, "This action was hit"); });
+
+			// the local Container should be able to find the service running in the other one
+			var foundTestApp = await Container.FindRemoteServices<TestApp>();
+			foundTestApp.Should().NotBeEmpty();			
+		}
+
 		#endregion
 
 		#region Utils

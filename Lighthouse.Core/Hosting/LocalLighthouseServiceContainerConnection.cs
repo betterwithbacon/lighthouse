@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,14 +33,19 @@ namespace Lighthouse.Core.Hosting
 
 		public override string ToString()
 		{
-			return $"Local Service Container '{RemoteContainer?.ServerName}'";
+			return $" Local Service Container '{RemoteContainer?.ServerName}'";
 		}
 
-		public IEnumerable<LighthouseServiceProxy<T>> FindServices<T>()
+		public Task<IEnumerable<LighthouseServiceProxy<T>>> FindServices<T>()
 			where T : class, ILighthouseService
 		{
 			// this container is local, so we're sharing the same memory pool,
-			return RemoteContainer.FindServices<T>().OfType<T>().Select(s => new LighthouseServiceProxy<T>(this, s));
+			return Task.FromResult(
+				RemoteContainer
+					.FindServices<T>()
+					.OfType<T>()
+					.Select(s => new LighthouseServiceProxy<T>(this, s))
+				);
 		}
 	}
 }

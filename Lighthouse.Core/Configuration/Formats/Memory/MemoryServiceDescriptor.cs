@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Lighthouse.Core.Configuration.Formats.Memory
 {
-	public class MemoryServiceDescriptor : ILighthouseServiceDescriptor
+	public class ServiceDescriptor : ILighthouseServiceDescriptor
 	{
 		public string Name { get; set; }
 		public string Type { get; set; }
@@ -14,7 +14,7 @@ namespace Lighthouse.Core.Configuration.Formats.Memory
 
 	public static class MemoryServiceDescriptorExtensions
 	{
-		public static ServiceLaunchRequest ToServiceLaunchRequest(this MemoryServiceDescriptor repo)
+		public static ServiceLaunchRequest ToServiceLaunchRequest(this ServiceDescriptor repo)
 		{
 			if(repo.Name == null)
 				return new ServiceLaunchRequest(repo.Type);

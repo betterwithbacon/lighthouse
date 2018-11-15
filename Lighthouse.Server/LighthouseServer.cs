@@ -50,8 +50,6 @@ namespace Lighthouse.Server
 
 				if (serverName != null)
 					Server.ServerName = serverName;
-
-
 			}
 
 			public LighthouseServer Build()
@@ -530,8 +528,12 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Service Discovery
-		public IEnumerable<LighthouseServiceRun> GetRunningServices()
-			=> RunningServices.Where(s => s.Service.RunState > LighthouseServiceRunState.PendingStart && s.Service.RunState < LighthouseServiceRunState.PendingStop);
+		public IEnumerable<LighthouseServiceRun> GetRunningServices(Func<LighthouseServiceRun, bool> filter = null)
+			=> RunningServices.Where(s => 
+			s.Service.RunState > LighthouseServiceRunState.PendingStart && 
+			s.Service.RunState < LighthouseServiceRunState.PendingStop &&
+			(filter == null || filter(s))
+		);
 
 		public IEnumerable<T> FindServices<T>() where T : ILighthouseService
 		{
@@ -541,12 +543,25 @@ namespace Lighthouse.Server
 		public async Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>()
 			where T : class, ILighthouseService
 		{
+			// TODO: the "are these services connected needs to be done in parallel in a 
+			// background thread or something, to avoid doing this every time find remote services is called
 			await RemoteContainerConnections.ParallelForEachAsync((conn) => conn.TryConnect());
-			//RemoteContainerConnections.ForEach(async (conn) => await );
 
-			return RemoteContainerConnections
-				.Where(conn => conn.IsConnected)
-				.SelectMany(conn => conn.FindServices<T>());
+			var results = new ConcurrentBag<LighthouseServiceProxy<T>>();
+
+			//TODO: copmmented out, to make debugging a bit simpler
+			//await RemoteContainerConnections.Where(conn => conn.IsConnected)
+			//	.ParallelForEachAsync(async (conn) =>
+			//	   {
+			//		   foreach (var service in await conn.FindServices<T>())
+			//			   results.Add(service);
+			//	   });
+
+			foreach(var connection in RemoteContainerConnections.Where(conn => conn.IsConnected))
+				foreach (var service in await connection.FindServices<T>())
+					results.Add(service);
+
+			return results;
 		}
 		#endregion
 
@@ -753,11 +768,6 @@ namespace Lighthouse.Server
 			Log(LogLevel.Info, LogType.Info, this, $"Adding remote lighthouse container: {connection}");
 		}
 
-		//IEnumerable<LighthouseServiceProxy<T>> ILighthouseServiceContainer.FindRemoteServices<T>()
-		//{
-		//	throw new NotImplementedException();
-		//}
-
 		public ManagementInterfaceResponse SubmitManagementRequest(ManagementRequestType requestType, string payload)
 		{
 			switch(requestType)
@@ -765,10 +775,19 @@ namespace Lighthouse.Server
 				case ManagementRequestType.Ping:
 					return GetStatus().SerializeForManagementInterface().ToMIResponse();
 				case ManagementRequestType.Services:
-					return GetRunningServices()
-						.Select(lsr => new LighthouseServiceRemotingWrapper(lsr.ID, lsr.Service))
-						.SerializeForManagementInterface()
-						.ToMIResponse();
+					{
+						var servicesRequest = payload.DeserializeForManagementInterface<LighthouseServerRequest<ListServicesRequest>>();
+						// TODO: at some point, all of this type name matching, needst o be delegated to "Service Discovery" where these things can be found by names,hashes, etc.
+						var typeNameToFilterOn = servicesRequest.Request.ServiceDescriptorToFind.Type;
+						return
+							new LighthouseServerResponse<List<LighthouseServiceRemotingWrapper>>(GetStatus(),
+								GetRunningServices((serviceRun) => serviceRun.Service.GetType().AssemblyQualifiedName == typeNameToFilterOn)
+								.Select(lsr => new LighthouseServiceRemotingWrapper(lsr.ID, lsr.Service))
+								.ToList()
+							)
+							.SerializeForManagementInterface()
+							.ToMIResponse();
+					}
 			}
 
 			return new ManagementInterfaceResponse(false, "unknown error");

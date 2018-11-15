@@ -66,5 +66,24 @@ namespace Lighthouse.Core.Tests.Hosting
 			connectionHistory.WasConnected.Should().BeFalse();
 			connectionHistory.Exception.Message.Should().Contain("nope");
 		}
+
+		[Fact]
+		public async Task FindServices_Works()
+		{
+			var ip = "127.0.0.1";
+			var mockNetworkProvider = Substitute.For<INetworkProvider>();
+			mockNetworkProvider.SupportedProtocols.Returns(new[] { NetworkProtocol.HTTP });
+			mockNetworkProvider.SupportedScopes.Returns(new[] { NetworkScope.Local });
+			mockNetworkProvider.GetStringAsync(Arg.Any<Uri>()).Returns("nope");
+
+			// inform the container of this provider
+			Container.RegisterResourceProvider(mockNetworkProvider);
+
+			var connection = new NetworkLighthouseServiceContainerConnection(Container, System.Net.IPAddress.Parse(ip));
+
+			var foundServices = await connection.FindServices<TestApp>();
+
+
+		}
 	}
 }
