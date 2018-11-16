@@ -51,7 +51,6 @@ namespace Lighthouse.Core.Tests.Hosting
 			proxy.Service.MethodCallCounter.Should().Be(0);
 			proxy.Service.MethodToCall();
 			proxy.Service.MethodCallCounter.Should().Be(1);
-
 		}
 	}
 
