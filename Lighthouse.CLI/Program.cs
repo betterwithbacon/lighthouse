@@ -15,6 +15,8 @@ namespace Lighthouse.CLI
 					.AddArgument("appConfigJsonFile").Command.App
 				.AddCommand("run")
 					.AddArgument("appConfigJsonFile").Command.App
+				.AddCommand("install")
+					.AddArgument("appName").Command.App
 				.AddCommand("deploy")
 					.AddArgument("appConfigJsonFile")
 					.AddArgument("environment") //, "local", "< server IP >")
