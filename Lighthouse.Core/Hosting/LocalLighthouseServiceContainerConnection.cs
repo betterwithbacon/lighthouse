@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Lighthouse.Core.Management;
 
 namespace Lighthouse.Core.Hosting
 {
@@ -46,6 +47,11 @@ namespace Lighthouse.Core.Hosting
 					.OfType<T>()
 					.Select(s => new LighthouseServiceProxy<T>(this, s))
 				);
+		}
+
+		public Task<ManagementInterfaceResponse> SubmitManagementRequest(IManagementRequest managementRequest)
+		{
+			throw new System.NotImplementedException();
 		}
 	}
 }

@@ -170,7 +170,7 @@ namespace Lighthouse.Core.Tests.UI
 		class MockAppCommandExecutor : IAppCommandExecutor
 		{
 			public static readonly ConcurrentBag<string> MockAppCommandExecutorArgumentsProvided = new ConcurrentBag<string>();
-			public void Execute(AppCommandExecutionArguments arguments)
+			public void Execute(AppCommandExecution arguments)
 			{
 				MockAppCommandExecutorArgumentsProvided.Add(arguments.ArgValues[0].Value);
 			}
@@ -199,7 +199,7 @@ namespace Lighthouse.Core.Tests.UI
 		{
 			bool wasHit = false;
 			string commandArg = "actualArg";			
-			void wasHitHandler(AppCommandExecutionArguments execution)
+			void wasHitHandler(AppCommandExecution execution)
 			{
 				wasHit = true;				
 			};
@@ -219,7 +219,7 @@ namespace Lighthouse.Core.Tests.UI
 		{
 			string commandArg = "actualArg";
 			string foundArg = "";
-			void wasHitHandler(AppCommandExecutionArguments execution)
+			void wasHitHandler(AppCommandExecution execution)
 			{
 				foundArg = execution.ArgValues.First().Value;
 			};

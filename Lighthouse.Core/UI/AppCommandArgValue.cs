@@ -2,8 +2,8 @@
 {
 	public class AppCommandArgValue
 	{
-		public AppCommandArgument Argument { get; internal set; }
-		public string Value { get; internal set; }
+		public AppCommandArgument Argument { get; set; }
+		public string Value { get; set; }
 
 		public override string ToString()
 		{

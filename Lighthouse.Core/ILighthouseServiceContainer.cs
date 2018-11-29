@@ -33,6 +33,8 @@ namespace Lighthouse.Core
 		/// <returns></returns>
 		IEnumerable<T> FindServices<T>() where T : ILighthouseService;
 
+		IEnumerable<ILighthouseServiceDescriptor> FindServiceDescriptor(string serviceName);
+
 		/// <summary>
 		/// Returns remote services from other attached contexts. Will NOT return services from this context. 
 		/// Any command issued on the local object. will be forwarded to the other service, executed, and results returned.
@@ -123,5 +125,7 @@ namespace Lighthouse.Core
 		/// <param name="payload"></param>
 		/// <returns></returns>
 		ManagementInterfaceResponse SubmitManagementRequest(ManagementRequestType routeName, string payload);
+
+		IEnumerable<ILighthouseServiceContainerConnection> FindServers();
 	}
 }

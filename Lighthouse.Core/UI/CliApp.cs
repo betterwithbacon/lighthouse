@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Core.UI
 {
@@ -11,6 +12,7 @@ namespace Lighthouse.Core.UI
 		public static class CommandPrompts
 		{
 			public const string PRESS_ANY_KEY_TO_QUIT = "Press Any Key to quit...";
+			public const string MISSING_ARGUMENT = "Missing argument";
 		}
 		
 		public string Name { get; }		
@@ -22,7 +24,17 @@ namespace Lighthouse.Core.UI
 		public AppCommand SelectedCommand { get; private set; }
 		public List<AppCommandArgValue> SelectedCommandArgValues { get; private set; }
 
-		public CliApp(string name, Action<string> writeToConsole, Func<string> readFromConsole, Func<ConsoleKeyInfo> readKeyFromConsole)
+		Func<bool, string, bool> OnQuit;
+
+		public CliApp(
+			string name, 
+			Action<string> writeToConsole, 
+			Func<string> readFromConsole, 
+			Func<ConsoleKeyInfo> readKeyFromConsole,
+			Func<bool, string, bool> onQuit = null
+			// <-- A complete and utter hack to prevent this app from dumping the entire process when testing, 
+			// lets just subclass the "app" and make some of the side effect causing behaviors
+			)
 		{
 			Name = name;			
 			this.WriteToConsole = writeToConsole;
@@ -33,6 +45,23 @@ namespace Lighthouse.Core.UI
 
 			SelectedCommand = null;
 			SelectedCommandArgValues = new List<AppCommandArgValue>();
+
+			OnQuit = onQuit;
+		}
+
+		public void Log(string message)
+		{
+			WriteToConsole(message);
+		}
+
+		public void InvalidArgument(string argName, string reason)
+		{
+			Quit(true, $"Invalid argument {argName}: {reason}");
+		}
+
+		public void Fault(string errorMessage)
+		{
+			Quit(true, errorMessage);
 		}
 
 		public void Start(IList<string> args)
@@ -63,7 +92,7 @@ namespace Lighthouse.Core.UI
 				{
 					// the app is valid, and ready to go, so do the commands that are connected
 					SelectedCommand.Execute(
-						new AppCommandExecutionArguments(this, SelectedCommand, SelectedCommandArgValues)						
+						new AppCommandExecution(this, SelectedCommand, SelectedCommandArgValues)						
 					);
 				}
 			}
@@ -93,6 +122,11 @@ namespace Lighthouse.Core.UI
 			}
 		}
 
+		public void Finish(string message = "Done!")
+		{
+			Quit(true, message);
+		}
+
 		public AppCommand GetCommand(string commandName)
 		{
 			return AvailableCommands.FirstOrDefault(a => a.CommandName.Equals(commandName, StringComparison.OrdinalIgnoreCase));
@@ -119,10 +153,21 @@ namespace Lighthouse.Core.UI
 			return string.Join(',', AvailableCommands);
 		}
 
-		void Quit(bool isFatal = false)
+
+		void Quit(bool isFatal = false, string quitMessage = null)
 		{
+			if (OnQuit?.Invoke(isFatal, quitMessage) ?? false)
+			{
+				// TODO: a true from OnQuit means "stop processing QUIT".
+				// this is a HACK, and should be undone, with subclassing
+				return;
+			}
+			
 			if (isFatal)
 			{
+				if(quitMessage  != null)
+					WriteToConsole(quitMessage);
+
 				Environment.Exit(-1);				
 			}
 			else
@@ -201,7 +246,7 @@ namespace Lighthouse.Core.UI
 			return command;
 		}
 
-		public static AppCommand AddCommand(this CliApp app, string commandName, Action<AppCommandExecutionArguments> executionAction = null)
+		public static AppCommand AddCommand(this CliApp app, string commandName, Action<AppCommandExecution> executionAction = null)
 		{
 			if (app.IsCommand(commandName))
 				throw new Exception("Command with that name is already added.");
@@ -215,7 +260,7 @@ namespace Lighthouse.Core.UI
 			return command;
 		}
 
-		public static AppCommand AddCommand(this AppCommand command, string commandName, Action<AppCommandExecutionArguments> executionAction = null)
+		public static AppCommand AddCommand(this AppCommand command, string commandName, Action<AppCommandExecution> executionAction = null)
 		{
 			return command.App.AddCommand(commandName, executionAction);			
 		}
@@ -276,6 +321,6 @@ namespace Lighthouse.Core.UI
 
 	public interface IAppCommandExecutor
 	{
-		void Execute(AppCommandExecutionArguments arguemnts);
+		Task Execute(AppCommandExecution arguments);		
 	}
 }

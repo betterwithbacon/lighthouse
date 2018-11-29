@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Lighthouse.Core.Management;
 
 namespace Lighthouse.Core.Hosting
 {
@@ -33,6 +34,11 @@ namespace Lighthouse.Core.Hosting
 		}
 
 		Task<IEnumerable<LighthouseServiceProxy<T>>> ILighthouseServiceContainerConnection.FindServices<T>()
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<ManagementInterfaceResponse> SubmitManagementRequest(IManagementRequest managementRequest)
 		{
 			throw new NotImplementedException();
 		}

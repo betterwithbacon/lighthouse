@@ -15,14 +15,14 @@ namespace Lighthouse.Server
 
 			// block the console thread
 
-			if (args.Length > 1)
-			{
-				RunConsoleMode(args);
-			}
-			else
-			{
+			//if (args.Length > 1)
+			//{
+			//	RunConsoleMode(args);
+			//}
+			//else
+			//{
 				RunHeadlessMode();
-			}
+			//}
 		}
 
 		static void RunConsoleMode(string[] args)
@@ -49,9 +49,7 @@ namespace Lighthouse.Server
 
 		static void RunHeadlessMode()
 		{
-			var server = new LighthouseServer(localLogger: (message) => Console.WriteLine(message));
-			//server.AddLocalLogger((message) => Console.WriteLine(message));
-
+			var server = new LighthouseServer(localLogger: (message) => Console.WriteLine(message));			
 			server.AddAvailableNetworkProviders();
 			server.AddAvailableFileSystemProviders();
 

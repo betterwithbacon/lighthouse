@@ -2,6 +2,7 @@
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
+using Lighthouse.Core.Management;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -139,6 +140,11 @@ namespace Lighthouse.Core.Hosting
 			}
 
 			return IsConnected;
+		}
+
+		public Task<ManagementInterfaceResponse> SubmitManagementRequest(IManagementRequest managementRequest)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

@@ -62,6 +62,11 @@ namespace Lighthouse.Server
 			}
 		}
 
+		public IEnumerable<ILighthouseServiceContainerConnection> FindServers()
+		{
+			return null;
+		}
+
 		#region Fields - Server Defaults
 		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 10 * 10; // per minute		
 		#endregion
@@ -538,6 +543,21 @@ namespace Lighthouse.Server
 		public IEnumerable<T> FindServices<T>() where T : ILighthouseService
 		{
 			return RunningServices.Select(st => st.Service).OfType<T>();
+		}
+
+		public IEnumerable<ILighthouseServiceDescriptor> FindServiceDescriptor(string serviceName)
+		{
+			if(ServiceRepositories == null)
+			{
+				throw new ApplicationException("Service repositorioes haven't been initialized. Ensure server is started.");
+			}
+
+			foreach(var repo in ServiceRepositories)
+			{
+				// TODO: do some sort of name spacing
+				foreach (var foundDescriptor in repo.GetServiceDescriptors().Where((descriptor) => descriptor.Name.Equals(serviceName, StringComparison.Ordinal)))
+					yield return foundDescriptor;
+			}
 		}
 
 		public async Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>()

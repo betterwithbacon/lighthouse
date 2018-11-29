@@ -10,6 +10,5 @@ namespace Lighthouse.Server.Apps.FileSync
 		public FileSyncApp()
 		{
 		}
-
 	}
 }

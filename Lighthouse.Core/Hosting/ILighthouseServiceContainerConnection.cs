@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
+using Lighthouse.Core.Management;
 
 namespace Lighthouse.Core.Hosting
 {
@@ -34,6 +35,13 @@ namespace Lighthouse.Core.Hosting
 		/// <returns></returns>
 		Task<IEnumerable<LighthouseServiceProxy<T>>> FindServices<T>()
 			where T : class, ILighthouseService;
+
+		/// <summary>
+		/// An endpoint that handles remoting/transmission of management request
+		/// </summary>
+		/// <param name="serviceInstallationRequest"></param>
+		/// <returns></returns>
+		Task<ManagementInterfaceResponse> SubmitManagementRequest(IManagementRequest managementRequest);
 	}
 
 	public struct LighthouseServiceContainerConnectionStatus
