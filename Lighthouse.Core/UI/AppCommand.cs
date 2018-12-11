@@ -40,7 +40,7 @@ namespace Lighthouse.Core.UI
 			if (ExecutionActionType != null)
 			{
 				var executor = Activator.CreateInstance(ExecutionActionType) as IAppCommandExecutor;
-				executor?.Execute(executionArguments);
+				executor?.Execute(executionArguments, App);
 			}
 			else
 			{

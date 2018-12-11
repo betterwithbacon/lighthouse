@@ -7,31 +7,29 @@ namespace Lighthouse.Core.UI
 {
     public class AppCommandExecution
     {
-		public CliApp App { get; private set; }
-		public AppCommand InvokedCommand { get; private set; }
-		public List<AppCommandArgValue> ArgValues { get; set; }
+		public string InvokedCommand { get; }
+		public Dictionary<string, string> ArgValues { get; }
 
-		public AppCommandExecution(CliApp app, AppCommand invokedCommand, IList<AppCommandArgValue> argValues)
+		public AppCommandExecution(CliApp app, string invokedCommand, Dictionary<string, string> argValues)
 		{
-			App = app;
 			InvokedCommand = invokedCommand;
-			ArgValues = argValues.ToList();
+			ArgValues = argValues;
 		}
 	}
 
-	public static class ArgValueListExtensions
-	{
-		public static string FirstOrDefaultCommandArgValue(this AppCommandExecution commandExecution, string argumentName)
-		{
-			return commandExecution?
-				.ArgValues?
-				.FirstOrDefault(
-					(acav) => 
-						acav.Argument
-							.ArgumentName
-							.Equals(argumentName, StringComparison.OrdinalIgnoreCase)
-				)?.Value;
-		}
-	}
+	//public static class ArgValueListExtensions
+	//{
+	//	public static string FirstOrDefaultCommandArgValue(this AppCommandExecution commandExecution, string argumentName)
+	//	{
+	//		return commandExecution?
+	//			.ArgValues?
+	//			.FirstOrDefault(
+	//				(acav) => 
+	//					acav.Argument
+	//						.ArgumentName
+	//						.Equals(argumentName, StringComparison.OrdinalIgnoreCase)
+	//			)?.Value;
+	//	}
+	//}
 
 }

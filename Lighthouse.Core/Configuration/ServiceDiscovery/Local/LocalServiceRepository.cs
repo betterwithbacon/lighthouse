@@ -1,6 +1,9 @@
-﻿using System;
+﻿using Lighthouse.Core.Configuration.Formats.Memory;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace Lighthouse.Core.Configuration.ServiceDiscovery.Local
@@ -20,7 +23,13 @@ namespace Lighthouse.Core.Configuration.ServiceDiscovery.Local
 
 		private void LoadServices()
 		{
-			
+			// TODO: go to the container, and get the services?
+			foreach(var type in Assembly.GetExecutingAssembly()
+				.GetTypes()
+				.Where(t => t.IsAssignableFrom(typeof(ILighthouseService))))
+			{
+				ServiceDescriptors.Add(type.ToServiceDescriptor());
+			}
 		}
 
 		public IEnumerable<ILighthouseServiceDescriptor> GetServiceDescriptors()

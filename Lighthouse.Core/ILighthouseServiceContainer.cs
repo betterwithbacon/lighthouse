@@ -127,5 +127,10 @@ namespace Lighthouse.Core
 		ManagementInterfaceResponse SubmitManagementRequest(ManagementRequestType routeName, string payload);
 
 		IEnumerable<ILighthouseServiceContainerConnection> FindServers();
+
+		void Start();
+		Task Stop();
+
+		void AddServiceRepository(IServiceRepository serviceRepository);
 	}
 }

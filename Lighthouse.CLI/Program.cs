@@ -1,4 +1,5 @@
 ﻿using Lighthouse.CLI.Handlers.Deployments;
+using Lighthouse.Core;
 using Lighthouse.Core.UI;
 using Lighthouse.Server;
 using System;
@@ -11,24 +12,32 @@ namespace Lighthouse.CLI
     {
         static void Main(string[] args)
         {
-			// setup the app
-			var app = new CliApp("lighthouse", Console.WriteLine, Console.ReadLine, Console.ReadKey);
-
-			app.AddCommand("test")
-				.AddArgument("appConfigJsonFile");
-			app.AddCommand("run")
-				.AddArgument("appConfigJsonFile");
-			app.AddCommand<ServiceInstallationHandler>("install")
-				.AddArgument(ServiceInstallationHandler.Arguments.APP_NAME);
-			app.AddCommand("deploy")
-				.AddArgument("appConfigJsonFile")
-				.AddArgument("environment")	
-					.AddHint("local", "Deploy to this machine.")
-					.AddHint("serverIP", "Deploy to the target IP. This machine should have a Lighthouse Monitor on it.");
+			var lighthouseCliApp = new LighthouseCliApp(Console.WriteLine, Console.ReadLine, Console.ReadKey);
 
 			System.Diagnostics.Debugger.Launch();
-			
-			app.Start(args);
+
+			lighthouseCliApp.Start(args);
+		}
+	}
+
+	public class LighthouseCliApp : CliApp
+	{
+		public LighthouseCliApp(Action<string> writeLine, Func<string> readLine, Func<ConsoleKeyInfo> readKey, 
+			Func<bool, string, bool> onQuit = null, Action<ILighthouseServiceContainer> onServerBuild = null)
+			: base("lighthouse-cli", writeLine,readLine, readKey)
+		{
+			this.AddResource(new LighthouseServer("lighthouse-cli", writeLine, Environment.CurrentDirectory));
+			this.AddCommand("test")
+				.AddArgument("appConfigJsonFile");
+			this.AddCommand("run")
+				.AddArgument("appConfigJsonFile");
+			this.AddCommand<ServiceInstallationHandler>("install")
+				.AddArgument(ServiceInstallationHandler.Arguments.APP_NAME);
+			this.AddCommand("deploy")
+				.AddArgument("appConfigJsonFile")
+				.AddArgument("environment")
+					.AddHint("local", "Deploy to this machine.")
+					.AddHint("serverIP", "Deploy to the target IP. This machine should have a Lighthouse Monitor on it.");
 		}
 	}
 }

@@ -31,10 +31,4 @@
     <ProjectReference Include="..\Lighthouse.Server\Lighthouse.Server.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="WarehouseCore">
-      <HintPath>..\dependencies\WarehouseCore.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>

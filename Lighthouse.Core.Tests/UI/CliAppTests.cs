@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 using static Lighthouse.Core.UI.CliApp;
@@ -170,9 +171,9 @@ namespace Lighthouse.Core.Tests.UI
 		class MockAppCommandExecutor : IAppCommandExecutor
 		{
 			public static readonly ConcurrentBag<string> MockAppCommandExecutorArgumentsProvided = new ConcurrentBag<string>();
-			public void Execute(AppCommandExecution arguments)
+			public async Task Execute(AppCommandExecution commandExecution, IAppContext context)
 			{
-				MockAppCommandExecutorArgumentsProvided.Add(arguments.ArgValues[0].Value);
+				await Task.Run( () => MockAppCommandExecutorArgumentsProvided.Add(commandExecution.ArgValues.Keys.First()));
 			}
 		}
 
@@ -317,5 +318,7 @@ namespace Lighthouse.Core.Tests.UI
 			Output.WriteLine(line);
 		}
 		#endregion
+
+
 	}
 }

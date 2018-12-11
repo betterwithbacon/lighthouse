@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Core.UI
 {
-	public class CliApp
+	public class CliApp : IAppContext
 	{
 		public static class CommandPrompts
 		{
@@ -23,18 +24,14 @@ namespace Lighthouse.Core.UI
 
 		public AppCommand SelectedCommand { get; private set; }
 		public List<AppCommandArgValue> SelectedCommandArgValues { get; private set; }
-
-		Func<bool, string, bool> OnQuit;
+		private readonly ConcurrentDictionary<Type, object> Resources = new ConcurrentDictionary<Type, object>();
 
 		public CliApp(
 			string name, 
 			Action<string> writeToConsole, 
 			Func<string> readFromConsole, 
 			Func<ConsoleKeyInfo> readKeyFromConsole,
-			Func<bool, string, bool> onQuit = null
-			// <-- A complete and utter hack to prevent this app from dumping the entire process when testing, 
-			// lets just subclass the "app" and make some of the side effect causing behaviors
-			)
+			Func<bool, string, bool> onQuit = null)
 		{
 			Name = name;			
 			this.WriteToConsole = writeToConsole;
@@ -44,24 +41,12 @@ namespace Lighthouse.Core.UI
 			AvailableCommands = new List<AppCommand>();
 
 			SelectedCommand = null;
-			SelectedCommandArgValues = new List<AppCommandArgValue>();
-
-			OnQuit = onQuit;
+			SelectedCommandArgValues = new List<AppCommandArgValue>();			
 		}
 
 		public void Log(string message)
 		{
 			WriteToConsole(message);
-		}
-
-		public void InvalidArgument(string argName, string reason)
-		{
-			Quit(true, $"Invalid argument {argName}: {reason}");
-		}
-
-		public void Fault(string errorMessage)
-		{
-			Quit(true, errorMessage);
 		}
 
 		public void Start(IList<string> args)
@@ -153,21 +138,13 @@ namespace Lighthouse.Core.UI
 			return string.Join(',', AvailableCommands);
 		}
 
-
-		void Quit(bool isFatal = false, string quitMessage = null)
+		public void Quit(bool isFatal = false, string quitMessage = null)
 		{
-			if (OnQuit?.Invoke(isFatal, quitMessage) ?? false)
-			{
-				// TODO: a true from OnQuit means "stop processing QUIT".
-				// this is a HACK, and should be undone, with subclassing
-				return;
-			}
+			if (quitMessage != null)
+				WriteToConsole(quitMessage);
 			
 			if (isFatal)
 			{
-				if(quitMessage  != null)
-					WriteToConsole(quitMessage);
-
 				Environment.Exit(-1);				
 			}
 			else
@@ -226,6 +203,35 @@ namespace Lighthouse.Core.UI
 		public bool IsCommand(string commandName)
 		{
 			return AvailableCommands.Any(c => c.CommandName.Equals(commandName, StringComparison.OrdinalIgnoreCase));
+		}
+
+		public void InvalidArgument(string argName, string reason)
+		{
+			Quit(true, $"Invalid argument {argName}: {reason}");
+		}
+
+		public void Fault(string errorMessage)
+		{
+			Quit(true, errorMessage);
+		}
+
+		public T GetResource<T>()
+			where T : class
+		{
+			if(Resources.TryGetValue(typeof(T), out var val))
+			{
+				return val as T;
+			}
+			return default;
+		}
+
+		protected void AddResource(object resource)
+		{
+			// TODO: this is just laziness. We need to make resolution a bit more complex
+			if (Resources[resource.GetType()] != null)
+				throw new InvalidOperationException("Type of resource already inserted");
+
+			Resources.TryAdd(resource.GetType(), resource);
 		}
 	}
 
@@ -290,7 +296,7 @@ namespace Lighthouse.Core.UI
 
 			command.Hints.Add(hint);
 			return command;
-		}		
+		}
 	}
 
 	public class AppCommandArgumentHint
@@ -321,6 +327,6 @@ namespace Lighthouse.Core.UI
 
 	public interface IAppCommandExecutor
 	{
-		Task Execute(AppCommandExecution arguments);		
+		Task Execute(AppCommandExecution arguments, IAppContext context);		
 	}
 }

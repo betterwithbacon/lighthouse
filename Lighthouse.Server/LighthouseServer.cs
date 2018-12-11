@@ -274,6 +274,10 @@ namespace Lighthouse.Server
 			foreach (var slr in AppConfiguration.GetServiceRepositories())			
 				AddServiceRepository(slr);
 
+			// manually add "local repo" 
+			// this will be everything native to the service, such as install, uninstall, etc.
+			AddServiceRepository(new LocalServiceRepository(this));
+
 			foreach (var slr in AppConfiguration.GetServiceLaunchRequests().Where(s => s != null))
 				AddServiceLaunchRequest(slr);			
 		}
