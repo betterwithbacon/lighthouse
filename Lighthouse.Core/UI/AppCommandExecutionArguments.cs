@@ -1,21 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 
 namespace Lighthouse.Core.UI
 {
-    public class AppCommandExecution
-    {
-		public string InvokedCommand { get; }
-		public Dictionary<string, string> ArgValues { get; }
+ //   public class AppCommandExecution
+ //   {
+	//	public ImmutableDictionary<string, string> ArgValues { get; }
 
-		public AppCommandExecution(CliApp app, string invokedCommand, Dictionary<string, string> argValues)
-		{
-			InvokedCommand = invokedCommand;
-			ArgValues = argValues;
-		}
-	}
+	//	public AppCommandExecution(IEnumerable<KeyValuePair<string, string>> argValues)
+	//	{
+	//		ArgValues = argValues.ToImmutableDictionary();
+	//	}
+	//}
 
 	//public static class ArgValueListExtensions
 	//{

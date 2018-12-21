@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -77,7 +78,9 @@ namespace Lighthouse.Core.UI
 				{
 					// the app is valid, and ready to go, so do the commands that are connected
 					SelectedCommand.Execute(
-						new AppCommandExecution(this, SelectedCommand, SelectedCommandArgValues)						
+							SelectedCommandArgValues
+							.Select(acav => new KeyValuePair<string, string>(acav.Argument.ArgumentName, acav.Value))
+							.ToImmutableDictionary()
 					);
 				}
 			}
@@ -238,7 +241,7 @@ namespace Lighthouse.Core.UI
 	public static class CliAppBuilderExtensions
 	{
 		public static AppCommand AddCommand<T>(this CliApp app, string commandName)
-			where T : IAppCommandExecutor
+			where T : IAppCommandHandler
 		{
 			if (app.IsCommand(commandName))
 				throw new Exception("Command with that name is already added.");
@@ -252,7 +255,7 @@ namespace Lighthouse.Core.UI
 			return command;
 		}
 
-		public static AppCommand AddCommand(this CliApp app, string commandName, Action<AppCommandExecution> executionAction = null)
+		public static AppCommand AddCommand(this CliApp app, string commandName, Action<IDictionary<string, string>> executionAction = null)
 		{
 			if (app.IsCommand(commandName))
 				throw new Exception("Command with that name is already added.");
@@ -266,7 +269,7 @@ namespace Lighthouse.Core.UI
 			return command;
 		}
 
-		public static AppCommand AddCommand(this AppCommand command, string commandName, Action<AppCommandExecution> executionAction = null)
+		public static AppCommand AddCommand(this AppCommand command, string commandName, Action<IDictionary<string, string>> executionAction = null)
 		{
 			return command.App.AddCommand(commandName, executionAction);			
 		}
@@ -313,20 +316,8 @@ namespace Lighthouse.Core.UI
 		}
 	}
 
-	//public class LighthouseTestCommands : IAppCommandExecutor
-	//{
-	//}
-
-	//public class LighthouseRunCommands : IAppCommandExecutor
-	//{
-	//}
-
-	//public class LighthouseDeployCommands : IAppCommandExecutor
-	//{
-	//}
-
-	public interface IAppCommandExecutor
+	public interface IAppCommandHandler
 	{
-		Task Execute(AppCommandExecution arguments, IAppContext context);		
+		Task Handle(IDictionary<string, string> argValues, IAppContext context);		
 	}
 }

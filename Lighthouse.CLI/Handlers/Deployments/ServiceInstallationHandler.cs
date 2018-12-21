@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.CLI.Handlers.Deployments
 {
-	public class ServiceInstallationHandler : IAppCommandExecutor
+	public class ServiceInstallationHandler : IAppCommandHandler
 	{
 		// TODO: convert this to an attribute
 		public const string COMMAND_NAME = "install";
@@ -23,11 +23,9 @@ namespace Lighthouse.CLI.Handlers.Deployments
 			public static string TARGET_SERVER = "targetServer";
 		}
 
-		public async Task Execute(AppCommandExecution commandCall, IAppContext context)
+		public async Task Handle(IDictionary<string, string> argValues, IAppContext context)
 		{
-			var appNameToInstall = commandCall.ArgValues[Arguments.APP_NAME];
-
-			if (appNameToInstall == null)
+			if (!argValues.TryGetValue(Arguments.APP_NAME, out var appNameToInstall))
 			{
 				context.InvalidArgument(Arguments.APP_NAME, CliApp.CommandPrompts.MISSING_ARGUMENT);
 				return;
@@ -66,11 +64,9 @@ namespace Lighthouse.CLI.Handlers.Deployments
 			// installations are PERMANENT associations, so the server needs to own that process
 			// which means using this temporary server to do it, makes little sense
 
-			var lighthouseServerToTarget = commandCall.ArgValues[Arguments.TARGET_SERVER];
-
 			ILighthouseServiceContainerConnection lighthouseServerConnection = null;
 
-			if (lighthouseServerToTarget == null)
+			if (!argValues.TryGetValue(Arguments.TARGET_SERVER, out var lighthouseServerToTarget))
 			{
 				// look for a local server on this machine
 				var otherServers = server.FindServers().ToList();
@@ -79,12 +75,14 @@ namespace Lighthouse.CLI.Handlers.Deployments
 				if (otherServers.Count == 0)
 				{
 					context.Fault($"No target Lighthouse servers found.");
+					return;
 				}
 
 				// if there are MULTIPLE local servers on this machine, then ask for a target machine
 				if (otherServers.Count > 1)
 				{
 					context.Fault($"Multiple Lighthouse servers found. Specify the URI of the target lighthouse server.");
+					return;
 				}
 
 				lighthouseServerConnection = otherServers.Single();
@@ -99,7 +97,8 @@ namespace Lighthouse.CLI.Handlers.Deployments
 
 			if(lighthouseServerConnection == null)
 			{
-				context.Fault($"A lighthjouse connection couldn't be made.");
+				context.Fault($"A lighthouse connection couldn't be made.");
+				return;
 			}
 
 			var response = await lighthouseServerConnection.SubmitManagementRequest(new ServiceInstallationRequest(serviceToInstall));

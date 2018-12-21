@@ -168,12 +168,12 @@ namespace Lighthouse.Core.Tests.UI
 		#endregion
 
 		#region Command Activation - Types		
-		class MockAppCommandExecutor : IAppCommandExecutor
+		class MockAppCommandExecutor : IAppCommandHandler
 		{
 			public static readonly ConcurrentBag<string> MockAppCommandExecutorArgumentsProvided = new ConcurrentBag<string>();
-			public async Task Execute(AppCommandExecution commandExecution, IAppContext context)
+			public async Task Handle(IDictionary<string, string> args, IAppContext context)
 			{
-				await Task.Run( () => MockAppCommandExecutorArgumentsProvided.Add(commandExecution.ArgValues.Keys.First()));
+				await Task.Run( () => MockAppCommandExecutorArgumentsProvided.Add(args.Keys.First()));
 			}
 		}
 
@@ -200,7 +200,7 @@ namespace Lighthouse.Core.Tests.UI
 		{
 			bool wasHit = false;
 			string commandArg = "actualArg";			
-			void wasHitHandler(AppCommandExecution execution)
+			void wasHitHandler(IDictionary<string,string> argValues)
 			{
 				wasHit = true;				
 			};
@@ -220,9 +220,9 @@ namespace Lighthouse.Core.Tests.UI
 		{
 			string commandArg = "actualArg";
 			string foundArg = "";
-			void wasHitHandler(AppCommandExecution execution)
+			void wasHitHandler(IDictionary<string,string> argValues)
 			{
-				foundArg = execution.ArgValues.First().Value;
+				foundArg = argValues.First().Value;
 			};
 
 			BuildApp("testapp");
