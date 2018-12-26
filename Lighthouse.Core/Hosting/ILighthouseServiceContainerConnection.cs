@@ -41,7 +41,7 @@ namespace Lighthouse.Core.Hosting
 		/// </summary>
 		/// <param name="serviceInstallationRequest"></param>
 		/// <returns></returns>
-		Task<ManagementInterfaceResponse> SubmitManagementRequest(IManagementRequest managementRequest);
+		Task<ManagementInterfaceResponse> SubmitManagementRequest(ServerManagementRequestType requestType, Dictionary<string, object> requestParameters);
 	}
 
 	public struct LighthouseServiceContainerConnectionStatus

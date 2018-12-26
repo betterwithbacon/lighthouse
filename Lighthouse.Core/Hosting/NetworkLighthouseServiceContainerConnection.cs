@@ -95,8 +95,8 @@ namespace Lighthouse.Core.Hosting
 					.GetNetworkProviders()
 					.FirstOrDefault((np) =>
 						// find a network provider that can see the internal network AND communicate over HTTP
-						np.SupportedScopes.Contains(IO.NetworkScope.Local) &&
-						np.SupportedProtocols.Contains(IO.NetworkProtocol.HTTP)
+						np.SupportedScopes.Contains(NetworkScope.Local) &&
+						np.SupportedProtocols.Contains(NetworkProtocol.HTTP)
 					);
 
 			if (networkProvider == null)
@@ -142,9 +142,44 @@ namespace Lighthouse.Core.Hosting
 			return IsConnected;
 		}
 
-		public Task<ManagementInterfaceResponse> SubmitManagementRequest(IManagementRequest managementRequest)
+		public async Task<ManagementInterfaceResponse> SubmitManagementRequest(ServerManagementRequestType requestType, IDictionary<string,object> requestParameters)
 		{
-			throw new NotImplementedException();
+			// serialize  the request and forward it to the remote target
+			var networkProvider = GetNetworkProvider();
+			UriBuilder uriBuilder = new UriBuilder("http", RemoteServerAddress.ToString(), RemoteServerPort)
+			{
+				Path = LighthouseContainerCommunicationUtil.Endpoints.MANAGEMENT 
+			};
+
+			var managementRequestResponse = await networkProvider.MakeRequest<ServerManagementRequest, ManagementInterfaceResponse>(
+				uriBuilder.Uri, 
+				new ServerManagementRequest
+				{
+					RequestType = requestType,					
+					RequestParameters = requestParameters
+				}
+			);
+
+			//var response = new ManagementInterfaceResponse(true, "");
+
+			return managementRequestResponse;
 		}
+	}
+
+	public class ServerManagementRequest
+	{
+		public static class RequestTypes
+		{
+			public static class Install
+			{
+				public static class Arguments
+				{
+					public static string ServiceName = "SERVICE_NAME";
+				}
+			}
+		}
+
+		public ServerManagementRequestType RequestType { get; internal set; }
+		public IEnumerable<KeyValuePair<string, object>> RequestParameters { get; internal set; }
 	}
 }

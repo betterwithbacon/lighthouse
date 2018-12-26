@@ -15,6 +15,7 @@ namespace Lighthouse.Core.Hosting
 		{
 			public const string PING = @"PING";
 			public const string SERVICES = @"SERVICES";
+			public const string MANAGEMENT = @"MANAGEMENT";
 		}
 
 		public static class Messages

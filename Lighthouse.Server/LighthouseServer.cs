@@ -799,22 +799,42 @@ namespace Lighthouse.Server
 				case ManagementRequestType.Ping:
 					return GetStatus().SerializeForManagementInterface().ToMIResponse();
 				case ManagementRequestType.Services:
+				{
+					var servicesRequest = payload.DeserializeForManagementInterface<LighthouseServerRequest<ListServicesRequest>>();
+					// TODO: at some point, all of this type name matching, needst o be delegated to "Service Discovery" where these things can be found by names,hashes, etc.
+					var typeNameToFilterOn = servicesRequest.Request.ServiceDescriptorToFind.Type;
+					return
+						new LighthouseServerResponse<List<LighthouseServiceRemotingWrapper>>(GetStatus(),
+							GetRunningServices((serviceRun) => serviceRun.Service.GetType().AssemblyQualifiedName == typeNameToFilterOn)
+							.Select(lsr => new LighthouseServiceRemotingWrapper(lsr.ID, lsr.Service))
+							.ToList()
+						)
+						.SerializeForManagementInterface()
+						.ToMIResponse();
+				}
+				case ManagementRequestType.Install:
+				{
+					var serviceNameToInstall = payload.DeserializeForManagementInterface<string>();
+
+					try
 					{
-						var servicesRequest = payload.DeserializeForManagementInterface<LighthouseServerRequest<ListServicesRequest>>();
-						// TODO: at some point, all of this type name matching, needst o be delegated to "Service Discovery" where these things can be found by names,hashes, etc.
-						var typeNameToFilterOn = servicesRequest.Request.ServiceDescriptorToFind.Type;
-						return
-							new LighthouseServerResponse<List<LighthouseServiceRemotingWrapper>>(GetStatus(),
-								GetRunningServices((serviceRun) => serviceRun.Service.GetType().AssemblyQualifiedName == typeNameToFilterOn)
-								.Select(lsr => new LighthouseServiceRemotingWrapper(lsr.ID, lsr.Service))
-								.ToList()
-							)
-							.SerializeForManagementInterface()
-							.ToMIResponse();
+						Install(serviceNameToInstall);
 					}
+					catch (Exception e)
+					{
+						return new ManagementInterfaceResponse(false, e.Message);
+					}
+						
+					return new ManagementInterfaceResponse(true, "success".SerializeForManagementInterface());
+				}
 			}
 
 			return new ManagementInterfaceResponse(false, "unknown error");
+		}
+
+		private void Install(string serviceNameToInstall)
+		{
+			throw new NotImplementedException();
 		}
 
 		public ILighthouseServiceContainerConnection Connect(Uri uri)

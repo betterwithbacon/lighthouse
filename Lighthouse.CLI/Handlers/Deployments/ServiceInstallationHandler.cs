@@ -106,8 +106,15 @@ namespace Lighthouse.CLI.Handlers.Deployments
 				return;
 			}
 
-			var response = await lighthouseServerConnection.SubmitManagementRequest(new ServiceInstallationRequest(serviceToInstall));
-
+			var response = await lighthouseServerConnection.SubmitManagementRequest(
+				ServerManagementRequestType.Install,
+				new Dictionary<string, object> {
+					{
+						ServerManagementRequest.RequestTypes.Install.Arguments.ServiceName,
+						appNameToInstall
+					}}
+				);
+			
 			if (response == null)
 			{
 				context.Fault("No response was received from lighthouse.");
