@@ -8,6 +8,7 @@ using Lighthouse.Core.Scheduling;
 using Lighthouse.Core.Storage;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Lighthouse.Core
@@ -73,6 +74,8 @@ namespace Lighthouse.Core
 		/// </summary>
 		/// <returns></returns>
 		IEnumerable<INetworkProvider> GetNetworkProviders();
+
+		ILighthouseServiceContainerConnection Connect(Uri uri);
 
 		void RegisterResourceProvider(IResourceProvider resourceProvider);
 

@@ -16,6 +16,7 @@ namespace Lighthouse.Core.UI
 
 		void Finish(string message);
 
+		void Log(string message);
 		T GetResource<T>()
 			where T : class;
 	}

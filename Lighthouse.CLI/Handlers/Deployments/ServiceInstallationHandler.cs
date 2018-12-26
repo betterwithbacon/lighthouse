@@ -90,9 +90,14 @@ namespace Lighthouse.CLI.Handlers.Deployments
 			else
 			{
 				if (!Uri.TryCreate(lighthouseServerToTarget, UriKind.Absolute, out var lighthouseServerUri))
-					context.InvalidArgument(Arguments.APP_NAME, $"Invalid URI:{lighthouseServerToTarget}");
+				{
+					context.InvalidArgument(Arguments.TARGET_SERVER, $"Invalid URI:{lighthouseServerToTarget}");
+					return;
+				}
 
-				lighthouseServerConnection = new NetworkLighthouseServiceContainerConnection(server, IPAddress.Parse(lighthouseServerUri.Host), lighthouseServerUri.Port);
+				lighthouseServerConnection = server.Connect(lighthouseServerUri);
+
+				context.Log($"Connection made to {lighthouseServerUri}");
 			}
 
 			if(lighthouseServerConnection == null)
@@ -103,10 +108,21 @@ namespace Lighthouse.CLI.Handlers.Deployments
 
 			var response = await lighthouseServerConnection.SubmitManagementRequest(new ServiceInstallationRequest(serviceToInstall));
 
-			if (response.WasSuccessful)
+			if (response == null)
+			{
+				context.Fault("No response was received from lighthouse.");
+				return;
+			}
+			else if (response.WasSuccessful)
+			{
 				context.Finish("Service installed.");
+				return;
+			}
 			else
+			{
 				context.Fault($"Installation failed: {response.Message}");
+				return;
+			}
 		}
 	}
 }

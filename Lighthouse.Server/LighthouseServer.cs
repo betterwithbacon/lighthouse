@@ -816,6 +816,15 @@ namespace Lighthouse.Server
 
 			return new ManagementInterfaceResponse(false, "unknown error");
 		}
+
+		public ILighthouseServiceContainerConnection Connect(Uri uri)
+		{
+			return new NetworkLighthouseServiceContainerConnection(
+				this,
+				IPAddress.Parse(uri.Host),
+				uri.Port
+			);
+		}
 		#endregion
 
 		public LighthouseServerStatus GetStatus()

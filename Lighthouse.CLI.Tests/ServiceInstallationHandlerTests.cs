@@ -4,6 +4,7 @@ using Lighthouse.Core;
 using Lighthouse.Core.Configuration.Formats.Memory;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Hosting;
+using Lighthouse.Core.Management;
 using Lighthouse.Core.Tests;
 using Lighthouse.Core.UI;
 using Lighthouse.Server;
@@ -21,25 +22,21 @@ namespace Lighthouse.CLI.Tests
 	public class ServiceInstallationHandlerTests : IDisposable
 	{
 		ServiceInstallationHandler Handler { get; }
-		private CliApp App { get; set; }
-		AppCommand InvokedCommand { get; set; }
-		private string CommandName { get; } = "testCommand";
+		private CliApp App { get; set; }				
 		Dictionary<string,string> ArgVals { get; } = new Dictionary<string, string>();		
 		public IAppContext AppContext { get; private set; }
 		public ITestOutputHelper Output { get; }
 
-		private List<string> ConsoleMessages = new List<string>();
-
-		Action<string> ConsoleWriteLine;
 		private readonly List<string> InvalidArguments = new List<string>();
-		private readonly List<string> faults = new List<string>();
-		private (bool, string) quitCall = ValueTuple.Create(false, "");
+		private readonly List<string> Finishes = new List<string>();		
+		private readonly List<string> Faults = new List<string>();
+		private readonly List<string> Logs = new List<string>();		
 		public TestRepository TestRepository;
+		private (bool, string) quitCall = ValueTuple.Create(false, "");
 
 		public ServiceInstallationHandlerTests(ITestOutputHelper output)
 		{
-			Handler = new ServiceInstallationHandler();
-			ConsoleWriteLine = (text) => ConsoleMessages.Add(text);
+			Handler = new ServiceInstallationHandler();			
 			Output = output;
 		}
 
@@ -62,10 +59,8 @@ namespace Lighthouse.CLI.Tests
 		public async Task Execute_WithBothArgs_NoServiceRepo_Faults()
 		{
 			GivenAContext();			
-			WithArgValue(COMMAND_NAME,
-				Arguments.APP_NAME, "testApp");
-			WithArgValue(COMMAND_NAME,
-				Arguments.TARGET_SERVER, "127.0.0.1");
+			WithArgValue(Arguments.APP_NAME, "testApp");
+			WithArgValue(Arguments.TARGET_SERVER, "127.0.0.1");
 			await WhenExecuteIsCalled();
 			ThenFaultRecorded("no services found");
 		}
@@ -78,14 +73,11 @@ namespace Lighthouse.CLI.Tests
 		{
 			GivenAContext(withFoundServices:
 				new[] {
-					new ServiceDescriptor{ Name ="testApp"},
-					new ServiceDescriptor{ Name ="testApp"}
+					new ServiceDescriptor{ Name ="testApp"}					
 				}
 			);
-			WithArgValue(COMMAND_NAME,
-				Arguments.APP_NAME, "testApp");
-			WithArgValue(COMMAND_NAME,
-				Arguments.TARGET_SERVER, "127.0.0.1");
+			WithArgValue(Arguments.APP_NAME, "testApp");
+			WithArgValue(Arguments.TARGET_SERVER, "127.0.0.1");
 			await WhenExecuteIsCalled();
 			ThenFaultRecorded("Multiple services found");
 		}
@@ -102,10 +94,68 @@ namespace Lighthouse.CLI.Tests
 				}
 			);
 
-			WithArgValue(COMMAND_NAME,
-				Arguments.APP_NAME, "testApp");
+			WithArgValue(Arguments.APP_NAME, "testApp");
 			await WhenExecuteIsCalled();
 			ThenFaultRecorded("No target");
+		}
+
+		[Fact]
+		[Trait("Tag", "ServiceInstallationHandler")]
+		[Trait("Tag", "CliHandlers")]
+		[Trait("Category", "Unit")]
+		public async Task Execute_ValidServiceName_TargetSpecified_NetworkConnectionCreated()
+		{
+			var response = new ManagementInterfaceResponse(true, "");
+			var mockConnection = Substitute.For<ILighthouseServiceContainerConnection>();
+			mockConnection.SubmitManagementRequest(Arg.Any<IManagementRequest>()).Returns(
+				response
+			);
+
+			GivenAContext(
+				withFoundServices:
+					new[] {
+						new ServiceDescriptor{ Name ="testApp"}
+					},
+				connectionFoundOnConnect:
+					mockConnection				
+			);
+
+			var uri = "http://127.0.0.1:5050";
+			WithArgValue(Arguments.APP_NAME, "testApp");
+			WithArgValue(Arguments.TARGET_SERVER, uri);
+
+			await WhenExecuteIsCalled();
+			ThenLogIsMade("connection made");
+			ThenLogIsMade(uri);
+		}
+
+		[Fact]
+		[Trait("Tag", "ServiceInstallationHandler")]
+		[Trait("Tag", "CliHandlers")]
+		[Trait("Category", "Unit")]
+		public async Task Execute_ValidServiceName_TargetSpecified_InvalidUri()
+		{
+			var response = new ManagementInterfaceResponse(true, "");
+			var mockConnection = Substitute.For<ILighthouseServiceContainerConnection>();
+			mockConnection.SubmitManagementRequest(Arg.Any<IManagementRequest>()).Returns(
+				response
+			);
+
+			GivenAContext(
+				withFoundServices:
+					new[] {
+						new ServiceDescriptor{ Name ="testApp"}
+					}				
+			);
+			var fakeUrl = "WRONG";
+			WithArgValue(Arguments.APP_NAME, "testApp");
+			WithArgValue(Arguments.TARGET_SERVER, fakeUrl);
+
+			await WhenExecuteIsCalled();
+			ThenInvalidArgumentRecorded(Arguments.TARGET_SERVER);
+			// Add this stuff back in
+			//ThenInvalidArgumentRecorded("Invalid URI");
+			//ThenInvalidArgumentRecorded(fakeUrl);
 		}
 
 		[Fact]
@@ -126,7 +176,7 @@ namespace Lighthouse.CLI.Tests
 				}
 			);
 
-			WithArgValue(COMMAND_NAME,
+			WithArgValue(
 				Arguments.APP_NAME, "testApp");
 			await WhenExecuteIsCalled();
 			ThenFaultRecorded("Multiple Lighthouse servers found");
@@ -136,9 +186,9 @@ namespace Lighthouse.CLI.Tests
 		[Trait("Tag", "ServiceInstallationHandler")]
 		[Trait("Tag", "CliHandlers")]
 		[Trait("Category", "Unit")]
-		public async Task Execute_ValidServiceName_NoTargetSpecified_SingleLighthouseServiceAvailable_ManagementRequestSent()
+		public async Task Execute_ValidServiceName_NoTargetSpecified_SingleLighthouseServiceAvailable_ManagementRequestSent_NoResponse()
 		{
-			var mockConnection = Substitute.For<ILighthouseServiceContainerConnection>();
+			var mockConnection = Substitute.For<ILighthouseServiceContainerConnection>();			
 			GivenAContext(
 				withFoundServices:
 					new[] {
@@ -149,10 +199,68 @@ namespace Lighthouse.CLI.Tests
 				}
 			);
 
-			WithArgValue(COMMAND_NAME,
+			WithArgValue(
 				Arguments.APP_NAME, "testApp");
 			await WhenExecuteIsCalled();
-			ThenFaultRecorded("Multiple Lighthouse servers found");
+			ThenFaultRecorded("No response");
+		}
+
+		[Fact]
+		[Trait("Tag", "ServiceInstallationHandler")]
+		[Trait("Tag", "CliHandlers")]
+		[Trait("Category", "Unit")]
+		public async Task Execute_ValidServiceName_NoTargetSpecified_SingleLighthouseServiceAvailable_ManagementRequestSent()
+		{
+			var response = new ManagementInterfaceResponse(true, "");
+			var mockConnection = Substitute.For<ILighthouseServiceContainerConnection>();
+			mockConnection.SubmitManagementRequest(Arg.Any<IManagementRequest>()).Returns(
+				response
+			);
+
+			GivenAContext(
+				withFoundServices:
+					new[] {
+						new ServiceDescriptor{ Name ="testApp"}
+					},
+				withFoundServers: new[] {
+					mockConnection
+				}
+			);
+
+			WithArgValue(
+				Arguments.APP_NAME, "testApp");
+			await WhenExecuteIsCalled();
+			ThenFinishRecorded("Service installed");
+		}
+
+		[Fact]
+		[Trait("Tag", "ServiceInstallationHandler")]
+		[Trait("Tag", "CliHandlers")]
+		[Trait("Category", "Unit")]
+		public async Task Execute_ValidServiceName_NoTargetSpecified_SingleLighthouseServiceAvailable_ManagementRequestSent_RequestFailed()
+		{
+			var failureMessage = Guid.NewGuid().ToString();
+			var response = new ManagementInterfaceResponse(false, failureMessage);
+			var mockConnection = Substitute.For<ILighthouseServiceContainerConnection>();
+			mockConnection.SubmitManagementRequest(Arg.Any<IManagementRequest>()).Returns(
+				response
+			);
+
+			GivenAContext(
+				withFoundServices:
+					new[] {
+						new ServiceDescriptor{ Name ="testApp"}
+					},
+				withFoundServers: new[] {
+					mockConnection
+				}
+			);
+
+			WithArgValue(
+				Arguments.APP_NAME, "testApp");
+			await WhenExecuteIsCalled();
+			ThenFaultRecorded("Installation failed");
+			ThenFaultRecorded(failureMessage);
 		}
 		#endregion
 
@@ -164,25 +272,46 @@ namespace Lighthouse.CLI.Tests
 
 		private void ThenFaultRecorded(string expectedMessage)
 		{
-			faults.Any(s => s.Contains(expectedMessage, StringComparison.OrdinalIgnoreCase)).Should().BeTrue();
+			Faults.Any(s => s.Contains(expectedMessage, StringComparison.OrdinalIgnoreCase)).Should().BeTrue();
+		}
+
+		private void ThenFinishRecorded(string finishMessage)
+		{
+			Finishes.Any(s => s.Contains(finishMessage, StringComparison.OrdinalIgnoreCase)).Should().BeTrue();
+		}
+
+		private void ThenLogIsMade(string logMessage)
+		{
+			Logs.Any(s => s.Contains(logMessage, StringComparison.OrdinalIgnoreCase)).Should().BeTrue();
 		}
 		#endregion
 
 		#region Arrange
 		private void GivenAContext(
 			IList<ILighthouseServiceDescriptor> withFoundServices = null,
-			IList<ILighthouseServiceContainerConnection> withFoundServers= null)
+			IList<ILighthouseServiceContainerConnection> withFoundServers= null,
+			ILighthouseServiceContainerConnection connectionFoundOnConnect = null
+			)
 		{
 			AppContext = Substitute.For<IAppContext>();
-			AppContext.Fault(Arg.Do<string>(message => faults.Add(message)));
+			AppContext.Fault(Arg.Do<string>(message => Faults.Add(message)));
 			AppContext.Quit(
 				Arg.Do<bool>(isFatal => quitCall.Item1 = isFatal),
 				Arg.Do<string>(message => quitCall.Item2 = message)
 			);
+
 			AppContext.InvalidArgument(
 				Arg.Do<string>(invalidArgName => InvalidArguments.Add(invalidArgName)), 
 				Arg.Any<string>()
 			);
+
+			AppContext.Finish(Arg.Do<string>(
+				finishMessage => Finishes.Add(finishMessage)
+			));
+
+			AppContext.Log(Arg.Do<string>(
+				log => Logs.Add(log)
+			));
 
 			var serviceContainer = Substitute.For<ILighthouseServiceContainer>();
 			
@@ -196,6 +325,11 @@ namespace Lighthouse.CLI.Tests
 				serviceContainer.FindServers().Returns(withFoundServers);
 			}
 
+			if (connectionFoundOnConnect != null)
+			{
+				serviceContainer.Connect(Arg.Any<Uri>()).Returns(connectionFoundOnConnect);
+			}
+
 			AppContext.GetResource<ILighthouseServiceContainer>().Returns(serviceContainer);
 			TestRepository = new TestRepository(null);
 			TestRepository.ServiceDescriptors.Add(
@@ -203,7 +337,7 @@ namespace Lighthouse.CLI.Tests
 			);
 		}
 
-		private void WithArgValue(string commandName, string argName, string value)
+		private void WithArgValue(string argName, string value)
 		{
 			ArgVals.Add(argName, value);
 		}
@@ -219,7 +353,11 @@ namespace Lighthouse.CLI.Tests
 		#region Heelpers
 		public void Dispose()
 		{
-			foreach(var message in ConsoleMessages)
+			foreach(var message in
+				InvalidArguments
+				.Concat(Logs)
+				.Concat(Faults)				
+				.Concat(Finishes))
 			{
 				Output.WriteLine(message);
 			}
