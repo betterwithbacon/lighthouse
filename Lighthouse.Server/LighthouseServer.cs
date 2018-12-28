@@ -113,7 +113,7 @@ namespace Lighthouse.Server
 		private IWorkQueue<IEvent> InternalWorkQueue { get; set; }
 		readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
 		readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
-		readonly ConcurrentBag<EventWrapper<IEvent>> AllReceivedEvents = new ConcurrentBag<EventWrapper<IEvent>>();
+		readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
 		Timer InternalWorkQueueProcessorTimer;		
 		readonly List<ILighthouseServiceContainerConnection> RemoteContainerConnections = new List<ILighthouseServiceContainerConnection>();
 		#endregion
@@ -717,19 +717,17 @@ namespace Lighthouse.Server
 				return;
 
 			// handle tasks in a separate Task
-			Do((container) => {
-				var time = GetNow();
-				var wrappedEvent = ev.Wrap(container, time);
-				AllReceivedEvents.Add(wrappedEvent);				
+			Do((container) => {				
+				AllReceivedEvents.Add(ev);				
 				if (Consumers.TryGetValue(ev.GetType(), out var consumers))
 				{
 					foreach (var consumer in consumers)
-						consumer.HandleEvent(wrappedEvent);
+						consumer.HandleEvent(ev);
 				}
 			});
 		}
 
-		public IEnumerable<EventWrapper<IEvent>> GetAllReceivedEvents(PointInTime since = null)
+		public IEnumerable<IEvent> GetAllReceivedEvents(PointInTime since = null)
 		{
 			return AllReceivedEvents.Where(e => since == null || since <= e.EventTime).ToArray();
 		}

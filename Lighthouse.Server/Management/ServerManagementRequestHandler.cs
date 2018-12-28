@@ -27,7 +27,7 @@ namespace Lighthouse.Server.Management
 
 					// emit an event to install this service in this container
 					requestContext.Container.EmitEvent(
-						new ServiceInstallationEvent(serviceName)
+						new ServiceInstallationEvent(serviceName, requestContext.Container)
 					);
 					break;
 			}
@@ -36,10 +36,12 @@ namespace Lighthouse.Server.Management
 		}
 	}
 
-	public class ServiceInstalledEvent : IEvent
+	public class ServiceInstalledEvent : BaseEvent
 	{
 		public string ServiceInstalled { get; }
-		public ServiceInstalledEvent(string serviceInstalled)
+
+		public ServiceInstalledEvent(string serviceInstalled, ILighthouseServiceContainer container)
+			: base(container)
 		{
 			ServiceInstalled = serviceInstalled;
 		}
@@ -48,11 +50,12 @@ namespace Lighthouse.Server.Management
 	// TODO: it does occur to me, that theoretically, it'd be cool if at some point in the future,
 	// The CLI to manage a container cluster, literally, could just emit events directly into the container, 
 	// and not have to worry about the asbstractions between the CLI and the server, but A LONG way from that
-	public class ServiceInstallationEvent : IEvent
+	public class ServiceInstallationEvent : BaseEvent
 	{
 		public string ServiceName { get; }
 
-		public ServiceInstallationEvent(string serviceName)
+		public ServiceInstallationEvent(string serviceName, ILighthouseServiceContainer container)
+			: base(container)
 		{
 			ServiceName = serviceName;
 		}

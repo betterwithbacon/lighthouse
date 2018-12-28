@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Lighthouse.Core;
+using Lighthouse.Core.Hosting;
 using Lighthouse.Core.Management;
 using Lighthouse.Server.Management;
 using NSubstitute;
@@ -20,8 +21,9 @@ namespace Lighthouse.Server.Tests.Management
 			var mockContext = Substitute.For<IManagementRequestContext>();
 			mockContext.Container.Returns(mockContainer);
 
+			var managementRequest = new ServerManagementRequest();
 
-			var response = handler.Handle("appName", mockContext) as string;
+			var response = handler.Handle(managementRequest.SerializeForManagementInterface(), mockContext) as string;
 			response.Should().NotBeNull();
 		}
 	}

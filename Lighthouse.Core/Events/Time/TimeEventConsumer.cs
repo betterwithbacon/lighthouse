@@ -32,9 +32,9 @@ namespace Lighthouse.Core.Events.Time
 			Container.Log(LogLevel.Debug, LogType.EventReceived, this, timeEvent.ToString());
 
 			// evaluate all of the schedules to see if one is a hit, if so, then run the action configured for this consumer
-			if (Schedules.Any(s => s.Key.IsMatch(Schedules[s.Key], timeEvent.Time)))
+			if (Schedules.Any(s => s.Key.IsMatch(Schedules[s.Key], timeEvent.EventTime)))
 			{
-				Container.Do((o) => EventAction(timeEvent.Time));
+				Container.Do((o) => EventAction(timeEvent.EventTime));
 			}
 		}
 

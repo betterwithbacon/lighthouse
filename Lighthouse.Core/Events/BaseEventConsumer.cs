@@ -44,7 +44,7 @@ namespace Lighthouse.Core.Events
 			return HashCode.Combine(obj.Identifier, obj.ScopeName);
 		}
 
-		public virtual void HandleEvent(EventWrapper<IEvent> ev)
+		public virtual void HandleEvent(IEvent ev)
 		{
 			// Find a type specific implementation on the inheriter.
 			// if not, then this method should be overwritten

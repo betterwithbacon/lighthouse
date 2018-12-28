@@ -3,14 +3,13 @@ using System;
 
 namespace Lighthouse.Core.Events.Logging
 {
-	public class LogEvent : IEvent
+	public class LogEvent : BaseEvent
 	{
 		public string Message { get; set; }
-		public DateTime Time { get; set; }
-		public ILighthouseServiceContainer LighthouseContainer { get; }
 		public ILighthouseComponent Source { get; }
 
 		public LogEvent(ILighthouseServiceContainer container, ILighthouseComponent source)
+			: base(container)
 		{
 			Source = source;
 			LighthouseContainer = container;

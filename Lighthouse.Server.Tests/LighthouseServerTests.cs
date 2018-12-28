@@ -387,12 +387,12 @@ namespace Lighthouse.Server.Tests
 		public TestEvent(ILighthouseServiceContainer Container, DateTime? time = null)
 		{
 			LighthouseContainer = Container;
-			Time = time ?? DateTime.Now;
+			EventTime = time ?? DateTime.Now;
 		}
 
 		public ILighthouseServiceContainer LighthouseContainer { get; }
 
-		public DateTime Time { get; private set; }
+		public DateTime EventTime { get; private set; }
 	}
 
 	public static class LighthouseServerConfigurationExtensions

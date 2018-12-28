@@ -7,10 +7,10 @@ namespace Lighthouse.Server.Management
 {
 	public class PingManagementRequestHandler : IManagementRequestHandler
 	{
-		public string Handle(string rawRequestPayload, IManagementRequestContext requestContext)
+		public object Handle(string rawRequestPayload, IManagementRequestContext requestContext)
 		{
 			// return the status of the requesting context
-			return requestContext.GetStatus();
+			return requestContext.Container.GetStatus();
 		}
 	}
 }

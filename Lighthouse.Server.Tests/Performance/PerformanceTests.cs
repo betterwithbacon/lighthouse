@@ -35,8 +35,7 @@ namespace Lighthouse.Server.Tests.Performance
 			timeEventConsumer.EventAction = (triggerTime) => Container.EmitEvent(
 				new LogEvent(Container, timeEventConsumer)
 				{
-					Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}",
-					Time = Container.GetNow()
+					Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}"					
 				}, timeEventConsumer
 			);
 
@@ -97,8 +96,7 @@ namespace Lighthouse.Server.Tests.Performance
 			timeEventConsumer.EventAction = (triggerTime) => Container.EmitEvent(
 				new LogEvent(Container, timeEventConsumer)
 				{
-					Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}",
-					Time = Container.GetNow()
+					Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}"					
 				}, timeEventConsumer
 			);
 

@@ -4,21 +4,18 @@ using System;
 
 namespace Lighthouse.Core.Events.Time
 {
-	public class TimeEvent : IEvent
+	public class TimeEvent : BaseEvent
 	{
-		public DateTime Time { get;  set; }
-
-		public ILighthouseServiceContainer LighthouseContainer { get;  private set; }
-
 		public TimeEvent(ILighthouseServiceContainer container, DateTime time)
+			: base(container,time)
 		{
 			LighthouseContainer = container;
-			Time = time;			
+			EventTime = time;			
 		}
 
 		public override string ToString()
 		{
-			return $"Time: {Time.ToLighthouseLogString()}";
+			return $"Time: {EventTime.ToLighthouseLogString()}";
 		}
 	}
 }

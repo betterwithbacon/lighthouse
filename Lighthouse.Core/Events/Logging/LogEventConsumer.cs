@@ -17,7 +17,7 @@ namespace Lighthouse.Core.Events.Logging
 		public void HandleEvent(LogEvent logEvent)
 		{
 			Container.Log(LogLevel.Debug, LogType.EventReceived, this, message: logEvent.ToString());
-			Container.Warehouse.Append(new StorageKey(LOG_NAME, this), new[] { $"[{logEvent.Time}] {logEvent.Message}" }, LoadingDockPolicies);			
+			Container.Warehouse.Append(new StorageKey(LOG_NAME, this), new[] { $"[{logEvent.EventTime}] {logEvent.Message}" }, LoadingDockPolicies);			
 		}
 
 		protected override void OnInit()
