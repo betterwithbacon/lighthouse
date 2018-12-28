@@ -127,7 +127,7 @@ namespace Lighthouse.Core
 		/// <param name="routeName"></param>
 		/// <param name="payload"></param>
 		/// <returns></returns>
-		ManagementInterfaceResponse SubmitManagementRequest(ManagementRequestType routeName, string payload);
+		ManagementInterfaceResponse HandleManagementRequest(ManagementRequestType routeName, string payload);
 
 		IEnumerable<ILighthouseServiceContainerConnection> FindServers();
 
@@ -135,5 +135,9 @@ namespace Lighthouse.Core
 		Task Stop();
 
 		void AddServiceRepository(IServiceRepository serviceRepository);
+
+		LighthouseServerStatus GetStatus();
+
+		IEnumerable<LighthouseServiceRun> GetRunningServices(Func<LighthouseServiceRun, bool> filter = null);
 	}
 }

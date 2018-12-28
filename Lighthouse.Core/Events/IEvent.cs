@@ -6,7 +6,7 @@ namespace Lighthouse.Core.Events
 {
 	public interface IEvent
 	{
-		ILighthouseServiceContainer LighthouseContainer { get; }
-		DateTime Time { get; }		
+		//ILighthouseServiceContainer LighthouseContainer { get; }
+		//DateTime Time { get; }		
 	}
 }

@@ -107,7 +107,7 @@ namespace Lighthouse.CLI.Tests
 		{
 			var response = new ManagementInterfaceResponse(true, "");
 			var mockConnection = Substitute.For<ILighthouseServiceContainerConnection>();
-			mockConnection.SubmitManagementRequest(Arg.Any<IManagementRequest>()).Returns(
+			mockConnection.SubmitManagementRequest(Arg.Any<ServerManagementRequestType>()).Returns(
 				response
 			);
 
@@ -137,7 +137,7 @@ namespace Lighthouse.CLI.Tests
 		{
 			var response = new ManagementInterfaceResponse(true, "");
 			var mockConnection = Substitute.For<ILighthouseServiceContainerConnection>();
-			mockConnection.SubmitManagementRequest(Arg.Any<IManagementRequest>()).Returns(
+			mockConnection.SubmitManagementRequest(Arg.Any<ServerManagementRequestType>()).Returns(
 				response
 			);
 
@@ -213,7 +213,7 @@ namespace Lighthouse.CLI.Tests
 		{
 			var response = new ManagementInterfaceResponse(true, "");
 			var mockConnection = Substitute.For<ILighthouseServiceContainerConnection>();
-			mockConnection.SubmitManagementRequest(Arg.Any<IManagementRequest>()).Returns(
+			mockConnection.SubmitManagementRequest(Arg.Any<ServerManagementRequestType>()).Returns(
 				response
 			);
 
@@ -242,7 +242,7 @@ namespace Lighthouse.CLI.Tests
 			var failureMessage = Guid.NewGuid().ToString();
 			var response = new ManagementInterfaceResponse(false, failureMessage);
 			var mockConnection = Substitute.For<ILighthouseServiceContainerConnection>();
-			mockConnection.SubmitManagementRequest(Arg.Any<IManagementRequest>()).Returns(
+			mockConnection.SubmitManagementRequest(Arg.Any<ServerManagementRequestType>()).Returns(
 				response
 			);
 

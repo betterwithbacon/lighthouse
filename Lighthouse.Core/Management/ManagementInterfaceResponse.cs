@@ -5,6 +5,11 @@
 		public bool WasSuccessful { get;  }
 		public string Message { get; }
 
+		//public ManagementInterfaceResponse()
+		//	: this(false,"")
+		//{
+		//}
+
 		public ManagementInterfaceResponse(bool wasSuccessful, string message)
 		{
 			WasSuccessful = wasSuccessful;

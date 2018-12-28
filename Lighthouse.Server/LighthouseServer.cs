@@ -98,7 +98,7 @@ namespace Lighthouse.Server
 		private readonly ConcurrentBag<Schedule> Schedules = new ConcurrentBag<Schedule>();
 		public bool IsRunning { get; private set; }
 		#endregion
-		
+
 		#region Fields - Configuration
 		private IAppConfigurationProvider AppConfiguration { get; set; }
 		// Local cache of ALL repositories. this will likely include more than the initial config
@@ -113,7 +113,7 @@ namespace Lighthouse.Server
 		private IWorkQueue<IEvent> InternalWorkQueue { get; set; }
 		readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
 		readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
-		readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
+		readonly ConcurrentBag<EventWrapper<IEvent>> AllReceivedEvents = new ConcurrentBag<EventWrapper<IEvent>>();
 		Timer InternalWorkQueueProcessorTimer;		
 		readonly List<ILighthouseServiceContainerConnection> RemoteContainerConnections = new List<ILighthouseServiceContainerConnection>();
 		#endregion
@@ -123,6 +123,7 @@ namespace Lighthouse.Server
 		TimeEventProducer GlobalClock { get; set; } // raise an event every minute, like a clock (a not very good clock)
 		public IWarehouse Warehouse { get; } = new Warehouse();
 		private readonly ConcurrentBag<ILighthouseManagementInterface> ManagementInterfaces = new ConcurrentBag<ILighthouseManagementInterface>();
+		private readonly Dictionary<ManagementRequestType, Type> RequestHandlerMappings = new Dictionary<ManagementRequestType, Type>();
 		#endregion
 
 		#region Constructors
@@ -264,7 +265,11 @@ namespace Lighthouse.Server
 			ServicePort = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT;
 
 			if (allConfigs.Count() > 1)
-				throw new InvalidOperationException("Too many app configuration providers found. There should onl e one");
+				throw new InvalidOperationException("Too many app configuration providers found. There should only be one.");
+
+			RequestHandlerMappings.Add(ManagementRequestType.Ping, typeof(PingManagementRequestHandler));
+			RequestHandlerMappings.Add(ManagementRequestType.Services, typeof(ServicesManagementRequestHandler));
+			RequestHandlerMappings.Add(ManagementRequestType.ServerManagement, typeof(ServerManagementRequestHandler));
 
 			AppConfiguration = allConfigs.Single();
 
@@ -713,19 +718,20 @@ namespace Lighthouse.Server
 
 			// handle tasks in a separate Task
 			Do((container) => {
-				AllReceivedEvents.Add(ev);
-
+				var time = GetNow();
+				var wrappedEvent = ev.Wrap(container, time);
+				AllReceivedEvents.Add(wrappedEvent);				
 				if (Consumers.TryGetValue(ev.GetType(), out var consumers))
 				{
 					foreach (var consumer in consumers)
-						consumer.HandleEvent(ev);
+						consumer.HandleEvent(wrappedEvent);
 				}
 			});
 		}
 
-		public IEnumerable<IEvent> GetAllReceivedEvents(PointInTime since = null)
+		public IEnumerable<EventWrapper<IEvent>> GetAllReceivedEvents(PointInTime since = null)
 		{
-			return AllReceivedEvents.Where(e => since == null || since <= e.Time).ToArray();
+			return AllReceivedEvents.Where(e => since == null || since <= e.EventTime).ToArray();
 		}
 
 		public void RegisterEventProducer(IEventProducer eventProducer)
@@ -792,49 +798,47 @@ namespace Lighthouse.Server
 			Log(LogLevel.Info, LogType.Info, this, $"Adding remote lighthouse container: {connection}");
 		}
 
-		public ManagementInterfaceResponse SubmitManagementRequest(ManagementRequestType requestType, string payload)
+		public class LighthouseServerManagementRequestHandlerContext : IManagementRequestContext
 		{
-			switch(requestType)
-			{
-				case ManagementRequestType.Ping:
-					return GetStatus().SerializeForManagementInterface().ToMIResponse();
-				case ManagementRequestType.Services:
-				{
-					var servicesRequest = payload.DeserializeForManagementInterface<LighthouseServerRequest<ListServicesRequest>>();
-					// TODO: at some point, all of this type name matching, needst o be delegated to "Service Discovery" where these things can be found by names,hashes, etc.
-					var typeNameToFilterOn = servicesRequest.Request.ServiceDescriptorToFind.Type;
-					return
-						new LighthouseServerResponse<List<LighthouseServiceRemotingWrapper>>(GetStatus(),
-							GetRunningServices((serviceRun) => serviceRun.Service.GetType().AssemblyQualifiedName == typeNameToFilterOn)
-							.Select(lsr => new LighthouseServiceRemotingWrapper(lsr.ID, lsr.Service))
-							.ToList()
-						)
-						.SerializeForManagementInterface()
-						.ToMIResponse();
-				}
-				case ManagementRequestType.Install:
-				{
-					var serviceNameToInstall = payload.DeserializeForManagementInterface<string>();
-
-					try
-					{
-						Install(serviceNameToInstall);
-					}
-					catch (Exception e)
-					{
-						return new ManagementInterfaceResponse(false, e.Message);
-					}
-						
-					return new ManagementInterfaceResponse(true, "success".SerializeForManagementInterface());
-				}
-			}
-
-			return new ManagementInterfaceResponse(false, "unknown error");
+			public ILighthouseServiceContainer Container { get; internal set; }
 		}
 
-		private void Install(string serviceNameToInstall)
+		public ManagementInterfaceResponse HandleManagementRequest(ManagementRequestType requestType, string payload)
 		{
-			throw new NotImplementedException();
+
+			// can't handle this reuqest
+			if (!RequestHandlerMappings.ContainsKey(requestType))
+			{
+				Log(LogLevel.Error, LogType.Error, this, $"Unexpected management request received: {requestType}");
+				return null;
+			}
+
+			var handlerType = RequestHandlerMappings[requestType];
+
+			if (!(Activator.CreateInstance(handlerType) is IManagementRequestHandler handler))
+			{
+				Log(LogLevel.Error, LogType.Error, this, $"Management request handler (found:[{handlerType}]) isn't of type IManagementRequestHandler.");
+				return null;
+			}
+
+			object rawResponse = null;
+
+			try
+			{
+				rawResponse = handler.Handle(payload,
+					new LighthouseServerManagementRequestHandlerContext
+					{
+						Container = this
+					});
+			}
+			catch(Exception e)
+			{
+				return new ManagementInterfaceResponse(false, e.Message);
+			}
+
+			return rawResponse != null ?
+					rawResponse.SerializeForManagementInterface().ToMIResponse() :
+					new ManagementInterfaceResponse(false, "unknown error");
 		}
 
 		public ILighthouseServiceContainerConnection Connect(Uri uri)
@@ -849,7 +853,6 @@ namespace Lighthouse.Server
 
 		public LighthouseServerStatus GetStatus()
 		{
-			// TODO, this doesn't always work because
 			return new LighthouseServerStatus(
 				new Version(AppConfiguration?.Version ?? "0.0.0.0"),
 				ServerName, 

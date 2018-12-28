@@ -6,6 +6,10 @@ using Lighthouse.Core.Management;
 
 namespace Lighthouse.Core.Hosting
 {
+	/// <summary>
+	/// Exposes operations for a remote lighthouse server. 
+	/// The connection should abstract any networking requirements, but should not perform business transformations itself, only providing a stable proxy.
+	/// </summary>
 	public interface ILighthouseServiceContainerConnection : ILighthouseComponent
 	{
 		// indicates if the container is still connected. it's up to the connection itself to determine "connected" whether by a ping or connection history, so this flag might be innacurate or out of date for ephemeral connections.
@@ -41,7 +45,7 @@ namespace Lighthouse.Core.Hosting
 		/// </summary>
 		/// <param name="serviceInstallationRequest"></param>
 		/// <returns></returns>
-		Task<ManagementInterfaceResponse> SubmitManagementRequest(ServerManagementRequestType requestType, Dictionary<string, object> requestParameters);
+		Task<ManagementInterfaceResponse> SubmitManagementRequest(ServerManagementRequestType requestType, IDictionary<string, object> requestParameters = null);
 	}
 
 	public struct LighthouseServiceContainerConnectionStatus

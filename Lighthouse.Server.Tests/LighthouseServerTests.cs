@@ -370,6 +370,16 @@ namespace Lighthouse.Server.Tests
 
 		}
 		#endregion
+
+		#region Management
+		public void SubmitManagementRequest_ManagementType_SubTypeParsed()
+		{
+			//this.Container.SubmitManagementRequest(
+			//	Core.Management.ManagementRequestType.ServerManagement,
+				
+			//	)
+		}
+		#endregion
 	}
 
 	public class TestEvent : IEvent

@@ -60,11 +60,6 @@ namespace Lighthouse.Server.Management
 			yield return $"http://{rawIp}:{port}/";
 		}
 
-		//public void AddRoute(string route, Func<string, string> handler)
-		//{
-		//	RouteResponses.TryAdd(route, handler);
-		//}
-
 		protected override void OnStart()
 		{
 			base.OnStart();
@@ -153,13 +148,12 @@ namespace Lighthouse.Server.Management
 		public string Route(string routeName, string payload)
 		{
 			// delegate each question to the container itself
-			// IDK, I don't want to rebuild ASP MVC controllers, ijust want very terse mapping
+			// IDK, I don't want to rebuild ASP MVC controllers, i just want very terse mapping
 			// my concern is, lets say we add 5 endpopints, and there's 3 management interfaces, I don't want them to have to do the mappinb, as well, just to sort of proxy it. 
 			// I think the management interfaces are purely abstractions for the 
-
 			if(Enum.TryParse<ManagementRequestType>(routeName,true, out var requestType))
 			{
-				var managementResponse = Container.SubmitManagementRequest(requestType, payload);
+				var managementResponse = Container.HandleManagementRequest(requestType, payload);
 				return managementResponse.Message;
 			}
 			else

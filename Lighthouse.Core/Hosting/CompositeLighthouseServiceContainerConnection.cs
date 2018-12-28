@@ -38,7 +38,7 @@ namespace Lighthouse.Core.Hosting
 			throw new NotImplementedException();
 		}
 
-		public Task<ManagementInterfaceResponse> SubmitManagementRequest(IManagementRequest managementRequest)
+		public Task<ManagementInterfaceResponse> SubmitManagementRequest(ServerManagementRequestType requestType, IDictionary<string, object> requestParameters)
 		{
 			throw new NotImplementedException();
 		}

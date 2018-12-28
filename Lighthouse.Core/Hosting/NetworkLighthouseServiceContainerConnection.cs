@@ -160,10 +160,8 @@ namespace Lighthouse.Core.Hosting
 				}
 			);
 
-			//var response = new ManagementInterfaceResponse(true, "");
-
 			return managementRequestResponse;
-		}
+		}		
 	}
 
 	public class ServerManagementRequest
@@ -180,6 +178,6 @@ namespace Lighthouse.Core.Hosting
 		}
 
 		public ServerManagementRequestType RequestType { get; internal set; }
-		public IEnumerable<KeyValuePair<string, object>> RequestParameters { get; internal set; }
+		public IDictionary<string, object> RequestParameters { get; internal set; }
 	}
 }
