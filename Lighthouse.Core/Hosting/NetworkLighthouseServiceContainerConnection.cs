@@ -179,5 +179,10 @@ namespace Lighthouse.Core.Hosting
 
 		public ServerManagementRequestType RequestType { get; internal set; }
 		public IDictionary<string, object> RequestParameters { get; internal set; }
+
+		public ServerManagementRequest()
+		{
+			RequestParameters = new Dictionary<string, object>();
+		}
 	}
 }

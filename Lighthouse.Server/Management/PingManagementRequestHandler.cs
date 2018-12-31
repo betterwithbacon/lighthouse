@@ -2,15 +2,16 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Server.Management
 {
 	public class PingManagementRequestHandler : IManagementRequestHandler
 	{
-		public object Handle(string rawRequestPayload, IManagementRequestContext requestContext)
+		public async Task<object> Handle(string rawRequestPayload, IManagementRequestContext requestContext)
 		{
 			// return the status of the requesting context
-			return requestContext.Container.GetStatus();
+			return await Task.FromResult(requestContext.Container.GetStatus());
 		}
 	}
 }

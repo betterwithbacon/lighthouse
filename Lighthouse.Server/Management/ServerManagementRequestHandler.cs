@@ -5,12 +5,13 @@ using Lighthouse.Core.Management;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Server.Management
 {
 	public class ServerManagementRequestHandler : IManagementRequestHandler
 	{
-		public object Handle(string request, IManagementRequestContext requestContext)
+		public async Task<object> Handle(string request, IManagementRequestContext requestContext)
 		{
 			var requestDetails = request.DeserializeForManagementInterface<ServerManagementRequest>();
 
@@ -21,18 +22,27 @@ namespace Lighthouse.Server.Management
 					//requestContext.Container.RegisterEventConsumer<ServiceInstalledEvent>(
 					//	new OneTimeHandler<ServiceInstalledEvent>( (ev) => 
 					//);
-					var serviceName = requestDetails.RequestParameters[ServerManagementRequest.RequestTypes.Install.Arguments.ServiceName] as string;
-					if (serviceName == null)
-						throw new ApplicationException("No service name was specified.");
 
-					// emit an event to install this service in this container
-					requestContext.Container.EmitEvent(
-						new ServiceInstallationEvent(serviceName, requestContext.Container)
-					);
+					//if (requestDetails.RequestParameters.ContainsKey(ServerManagementRequest.RequestTypes.Install.Arguments.ServiceName))					
+					if (requestDetails.RequestParameters.TryGetValue(ServerManagementRequest.RequestTypes.Install.Arguments.ServiceName, out var serviceNameRaw))
+					{
+						if(!(serviceNameRaw is string serviceName))
+							throw new ApplicationException($"Invalid service name was specified. {serviceNameRaw}");
+
+						// emit an event to install this service in this container
+						await requestContext.Container.EmitEvent(
+							new ServiceInstallationEvent(serviceName, requestContext.Container)
+						);						
+					}
+					else
+					{
+						if (!(serviceNameRaw is string serviceName))
+							throw new ApplicationException("No service name was specified.");
+					}
 					break;
 			}
 
-			return "success";
+			return $"success";
 		}
 	}
 

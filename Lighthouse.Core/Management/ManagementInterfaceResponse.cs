@@ -2,13 +2,10 @@
 {
 	public class ManagementInterfaceResponse
 	{
+		public static readonly ManagementInterfaceResponse Success = new ManagementInterfaceResponse(true, "");
 		public bool WasSuccessful { get;  }
 		public string Message { get; }
 
-		//public ManagementInterfaceResponse()
-		//	: this(false,"")
-		//{
-		//}
 
 		public ManagementInterfaceResponse(bool wasSuccessful, string message)
 		{

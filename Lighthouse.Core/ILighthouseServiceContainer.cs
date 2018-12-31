@@ -45,15 +45,6 @@ namespace Lighthouse.Core
 		Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>() where T : class, ILighthouseService;
 
 		/// <summary>
-		/// Returns Lighthouser services that are hosted outside of this service container
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <returns></returns>
-		//LighthouseComponentDescriptor<T> RetrieveRemoteComponent<T>(string uri = null) where T : ILighthouseComponent;
-
-		//T FindRemoteServiceDescriptor<T>() where T : ILighthouseServiceDescriptor;
-
-		/// <summary>
 		/// The current time, based on the lighthouse service.
 		/// </summary>
 		/// <returns></returns>
@@ -100,7 +91,7 @@ namespace Lighthouse.Core
 		/// The work may be queued up, so items performed in parallel should simply be added sequentially.
 		/// </summary>
 		/// <param name="actions"></param>
-		void Do(Action<ILighthouseServiceContainer> action, string logMessage = "");
+		Task Do(Action<ILighthouseServiceContainer> action, string logMessage = "");
 
 		void AddScheduledAction(Schedule schedule, Action<DateTime> taskToPerform);
 
@@ -109,7 +100,7 @@ namespace Lighthouse.Core
 		void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer)
 			where TEvent : IEvent;
 
-		void EmitEvent(IEvent ev, ILighthouseLogSource source = null);
+		Task EmitEvent(IEvent ev, ILighthouseLogSource source = null);
 
 		IEnumerable<IEvent> GetAllReceivedEvents(PointInTime since = null);
 		

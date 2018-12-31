@@ -696,7 +696,7 @@ namespace Lighthouse.Server
 				throw new ApplicationException($"Producer: {producer} is not ready.");
 		}
 
-		public void EmitEvent(IEvent ev, ILighthouseLogSource logSource = null)
+		public async Task EmitEvent(IEvent ev, ILighthouseLogSource logSource = null)
 		{	
 			// log the event was raised within the context
 			// but don't log events emitted by the source itself
@@ -708,16 +708,13 @@ namespace Lighthouse.Server
 			// will be heard by both the local context, and potentially propagated to other contexts
 			//EventQueue.Enqueue(ev);
 
-			HandleEvent(ev);
+			await HandleEvent(ev);
 		}
 
-		private void HandleEvent(IEvent ev)
+		private async Task HandleEvent(IEvent ev)
 		{
-			if (ev == null)
-				return;
-
 			// handle tasks in a separate Task
-			Do((container) => {				
+			await Do((container) => {				
 				AllReceivedEvents.Add(ev);				
 				if (Consumers.TryGetValue(ev.GetType(), out var consumers))
 				{
@@ -758,27 +755,28 @@ namespace Lighthouse.Server
 			Log(LogLevel.Debug, LogType.ConsumerRegistered, eventConsumer);
 		}
 
-		public void Do(Action<ILighthouseServiceContainer> action, string logMessage = null)
+		public async Task Do(Action<ILighthouseServiceContainer> action, string logMessage = null)
 		{
 			if(logMessage != null)
 				Log(LogLevel.Debug, LogType.Info,this, $"Performing action {logMessage ?? "<unknown>"}");
 
 			// just run all of the tasks			
 			// TOD: do all of the magic, that this method is supposed to do
-			Task.Run(() => action(this), CancellationTokenSource.Token).ContinueWith(
-				(task) =>
-				{
-					// handle errors
-					if (task.IsFaulted)
-					{
-						HandleTaskError(task.Exception.InnerException);
-					}
-					// no need to handle successful "do" calls, as they're expected to succeed, and also won't have any thread metadata
-					//else
-					//{
-					//	HandleTaskCompletion(task);
-					//}
-				}, CancellationTokenSource.Token);
+			await Task.Run(
+				() => action(this), CancellationTokenSource.Token)
+				.ContinueWith(
+					(task) => {
+						// handle errors
+						if (task.IsFaulted)
+						{
+							HandleTaskError(task.Exception.InnerException);
+						}
+						// no need to handle successful "do" calls, as they're expected to succeed, and also won't have any thread metadata
+						//else
+						//{
+						//	HandleTaskCompletion(task);
+						//}
+					}, CancellationTokenSource.Token);
 		}
 
 		public IEnumerable<T> FindComponent<T>() where T : ILighthouseComponent
@@ -803,7 +801,6 @@ namespace Lighthouse.Server
 
 		public ManagementInterfaceResponse HandleManagementRequest(ManagementRequestType requestType, string payload)
 		{
-
 			// can't handle this reuqest
 			if (!RequestHandlerMappings.ContainsKey(requestType))
 			{
@@ -819,11 +816,9 @@ namespace Lighthouse.Server
 				return null;
 			}
 
-			object rawResponse = null;
-
 			try
 			{
-				rawResponse = handler.Handle(payload,
+				handler.Handle(payload,
 					new LighthouseServerManagementRequestHandlerContext
 					{
 						Container = this
@@ -834,9 +829,7 @@ namespace Lighthouse.Server
 				return new ManagementInterfaceResponse(false, e.Message);
 			}
 
-			return rawResponse != null ?
-					rawResponse.SerializeForManagementInterface().ToMIResponse() :
-					new ManagementInterfaceResponse(false, "unknown error");
+			return ManagementInterfaceResponse.Success;					
 		}
 
 		public ILighthouseServiceContainerConnection Connect(Uri uri)
