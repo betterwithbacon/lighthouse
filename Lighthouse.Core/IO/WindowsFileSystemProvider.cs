@@ -24,8 +24,6 @@ namespace Lighthouse.Core.IO
 			LighthouseContainer.Log(Logging.LogLevel.Info, Logging.LogType.Info, this, $"RootDirectory is {RootDirectory}");
 		}
 
-		public event StatusUpdatedEventHandler StatusUpdated;
-
 		public async Task<byte[]> ReadFromFileSystem(string fileName)
 		{
 			var fullWritePath = GetFilePath(fileName);

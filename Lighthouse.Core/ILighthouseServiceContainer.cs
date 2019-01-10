@@ -127,6 +127,8 @@ namespace Lighthouse.Core
 
 		void AddServiceRepository(IServiceRepository serviceRepository);
 
+		void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest, bool persist = false, bool autoStart = false);
+
 		LighthouseServerStatus GetStatus();
 
 		IEnumerable<LighthouseServiceRun> GetRunningServices(Func<LighthouseServiceRun, bool> filter = null);

@@ -16,7 +16,17 @@ namespace Lighthouse.Core.Configuration.Formats.YAML
 	{
 		public static ServiceLaunchRequest ToServiceLaunchRequest(this LighthouseYamlConfigServiceDescriptor repo)
 		{
-			return null;
+			return new ServiceLaunchRequest(repo.Name);	
+		}
+
+		public static LighthouseYamlConfigServiceDescriptor ToLighthouseYamlConfigServiceDescriptor(this ServiceLaunchRequest repo)
+		{
+			return new LighthouseYamlConfigServiceDescriptor
+			{
+				Name = repo.ServiceName,
+				Type = repo.ServiceType?.AssemblyQualifiedName,
+				Alias = repo.ServiceName
+			};
 		}
 	}
 }

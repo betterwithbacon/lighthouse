@@ -46,6 +46,8 @@ namespace Lighthouse.Core.Events
 
 		public virtual void HandleEvent(IEvent ev)
 		{
+			Container.Log(LogLevel.Debug, LogType.EventReceived, this, message: ev.ToString());
+
 			// Find a type specific implementation on the inheriter.
 			// if not, then this method should be overwritten
 			if (MethodCache.TryGetValue(ev?.GetType(), out var method))

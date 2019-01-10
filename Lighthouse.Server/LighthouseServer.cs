@@ -102,8 +102,8 @@ namespace Lighthouse.Server
 		#region Fields - Configuration
 		private IAppConfigurationProvider AppConfiguration { get; set; }
 		// Local cache of ALL repositories. this will likely include more than the initial config
-		public IList<IServiceRepository> ServiceRepositories { get; set; } = new List<IServiceRepository>();
-		public IList<ServiceLaunchRequest> ServiceLaunchRequests { get; set; } = new List<ServiceLaunchRequest>();
+		private IList<IServiceRepository> ServiceRepositories { get; set; } = new List<IServiceRepository>();
+		public IList<ServiceLaunchRequest> ServiceLaunchRequests { get; private set; } = new List<ServiceLaunchRequest>();
 		public LighthouseMonitor LighthouseMonitor { get; private set; }
 		public int ServicePort { get; private set; }
 		#endregion
@@ -206,12 +206,24 @@ namespace Lighthouse.Server
 			if(EventQueue != null)
 				RegisterEventProducer(new QueueEventProducer(EventQueue, 1000));
 
+			AddBaseProducers();
+
+			AddBaseConsumers();
+
+			LaunchConfiguredServices();
+		}
+
+		private void AddBaseProducers()
+		{
 			// always add the global clock. this clock will be used to drive scheduled events
 			RegisterEventProducer(GlobalClock);
+		}
 
-			// TODO: lets just make this be a hook to add queues, to avoid this being overused
-			// the internal queue, is a ideally a way to create durability of this process, NOT a way to provide inter-lighthouse communication
-			LaunchConfiguredServices();
+		private void AddBaseConsumers()
+		{
+			RegisterEventConsumer<ServiceInstallationEvent>(
+				new ServiceInstallationEventConsumer()
+			);
 		}
 
 		public void OverrideGlobalClock(TimeEventProducer time )
@@ -284,7 +296,7 @@ namespace Lighthouse.Server
 			AddServiceRepository(new LocalServiceRepository(this));
 
 			foreach (var slr in AppConfiguration.GetServiceLaunchRequests().Where(s => s != null))
-				AddServiceLaunchRequest(slr);			
+				AddServiceLaunchRequest(slr);
 		}
 
 		public void BindServicePort(int servicePort)
@@ -301,10 +313,24 @@ namespace Lighthouse.Server
 			ServiceRepositories.Add(serviceRepository);
 		}
 
-		public void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest)
+		public void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest, bool persist = false, bool autoStart = false)
 		{
 			Log(LogLevel.Debug, LogType.Info, this, $"Loading service launch request: {launchRequest}");
 			ServiceLaunchRequests.Add(launchRequest);
+
+			// TODO: "install" should nominally mean that this server is now capable of running this service completely disconnectede
+			// however, in the future, it would be possible for a server to remotely retrieve a package from the remote store into the local container
+
+			if(persist)
+			{
+				AppConfiguration.AddServiceLaunchRequest(launchRequest);
+			}
+
+			// start the service when "installed"
+			if(autoStart)
+			{
+				Launch(launchRequest);
+			}
 		}
 
 		public async Task Stop()

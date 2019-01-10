@@ -60,6 +60,7 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 		public string Name { get; private set; }
 		public LighthouseConfigType ConfigType { get; private set; }
 		private IFileContentProvider FileContentProvider { get; }
+		protected T Config { get; set; }
 		
 		//Dictionary<LighthouseConfigType, Type> ConfigTypeTypeMappings = new Dictionary<LighthouseConfigType, Type>
 		//{
@@ -70,15 +71,13 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 		{
 			LighthouseContainer = lighthouseContainer ?? throw new ArgumentNullException(nameof(lighthouseContainer));			
 			FileContentProvider = fileContentProvider ?? throw new ArgumentNullException(nameof(fileContentProvider));
-			//Load();
 		}
 
 		public FileBasedConfigProvider(ILighthouseServiceContainer lighthouseContainer, string configFilePath = null)
 		{
 			LighthouseContainer = lighthouseContainer ?? throw new ArgumentNullException(nameof(lighthouseContainer));
 			ConfigFilePath = configFilePath ?? Path.Combine(lighthouseContainer.WorkingDirectory, LighthouseYamlBaseConfig.DEFAULT_CONFIG_FILENAME); //  cache this off
-			FileContentProvider = new FileSystemContentProvider(lighthouseContainer, configFilePath);
-			//Load();
+			FileContentProvider = new FileSystemContentProvider(lighthouseContainer, configFilePath);			
 		}
 
 		public void Load()
@@ -92,14 +91,14 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 					.WithNamingConvention(new CamelCaseNamingConvention())
 					.Build();
 
-				var config = deserializer.Deserialize<T>(data);
+				Config = deserializer.Deserialize<T>(data);
 
 				// Process the common elements of a config file
-				Name = config.Name;
-				ConfigType = Enum.TryParse<LighthouseConfigType>(config.ConfigType, out var configType) ? configType : LighthouseConfigType.Component; // if we don't know the config type, make it component
+				Name = Config.Name;
+				ConfigType = Enum.TryParse<LighthouseConfigType>(Config.ConfigType, out var configType) ? configType : LighthouseConfigType.Component; // if we don't know the config type, make it component
 
 				// do the deep parsing
-				LoadTypeSpecificConfig(config);
+				LoadTypeSpecificConfig(Config);
 			}
 			else
 			{
@@ -109,6 +108,16 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 
 		protected virtual void LoadTypeSpecificConfig(T typeSpecificConfigData)
 		{
+		}
+
+		public void Save()
+		{
+			var serializer = new SerializerBuilder().
+				WithNamingConvention(new CamelCaseNamingConvention())
+				.Build();
+			var data = serializer.Serialize(Config);
+			var fileSystemProvider = LighthouseContainer.GetFileSystemProviders().FirstOrDefault();
+			fileSystemProvider.WriteStringToFileSystem(ConfigFilePath, data);
 		}
 	}	
 }

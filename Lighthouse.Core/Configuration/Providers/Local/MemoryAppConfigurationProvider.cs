@@ -60,7 +60,12 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 
 		public void Load()
 		{
-			// it's always ready
+			// it's always ready ;)
+		}
+
+		public void Save()
+		{
+			// not much to do here really
 		}
 	}
 }

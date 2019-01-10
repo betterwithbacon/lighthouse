@@ -11,6 +11,7 @@ namespace Lighthouse.Core.Configuration.Providers
 		string Name { get; }
 		LighthouseConfigType ConfigType { get; }
 		void Load();
+		void Save();
 	}
 
 	public interface IAppConfigurationProvider :IConfigurationProvider
@@ -20,5 +21,6 @@ namespace Lighthouse.Core.Configuration.Providers
 
 		IEnumerable<IServiceRepository> GetServiceRepositories();
 		IEnumerable<ServiceLaunchRequest> GetServiceLaunchRequests();
+		void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest);
 	}		 
 }

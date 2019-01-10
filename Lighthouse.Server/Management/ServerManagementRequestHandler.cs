@@ -63,11 +63,13 @@ namespace Lighthouse.Server.Management
 	public class ServiceInstallationEvent : BaseEvent
 	{
 		public string ServiceName { get; }
+		public bool AutoStart { get; }
 
-		public ServiceInstallationEvent(string serviceName, ILighthouseServiceContainer container)
+		public ServiceInstallationEvent(string serviceName, ILighthouseServiceContainer container, bool autoStart = false)
 			: base(container)
 		{
 			ServiceName = serviceName;
+			AutoStart = autoStart;
 		}
 	}
 }

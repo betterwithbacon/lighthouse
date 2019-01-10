@@ -22,7 +22,7 @@ namespace Lighthouse.Core.Configuration.ServiceDiscovery
 
 		public ServiceLaunchRequest(Type type)
 		{
-			ServiceType = type;			
+			ServiceType = type;
 		}
 
 		public ServiceLaunchRequest(string serviceName)

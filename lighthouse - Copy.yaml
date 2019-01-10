@@ -1,0 +1,17 @@
+name: 'Lighthouse Server'
+version: '0.1'
+maxThreadCount: '4'
+type: app
+
+service_repositories:    
+    -   name: global
+        uri: 'lighthouse:global_service_repo'
+
+services:     
+    -   name: test-app
+        type: Lighthouse.Core.Apps,TestApps
+    -   name: timer-app
+    -   name: warehouse
+    -   name: service_repo  
+        type: Lighthouse.Core.Apps,ServiceRepo
+        alias: global_service_repo

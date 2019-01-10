@@ -93,7 +93,7 @@ namespace Lighthouse.Server.Tests.Performance
 
 			// create a consumer that when it receives a time event, that matches it's schedule, it will trigger a log write event
 			var timeEventConsumer = new TimeEventConsumer();
-			timeEventConsumer.EventAction = (triggerTime) => Container.EmitEvent(
+			timeEventConsumer.EventAction = async (triggerTime) => await Container.EmitEvent(
 				new LogEvent(Container, timeEventConsumer)
 				{
 					Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}"					
