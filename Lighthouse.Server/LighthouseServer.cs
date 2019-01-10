@@ -323,7 +323,10 @@ namespace Lighthouse.Server
 
 			if(persist)
 			{
+				// save the current state of the configuration
 				AppConfiguration.AddServiceLaunchRequest(launchRequest);
+				// TODO: obviously, the problem here is ANY other changes to the app config will ALSO be persisted
+				AppConfiguration.Save();
 			}
 
 			// start the service when "installed"

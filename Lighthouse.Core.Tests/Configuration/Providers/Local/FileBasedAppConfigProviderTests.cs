@@ -73,8 +73,6 @@ namespace Lighthouse.Core.Tests.Configuration.Providers.Local
 				destFilePath,
 				true);
 
-			byte[] data = null;
-			
 			var mockLighthouse = Substitute.For<ILighthouseServiceContainer>();
 			// LogLevel level, LogType logType,  ILighthouseLogSource sender, string message = null, Exception exception = null, bool emitEvent = true
 			mockLighthouse.Log(Arg.Any<LogLevel>(), Arg.Any<LogType>(), Arg.Any<ILighthouseLogSource>());
@@ -89,9 +87,7 @@ namespace Lighthouse.Core.Tests.Configuration.Providers.Local
 
 			provider.Save();
 
-			
-			var decodedData = Encoding.UTF8.GetString(data);
-			decodedData.Should().NotBeNullOrEmpty();
+			File.Exists(destFilePath).Should().BeTrue();
 		}
 	}
 }
