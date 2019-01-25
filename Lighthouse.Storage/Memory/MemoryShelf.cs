@@ -8,9 +8,65 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Storage.Memory
 {
-	public class MemoryShelf : IShelf<string>
+	public class KeyValueMemoryShelf : IShelf<IDictionary<string, string>>
 	{
-		private static readonly ConcurrentDictionary<MemoryShelfKey, List<string>> Records = new ConcurrentDictionary<MemoryShelfKey, List<string>>();
+		public static readonly IList<StoragePolicy> SupportedPolicies = new[] { StoragePolicy.Ephemeral };
+		public string Identifier => Guid.NewGuid().ToString();
+		public IWarehouse Warehouse { get; private set; }
+		public IStorageScope Scope { get; private set; }
+		private static readonly ConcurrentDictionary<StorageKey, Dictionary<string,string>> Records = new ConcurrentDictionary<StorageKey, Dictionary<string, string>>();
+
+		public void Append(StorageKey key, IDictionary<string, string> additionalPayload)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool CanEnforcePolicies(IEnumerable<StoragePolicy> loadingDockPolicies)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool CanRetrieve(StorageKey key)
+		{
+			return Records.Keys.Contains(new MemoryShelfKey(key.Scope, key.Id));
+		}
+
+		public bool Equals(IShelf<IDictionary<string, string>> x, IShelf<IDictionary<string, string>> y)
+		{
+			// TODO: lol
+			return false;
+		}
+
+		public int GetHashCode(IShelf<IDictionary<string, string>> obj)
+		{
+			throw new NotImplementedException();
+		}
+
+		public ShelfManifest GetManifest(StorageKey key)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Initialize(IWarehouse warehouse, IStorageScope scope)
+		{
+			throw new NotImplementedException();
+		}
+
+		public IDictionary<string, string> Retrieve(StorageKey key)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Store(StorageKey key, IDictionary<string, string> payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)
+		{
+			throw new NotImplementedException();
+		}
+	}
+
+	public class MemoryShelf 
+		: IShelf<string>		
+	{
+		private static readonly ConcurrentDictionary<MemoryShelfKey, string> Records = new ConcurrentDictionary<MemoryShelfKey, string>();
 		public static readonly IList<StoragePolicy> SupportedPolicies = new[] {  StoragePolicy.Ephemeral };
 		public string Identifier => Guid.NewGuid().ToString();
 		public IWarehouse Warehouse { get; private set; }
@@ -21,19 +77,20 @@ namespace Lighthouse.Storage.Memory
 			return Records.Keys.Contains(new MemoryShelfKey(key.Scope, key.Id));
 		}
 
-		public IEnumerable<string> Retrieve(StorageKey key)
+		#region IShelf<string>
+		public string Retrieve(StorageKey key)
 		{
-			return Records.GetValueOrDefault(new MemoryShelfKey(key.Scope, key.Id), new List<string>());
+			return Records.GetValueOrDefault(new MemoryShelfKey(key.Scope, key.Id), "");
 		}
 
-		public void Append(StorageKey key, IEnumerable<string> additionalPayload)
+		public void Append(StorageKey key, string additionalPayload)
 		{
-			Records.AddOrUpdate(new MemoryShelfKey(key.Scope, key.Id), additionalPayload.ToList(), (k, a) => a.Concat(additionalPayload).ToList());
+			Records.AddOrUpdate(new MemoryShelfKey(key.Scope, key.Id), additionalPayload, (k, a) => a += additionalPayload);
 		}
 
-		public void Store(StorageKey key, IEnumerable<string> payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)
+		public void Store(StorageKey key, string payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)
 		{
-			Records.AddOrUpdate(new MemoryShelfKey(key.Scope, key.Id), payload.ToList(),(k,a) => payload.ToList());
+			Records.AddOrUpdate(new MemoryShelfKey(key.Scope, key.Id), payload,(k,a) => payload);
 			foreach(var pol in SupportedPolicies)
 				enforcedPolicies.TryAdd(pol);
 		}
@@ -57,10 +114,12 @@ namespace Lighthouse.Storage.Memory
 			// TODO: this is TERRIBLE, because it means that another shelf with the same ID, could be confused for this one
 			return obj.Identifier.GetHashCode();
 		}
-
+		#endregion
+		
+		#region Helpers
 		public ShelfManifest GetManifest(StorageKey key)
 		{
-			if(CanRetrieve(key))
+			if (CanRetrieve(key))
 			{
 				// the only way to get metadata from a memory shelf is to actually just retrieve it. 
 				// TODO: store metadata separately for items as stord
@@ -70,25 +129,19 @@ namespace Lighthouse.Storage.Memory
 			return null;
 		}
 
-		#region Helpers
-		private long CalculateSize(IEnumerable<string> records)
+		private long CalculateSize(string record)
 		{
-			var size = 0L;			
-			//long size = records.Aggregate(0, 
-			//	(totalRecordSize, record) => totalRecordSize += Encoding.Unicode.GetByteCount(record)
-			//);
-
-			return size;
+			return Encoding.Unicode.GetByteCount(record);			
 		}
-		#endregion
 
 		public void Initialize(IWarehouse warehouse, IStorageScope scope)
 		{
 			Warehouse = warehouse;
 			Scope = scope;
-			
+
 			// there's no other work for a memshelf
 		}
+		#endregion
 
 		#region MemoryShelfKey
 		struct MemoryShelfKey

@@ -6,10 +6,10 @@ namespace Lighthouse.Core.Storage
 {
 	public interface IWarehouse : ILighthouseComponent // : IDictionary<StorageKey, TData><-- one day!
 	{
-		/// <summary>
-		/// Places the warehouse in a state where it can store and retrieve data
-		/// </summary>
-		void Initialize(ILighthouseServiceContainer lighthouseContainer, params Type[] shelfTypes);
+		///// <summary>
+		///// Places the warehouse in a state where it can store and retrieve data
+		///// </summary>
+		//void Initialize(ILighthouseServiceContainer lighthouseContainer, params Type[] shelfTypes);
 
 		/// <summary>
 		/// Stores the provided data, with the relevant key
@@ -19,7 +19,7 @@ namespace Lighthouse.Core.Storage
 		/// <param name="data"></param>
 		/// <param name="loadingDockPolicies"></param>
 		/// <returns></returns>
-		Receipt Store<T>(StorageKey key, IEnumerable<T> data, IEnumerable<StoragePolicy> loadingDockPolicies);
+		Receipt Store<T>(StorageKey key, T data, IEnumerable<StoragePolicy> loadingDockPolicies);
 
 		/// <summary>
 		/// Appends data to the existing data 
@@ -28,7 +28,7 @@ namespace Lighthouse.Core.Storage
 		/// <param name="key"></param>
 		/// <param name="data"></param>
 		/// <param name="loadingDockPolicies"></param>
-		void Append<T>(StorageKey key, IEnumerable<T> data, IEnumerable<StoragePolicy> loadingDockPolicies);
+		void Append<T>(StorageKey key, T data);
 
 		/// <summary>
 		/// Returns the Data for a given key and scope
@@ -37,7 +37,7 @@ namespace Lighthouse.Core.Storage
 		/// <param name="key"></param>
 		/// <param name="scope"></param>
 		/// <returns></returns>
-		IEnumerable<T> Retrieve<T>(StorageKey key);
+		T Retrieve<T>(StorageKey key);
 
 		/// <summary>
 		/// Returns all of the available metadata for a given StorageKey.

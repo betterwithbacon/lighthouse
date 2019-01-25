@@ -10,12 +10,12 @@ namespace Lighthouse.Core.Events.Logging
     {
 		private string LOG_NAME { get; set; }
 		private IList<StoragePolicy> LoadingDockPolicies => new[] { StoragePolicy.Ephemeral };				
-		public List<string> AllLogRecords => Container.Warehouse.Retrieve<string>( new StorageKey(LOG_NAME, this)).ToList();		
+		public List<string> AllLogRecords => Container.Warehouse.Retrieve<List<string>>( new StorageKey(LOG_NAME, this)).ToList();		
 		public override IList<Type> Consumes => new[] { typeof(LogEvent) };
 
 		public void HandleEvent(LogEvent logEvent)
 		{
-			Container.Warehouse.Append(new StorageKey(LOG_NAME, this), new[] { $"[{logEvent.EventTime}] {logEvent.Message}" }, LoadingDockPolicies);
+			Container.Warehouse.Append(new StorageKey(LOG_NAME, this), new[] { $"[{logEvent.EventTime}] {logEvent.Message}" });
 		}
 
 		protected override void OnInit()

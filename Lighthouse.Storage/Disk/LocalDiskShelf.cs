@@ -20,7 +20,7 @@ namespace Lighthouse.Storage.Disk
 		
 		public IFileSystemProvider FileSystemProvider { get; private set; }
 		
-		public void Append(StorageKey key, IEnumerable<string> additionalPayload)
+		public void Append(StorageKey key, string additionalPayload)
 		{
 			throw new NotImplementedException();
 		}
@@ -66,34 +66,28 @@ namespace Lighthouse.Storage.Disk
 				throw new ApplicationException("No filesystem could be located.");
 		}
 
-		public IEnumerable<string> Retrieve(StorageKey key)
+		public string Retrieve(StorageKey key)
 		{
 			// TODO: don't do this asynchronously YET. I'm delaying converting everything to async, but not yet.
-			var rawData = FileSystemProvider.ReadFromFileSystem(GetFilePath(key)).Result;
+			var rawData = FileSystemProvider.ReadStringFromFileSystem(GetFilePath(key));
 
 			if (rawData == null || rawData.Length == 0)
 			{
 				// no data, just return an empty file
 				// TODO: should this be an exception? if there isn't any data. Or is it possible an empty file was created
-				yield return "";
+				return "";
 			}
 			else
 			{
-				yield return Encoding.UTF8.GetString(rawData);
+				return rawData;
 			}
 		}
 
-		public void Store(StorageKey key, IEnumerable<string> payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)
+		public void Store(StorageKey key, string payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)
 		{
-			var convertedPayload = new List<byte>();
-			foreach(var rec in payload)
-			{
-				convertedPayload.AddRange(Encoding.UTF8.GetBytes(rec));
-			}
-
 			SupportedPolicies.ForEach((ldp) => enforcedPolicies.TryAdd(ldp));
 
-			FileSystemProvider.WriteToFileSystem($"\\{key.Scope.Identifier}\\{key.Id}", convertedPayload.ToArray());
+			FileSystemProvider.WriteStringToFileSystem($"\\{key.Scope.Identifier}\\{key.Id}", payload);
 		}
 
 		string GetFilePath(StorageKey key)

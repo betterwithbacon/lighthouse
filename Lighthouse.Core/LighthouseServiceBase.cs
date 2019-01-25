@@ -1,11 +1,12 @@
 ﻿using Lighthouse.Core.Scheduling;
+using Lighthouse.Core.Storage;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Lighthouse.Core
 {
-	public abstract class LighthouseServiceBase : ILighthouseService
+	public abstract class LighthouseServiceBase : ILighthouseService, IStorageScope
 	{
 		public string Id { get; private set; }
 		public LighthouseServiceRunState RunState { get; protected set; }
@@ -13,6 +14,8 @@ namespace Lighthouse.Core
 		public event StatusUpdatedEventHandler StatusUpdated;
 		private readonly List<Action<ILighthouseServiceContainer>> StartupActions = new List<Action<ILighthouseServiceContainer>>();
 		protected virtual bool IsInitialized { get; }
+		public string ScopeName => Identifier;
+		public string Identifier => GetServiceIdentifier();
 
 		protected void AddStartupTask(Action<ILighthouseServiceContainer> task)
 		{
@@ -89,6 +92,21 @@ namespace Lighthouse.Core
 		public override string ToString()
 		{
 			return $"[{GetType().Name}|{Id}]";
+		}
+
+		public bool Equals(IStorageScope x, IStorageScope y)
+		{
+			return x.Identifier == y.Identifier;
+		}
+
+		public int GetHashCode(IStorageScope obj)
+		{
+			return obj.Identifier.GetHashCode();
+		}
+
+		protected virtual string GetServiceIdentifier()
+		{
+			return GetType().Name;
 		}
 	}
 }

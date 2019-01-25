@@ -10,13 +10,16 @@ namespace Lighthouse.Core.Storage
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
 	public interface IShelf<T> : IShelf, IEqualityComparer<IShelf<T>>
-	{	
-		// Storage operations
-		void Append(StorageKey key, IEnumerable<T> additionalPayload);
-		void Store(StorageKey key, IEnumerable<T> payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies);
-		IEnumerable<T> Retrieve(StorageKey key);
+	{
+		void Store(StorageKey key, T payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies);
+		void Append(StorageKey key, T additionalPayload);		
+		T Retrieve(StorageKey key);
 	}
 
+	/// <summary>
+	/// A shelf is a type of storage sink. So if it's in-memory, AWS S3, or Redis, it represents a method of persisting data.
+	/// Warehouses, will organize and decide about the movement of data between shelves
+	/// </summary>
 	public interface IShelf
 	{
 		void Initialize(IWarehouse warehouse, IStorageScope scope);

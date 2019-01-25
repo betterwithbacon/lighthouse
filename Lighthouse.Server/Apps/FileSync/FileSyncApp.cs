@@ -1,10 +1,10 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Scheduling;
-using Lighthouse.Core.Storage;
+using Lighthouse.Storage.Collections;
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 
@@ -34,7 +34,7 @@ namespace Lighthouse.Server.Apps.FileSync
 			//		file1 --> 1/1/2019
 			//		file2 --> 1/2/2019
 			// c:\folder2 --> FileSyncFolderStatus
-			FolderStatus = new WarehouseDictionary<string, FileSyncFolderStatus>(Container.Warehouse, $"{nameof(FileSyncApp)}.{nameof(FolderStatus)}");
+			FolderStatus = new WarehouseDictionary<string, FileSyncFolderStatus>(Container.Warehouse, this , $"{nameof(FileSyncApp)}.{nameof(FolderStatus)}");
 		}
 		
 		public void Sync(DateTime time)
@@ -47,91 +47,6 @@ namespace Lighthouse.Server.Apps.FileSync
 				
 				Interlocked.Decrement(ref _lockFlag);
 			}
-		}
-	}
-
-	/// <summary>
-	///  A warehouse dictionary is a key/value store that is backed by a Warehouse.
-	///  So ideally it should be possible for a user to use this dictionary, and have the state seameledssly reconstitute itself later	
-	///  The syncing is non-deterministic
-	/// </summary>
-	/// <typeparam name="TKey"></typeparam>
-	/// <typeparam name="TValue"></typeparam>
-	public class WarehouseDictionary<TKey, TValue> : IDictionary<TKey, TValue>
-	{
-		private readonly IWarehouse Warehouse;
-		private readonly string dictionaryName;
-		private readonly Dictionary<TKey, TValue> internalDictionary = new Dictionary<TKey, TValue>();
-
-		public WarehouseDictionary(IWarehouse warehouse, string dictionaryName)
-		{
-			Warehouse = warehouse;
-			this.dictionaryName = dictionaryName;
-		}
-
-		public TValue this[TKey key] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-		public ICollection<TKey> Keys => throw new NotImplementedException();
-
-		public ICollection<TValue> Values => throw new NotImplementedException();
-
-		public int Count => throw new NotImplementedException();
-
-		public bool IsReadOnly => throw new NotImplementedException();
-
-		public void Add(TKey key, TValue value)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void Add(KeyValuePair<TKey, TValue> item)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void Clear()
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool Contains(KeyValuePair<TKey, TValue> item)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool ContainsKey(TKey key)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
-		{
-			throw new NotImplementedException();
-		}
-
-		public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool Remove(TKey key)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool Remove(KeyValuePair<TKey, TValue> item)
-		{
-			throw new NotImplementedException();
-		}
-
-		public bool TryGetValue(TKey key, out TValue value)
-		{
-			throw new NotImplementedException();
-		}
-
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			throw new NotImplementedException();
 		}
 	}
 }

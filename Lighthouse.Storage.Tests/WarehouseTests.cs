@@ -50,7 +50,7 @@ namespace Lighthouse.Storage.Tests
 
 			timer.Start();
 			var receipt = warehouse.Store(key, payload, new[] { StoragePolicy.Ephemeral });
-			var returnedValue = warehouse.Retrieve<string>(key).ToList();
+			var returnedValue = warehouse.Retrieve<string>(key);
 			Warehouse.VerifyChecksum(returnedValue, receipt.SHA256Checksum).Should().BeTrue();
 			timer.Stop();
 
@@ -71,7 +71,7 @@ namespace Lighthouse.Storage.Tests
 
 			var receipt = warehouse.Store(key, payload, new[] { StoragePolicy.Ephemeral });
 
-			var returnedValue = warehouse.Retrieve<string>(key).ToList();
+			var returnedValue = warehouse.Retrieve<string>(key);
 
 			Warehouse.VerifyChecksum(returnedValue, receipt.SHA256Checksum).Should().BeTrue();
 		}
@@ -82,7 +82,7 @@ namespace Lighthouse.Storage.Tests
 		public void MemoryWarehouseShouldStoreAndReturnAndAppendAndReturnPallet()
 		{
 			var warehouse = new Warehouse();
-			var payload = new List<string>() { "Test Test test" };
+			var payload = "Test Test test";
 			var scope = new ApplicationScope("TestApp");
 			var key = new StorageKey($"key", scope);
 
@@ -93,9 +93,9 @@ namespace Lighthouse.Storage.Tests
 			returnedValue.Should().Contain(payload);
 
 			var nextText = " 123456789";
-			payload.Add(nextText);
+			payload += nextText;
 
-			warehouse.Append(key, new[] { nextText }, receipt.Policies);
+			warehouse.Append(key, new[] { nextText });
 
 			var newReturnedValue = warehouse.Retrieve<string>(key);
 			newReturnedValue.Should().Contain(payload);
@@ -112,11 +112,11 @@ namespace Lighthouse.Storage.Tests
 			Parallel.ForEach(Enumerable.Range(1, 10),
 				new ParallelOptions { MaxDegreeOfParallelism = 10 },
 				(index) => {
-					var payload = new[] { index.ToString() };
+					var payload = index.ToString();
 					var key = new StorageKey($"key_{index}", appScope);
 					warehouse.Store(key, payload, new[] { StoragePolicy.Ephemeral });
 					output.WriteLine($"Index stored: {index}");
-					warehouse.Retrieve<string>(key).Should().Contain(payload);
+					warehouse.Retrieve<string>(key).Should().Be(payload);
 				});
 		}
 
@@ -132,13 +132,13 @@ namespace Lighthouse.Storage.Tests
 			Parallel.ForEach(Enumerable.Range(1, 10),
 				new ParallelOptions { MaxDegreeOfParallelism = 10 },
 				(index) => {
-					var payload = new[] { index.ToString() };
+					var payload = index.ToString();
 					var additionalPayload = new[] { (index + 100).ToString() };
 					var key = new StorageKey($"key_{index}", appScope);
 					warehouse.Store(key, payload, new[] { StoragePolicy.Ephemeral });
-					warehouse.Append(key, additionalPayload, new[] { StoragePolicy.Ephemeral });
+					warehouse.Append(key, additionalPayload);
 					output.WriteLine($"Index stored: {index}");
-					warehouse.Retrieve<string>(key).Should().Contain(payload.Concat(additionalPayload));
+					warehouse.Retrieve<string>(key).Should().Be(payload += additionalPayload);
 				});
 		}
 
@@ -156,9 +156,8 @@ namespace Lighthouse.Storage.Tests
 			Parallel.ForEach(Enumerable.Range(1, 100),
 				new ParallelOptions { MaxDegreeOfParallelism = 10 },
 				(index) => {
-					warehouse.Append(key, new[] { (index + 100).ToString() }, new[] { StoragePolicy.Ephemeral });
+					warehouse.Append(key, new[] { (index + 100).ToString() });
 					output.WriteLine($"Index stored: {index}");
-
 				});
 
 			warehouse.Retrieve<string>(key).Count().Should().Be(101);

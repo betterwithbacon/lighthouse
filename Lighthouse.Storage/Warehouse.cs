@@ -22,7 +22,7 @@ namespace Lighthouse.Storage
 		readonly ConcurrentBag<IShelf> Shelves = new ConcurrentBag<IShelf>();		
 		private readonly ConcurrentBag<Warehouse> RemoteWarehouses = new ConcurrentBag<Warehouse>();
 
-		private bool IsInitialized => Shelves.Count > 0;
+		protected override bool IsInitialized => Shelves.Count > 0;
 
 		static Warehouse()
 		{
@@ -38,13 +38,7 @@ namespace Lighthouse.Storage
 				AvailableShelfTypes.Add(shelfType);
 		}
 
-		public Warehouse( bool initImmediately = true)
-		{
-			if(initImmediately)			
-				Initialize(null);
-		}
-
-		public void Initialize(ILighthouseServiceContainer serviceContainer, params Type[] shelvesToUse)
+		protected override void OnInit()
 		{
 			// Discover shelf types
 			foreach (var shelf in DiscoverShelves())
@@ -55,16 +49,16 @@ namespace Lighthouse.Storage
 				shelf.Initialize(this, StorageScope.Global);
 			}
 
-			foreach (var shelfType in shelvesToUse)
-			{
-				if (Activator.CreateInstance(shelfType) is IShelf shelf)
-				{
-					Shelves.Add(shelf);
+			//foreach (var shelfType in shelvesToUse)
+			//{
+			//	if (Activator.CreateInstance(shelfType) is IShelf shelf)
+			//	{
+			//		Shelves.Add(shelf);
 
-					// create all the shelves in the global scope
-					shelf.Initialize(this, StorageScope.Global);
-				}
-			}
+			//		// create all the shelves in the global scope
+			//		shelf.Initialize(this, StorageScope.Global);
+			//	}
+			//}
 		}
 
 		protected override void OnAfterStart()
@@ -139,7 +133,7 @@ namespace Lighthouse.Storage
 		{
 		}
 
-		public Receipt Store<T>(StorageKey key, IEnumerable<T> data, IEnumerable<StoragePolicy> loadingDockPolicies)
+		public Receipt Store<T>(StorageKey key, T data, IEnumerable<StoragePolicy> loadingDockPolicies)
 		{
 			ThrowIfNotInitialized();
 
@@ -170,27 +164,34 @@ namespace Lighthouse.Storage
 			return receipt;
 		}
 
-		public void Append<T>(StorageKey key, IEnumerable<T> data, IEnumerable<StoragePolicy> loadingDockPolicies)
+		public void Append<T>(StorageKey key, T data)
 		{
-			ThrowIfNotInitialized();
+			//ThrowIfNotInitialized();
 			
-			Parallel.ForEach(ResolveShelves<T>(loadingDockPolicies), (shelf) =>
-			{
-				shelf.Append(key, data);
-			});
+			//Parallel.ForEach(ResolveShelves<T>(loadingDockPolicies), (shelf) =>
+			//{
+			//	shelf.Append(key, data);
+			//});
 		}
 
-		public IEnumerable<T> Retrieve<T>(StorageKey key)
+		public T Retrieve<T>(StorageKey key)			
 		{
 			ThrowIfNotInitialized();
-			return 
-				Shelves				
-					// We can't just use the OfType, because we ned to handle inheritance
-					// buy we do want this for speed.
+			var foundShelf = Shelves
 					.OfType<IShelf<T>>()
-					.FirstOrDefault(shelf => shelf.CanRetrieve(key))					
-					.Retrieve(key) 
-				?? Enumerable.Empty<T>();
+					.FirstOrDefault(shelf => shelf.CanRetrieve(key));
+
+			if (foundShelf == null)
+			{
+				throw new ApplicationException($"Can't store this type of data: {typeof(T)}.");
+			}
+
+			var val = foundShelf.Retrieve(key);
+
+			if (val != null)
+				return val;
+			else
+				return default;
 		}
 
 		public IEnumerable<IShelf<T>> ResolveShelves<T>(IEnumerable<StoragePolicy> loadingDockPolicies)
@@ -204,7 +205,7 @@ namespace Lighthouse.Storage
 				throw new InvalidOperationException("Warehouse not initialized.");
 		}
 
-		public static string CalculateChecksum<T>(IEnumerable<T> input)
+		public static string CalculateChecksum<T>(T input)
 		{
 			// can't calculate checksums for non strings right now
 			// TODO: add support for non-strings
@@ -213,7 +214,7 @@ namespace Lighthouse.Storage
 
 			using (var sha256 = SHA256.Create())
 			{
-				byte[] data = sha256.ComputeHash(input.SelectMany(s => Encoding.UTF8.GetBytes(s as String)).ToArray());
+				byte[] data = sha256.ComputeHash(Encoding.UTF8.GetBytes(input as string));
 				var sBuilder = new StringBuilder();
 				for (int i = 0; i < data.Length; i++)				
 					sBuilder.Append(data[i].ToString("x2"));
@@ -222,7 +223,7 @@ namespace Lighthouse.Storage
 			}
 		}
 
-		public static bool VerifyChecksum(IList<string> input, string hash)
+		public static bool VerifyChecksum(string input, string hash)
 		{
 			return CalculateChecksum(input).Equals(hash);
 		}
