@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Lighthouse.Storage.Disk
 {
-	public class LocalDiskShelf : IShelf<string>
+	public class LocalDiskShelf : IStore<string>
 	{
 		private readonly Dictionary<StorageKey, string> FileNames = new Dictionary<StorageKey, string>();
 
@@ -36,12 +36,12 @@ namespace Lighthouse.Storage.Disk
 			return FileSystemProvider.FileExists(file);
 		}
 
-		public bool Equals(IShelf<string> x, IShelf<string> y)
+		public bool Equals(IStore<string> x, IStore<string> y)
 		{
 			return x.Identifier == y.Identifier;
 		}
 
-		public int GetHashCode(IShelf<string> obj)
+		public int GetHashCode(IStore<string> obj)
 		{
 			return obj?.Identifier.GetHashCode() ?? -1;
 		}

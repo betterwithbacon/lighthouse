@@ -19,16 +19,18 @@ namespace Lighthouse.Core.Storage
 		/// <param name="data"></param>
 		/// <param name="loadingDockPolicies"></param>
 		/// <returns></returns>
-		Receipt Store<T>(StorageKey key, T data, IEnumerable<StoragePolicy> loadingDockPolicies);
+		Receipt Store(IStorageScope scope, string key, object data, IEnumerable<StoragePolicy> loadingDockPolicies = null);
 
-		/// <summary>
-		/// Appends data to the existing data 
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="key"></param>
-		/// <param name="data"></param>
-		/// <param name="loadingDockPolicies"></param>
-		void Append<T>(StorageKey key, T data);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="scope"></param>
+        /// <param name="key"></param>
+        /// <param name="data"></param>
+        /// <param name="loadingDockPolicies"></param>
+        /// <returns></returns>
+        Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null);
+
 
 		/// <summary>
 		/// Returns the Data for a given key and scope
@@ -37,14 +39,23 @@ namespace Lighthouse.Core.Storage
 		/// <param name="key"></param>
 		/// <param name="scope"></param>
 		/// <returns></returns>
-		T Retrieve<T>(StorageKey key);
+		T Retrieve<T>(IStorageScope scope, string key);
 
-		/// <summary>
-		/// Returns all of the available metadata for a given StorageKey.
-		/// </summary>
-		/// <param name="key"></param>
-		/// <param name="scope"></param>
-		/// <returns></returns>
-		StorageKeyManifest GetManifest(StorageKey key);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="scope"></param>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        string Retrieve(IStorageScope scope, string key);
+
+        /// <summary>
+        /// Returns all of the available metadata for a given StorageKey.
+        /// </summary>
+        /// <param name="key"></param>
+        /// <param name="scope"></param>
+        /// <returns></returns>
+        StorageKeyManifest GetManifest(IStorageScope scope, string key);
 	}
 }

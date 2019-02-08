@@ -5,35 +5,42 @@ using System.Text;
 
 namespace Lighthouse.Core.Storage
 {
-	/// <summary>
-	/// Stores a particular type and scope of data
-	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	public interface IShelf<T> : IShelf, IEqualityComparer<IShelf<T>>
-	{
-		void Store(StorageKey key, T payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies);
-		void Append(StorageKey key, T additionalPayload);		
-		T Retrieve(StorageKey key);
-	}
+    /// <summary>
+    /// A specialized store of objects.
+    /// </summary>
+    public interface IObjectStore : IStore
+    {
+        // Storage Operations
+        void Store(IStorageScope scope, object payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies);
+        T Retrieve<T>(IStorageScope scope, string key);
+    }
 
-	/// <summary>
-	/// A shelf is a type of storage sink. So if it's in-memory, AWS S3, or Redis, it represents a method of persisting data.
-	/// Warehouses, will organize and decide about the movement of data between shelves
-	/// </summary>
-	public interface IShelf
-	{
-		void Initialize(IWarehouse warehouse, IStorageScope scope);
+    /// <summary>
+    /// An optimized key/value store, where they values are always strings. However, the retrieval should be nominally faster
+    /// Also if a consumer wants to store serialized object graphs in one of these, that's an option too I guess.
+    /// </summary>
+    public interface IKeyValueStore : IStore
+    {
+        // Storage Operations
+        void Store(IStorageScope scope, string payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies);
+        string Retrieve(IStorageScope scope, string key);
+    }
 
-		// Identification aspects
-		string Identifier { get; }
-		IWarehouse Warehouse { get; }
-		IStorageScope Scope { get; }
+    /// <summary>
+    /// A shelf is a type of storage sink. So if it's in-memory, AWS S3, or Redis, it represents a method of persisting data.
+    /// Warehouses, will organize and decide about the movement of data between shelves
+    /// </summary>
+    public interface IStore
+	{
+		void Initialize(IWarehouse warehouse);
 
 		// Retrieval Operations
-		bool CanRetrieve(StorageKey key);
-		ShelfManifest GetManifest(StorageKey key);
+		bool CanRetrieve(IStorageScope scope, string key);
 
-		// Discovery Operations
-		bool CanEnforcePolicies(IEnumerable<StoragePolicy> loadingDockPolicies);
+        // Metadata operations 
+        ShelfManifest GetManifest(IStorageScope scope, string key); // <-- hmmmmm??
+
+        // Discovery Operations
+        bool CanEnforcePolicies(IEnumerable<StoragePolicy> loadingDockPolicies);
 	}
 }

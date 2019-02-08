@@ -19,7 +19,7 @@ namespace Lighthouse.Storage
 		// ideally, this will be discovered by reflection
 		public static ConcurrentBag<Type> AvailableShelfTypes;
 		public readonly List<Receipt> SessionReceipts = new List<Receipt>();
-		readonly ConcurrentBag<IShelf> Shelves = new ConcurrentBag<IShelf>();		
+		readonly ConcurrentBag<IStore> Shelves = new ConcurrentBag<IStore>();		
 		private readonly ConcurrentBag<Warehouse> RemoteWarehouses = new ConcurrentBag<Warehouse>();
 
 		protected override bool IsInitialized => Shelves.Count > 0;
@@ -31,7 +31,7 @@ namespace Lighthouse.Storage
 
 		public static void RegisterShelfType(Type shelfType)
 		{
-			if (shelfType.IsAssignableFrom(typeof(IShelf)) && shelfType.IsClass)
+			if (shelfType.IsAssignableFrom(typeof(IStore)) && shelfType.IsClass)
 				throw new ArgumentException("shelf type MUST be implement IShelf and be concrete.");
 
 			if (!AvailableShelfTypes.Contains(shelfType))
@@ -46,7 +46,7 @@ namespace Lighthouse.Storage
 				Shelves.Add(shelf);
 
 				// create all the shelves in the global scope
-				shelf.Initialize(this, StorageScope.Global);
+				shelf.Initialize(this);
 			}
 
 			//foreach (var shelfType in shelvesToUse)
@@ -70,7 +70,7 @@ namespace Lighthouse.Storage
 			LoadRemoteWarehouses().RunSynchronously();
 		}
 
-		public IEnumerable<IShelf> DiscoverShelves()
+		public IEnumerable<IStore> DiscoverShelves()
 		{
 			yield return new MemoryShelf();
 
@@ -133,8 +133,9 @@ namespace Lighthouse.Storage
 		{
 		}
 
-		public Receipt Store<T>(StorageKey key, T data, IEnumerable<StoragePolicy> loadingDockPolicies)
-		{
+        //public Receipt Store<T>(StorageKey key, T data, IEnumerable<StoragePolicy> loadingDockPolicies)
+        public Receipt Store(IStorageScope scope, string key, object data, IEnumerable<StoragePolicy> loadingDockPolicies = null)
+        {
 			ThrowIfNotInitialized();
 
 			var uuid = Guid.NewGuid();
@@ -151,12 +152,12 @@ namespace Lighthouse.Storage
 			var receipt = new Receipt(enforcedPolicies.Any())
 			{
 				UUID = uuid,
-				Key = key.Id,
-				Scope = key.Scope,
+				Key = key,
+				Scope = scope,
 				// add the policies that were upheld during the store, this is necessary, 
 				// because this warehouse might not be able to satisfy all of the policies				
 				Policies = enforcedPolicies.Distinct().ToList(),
-				SHA256Checksum = CalculateChecksum<T>(data)				
+				SHA256Checksum = CalculateChecksum(data)
 			};
 
 			SessionReceipts.Add(receipt);
@@ -164,21 +165,16 @@ namespace Lighthouse.Storage
 			return receipt;
 		}
 
-		public void Append<T>(StorageKey key, T data)
-		{
-			//ThrowIfNotInitialized();
-			
-			//Parallel.ForEach(ResolveShelves<T>(loadingDockPolicies), (shelf) =>
-			//{
-			//	shelf.Append(key, data);
-			//});
-		}
+        public Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null)
+        {
+            throw new NotImplementedException();
+        }
 
-		public T Retrieve<T>(StorageKey key)			
+        public T Retrieve<T>(StorageKey key)			
 		{
 			ThrowIfNotInitialized();
 			var foundShelf = Shelves
-					.OfType<IShelf<T>>()
+					.OfType<IStore<T>>()
 					.FirstOrDefault(shelf => shelf.CanRetrieve(key));
 
 			if (foundShelf == null)
@@ -194,9 +190,9 @@ namespace Lighthouse.Storage
 				return default;
 		}
 
-		public IEnumerable<IShelf<T>> ResolveShelves<T>(IEnumerable<StoragePolicy> loadingDockPolicies)
+		public IEnumerable<IStore<T>> ResolveShelves<T>(IEnumerable<StoragePolicy> loadingDockPolicies)
 		{
-			return Shelves.OfType<IShelf<T>>().Where(s => s.CanEnforcePolicies(loadingDockPolicies));
+			return Shelves.OfType<IStore<T>>().Where(s => s.CanEnforcePolicies(loadingDockPolicies));
 		}
 
 		void ThrowIfNotInitialized()
@@ -205,14 +201,14 @@ namespace Lighthouse.Storage
 				throw new InvalidOperationException("Warehouse not initialized.");
 		}
 
-		public static string CalculateChecksum<T>(T input)
+		public static string CalculateChecksum(object input)
 		{
 			// can't calculate checksums for non strings right now
 			// TODO: add support for non-strings
-			if (typeof(T) != typeof(String))
+			if (input.GetType() != typeof(string))
 				return String.Empty;
-
-			using (var sha256 = SHA256.Create())
+            
+            using (var sha256 = SHA256.Create())
 			{
 				byte[] data = sha256.ComputeHash(Encoding.UTF8.GetBytes(input as string));
 				var sBuilder = new StringBuilder();
@@ -228,22 +224,33 @@ namespace Lighthouse.Storage
 			return CalculateChecksum(input).Equals(hash);
 		}
 
-		public StorageKeyManifest GetManifest(StorageKey key)
+		public StorageKeyManifest GetManifest(IStorageScope scope, string key)
 		{
-			// right now, we just return the data that was sent when it was created
-			var policies = SessionReceipts.FirstOrDefault(sr => sr.Key == key.Id)?.Policies;
+            //// right now, we just return the data that was sent when it was created
+            //var policies = SessionReceipts.FirstOrDefault(sr => sr.Key == key.Id)?.Policies;
 
-			// if there aren't any receipts for this, the warehouse has no idea where they're stored. 
-			// TODO: ideally, the warehouse will eventually be able to resolve the receipts from their state
-			if (policies == null)
-				return new StorageKeyManifest();
-				
-			return new StorageKeyManifest
-			{
-				// TODO: where do we get the type from? is it passed in? Why should it matter here?
-				StorageShelvesManifests = ResolveShelves<object>(policies).Where(s => s.CanRetrieve(key)).Select( shelf => shelf.GetManifest(key)).ToList(),
-				StoragePolicies = policies
-			};	
+            //// if there aren't any receipts for this, the warehouse has no idea where they're stored. 
+            //// TODO: ideally, the warehouse will eventually be able to resolve the receipts from their state
+            //if (policies == null)
+            //	return new StorageKeyManifest();
+
+            //return new StorageKeyManifest
+            //{
+            //	// TODO: where do we get the type from? is it passed in? Why should it matter here?
+            //	StorageShelvesManifests = ResolveShelves<object>(policies).Where(s => s.CanRetrieve(key)).Select( shelf => shelf.GetManifest(key)).ToList(),
+            //	StoragePolicies = policies
+            //};	
+            return null;
 		}
-	}
+
+        public T Retrieve<T>(IStorageScope scope, string key)
+        {
+            throw new NotImplementedException();
+        }
+
+        public string Retrieve(IStorageScope scope, string key)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

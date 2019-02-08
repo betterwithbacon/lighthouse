@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Storage.Memory
 {
-	public class KeyValueMemoryShelf : IShelf<IDictionary<string, string>>
+	public class KeyValueMemoryShelf : IStore<IDictionary<string, string>>
 	{
 		public static readonly IList<StoragePolicy> SupportedPolicies = new[] { StoragePolicy.Ephemeral };
 		public string Identifier => Guid.NewGuid().ToString();
@@ -31,13 +31,13 @@ namespace Lighthouse.Storage.Memory
 			return Records.Keys.Contains(new MemoryShelfKey(key.Scope, key.Id));
 		}
 
-		public bool Equals(IShelf<IDictionary<string, string>> x, IShelf<IDictionary<string, string>> y)
+		public bool Equals(IStore<IDictionary<string, string>> x, IStore<IDictionary<string, string>> y)
 		{
 			// TODO: lol
 			return false;
 		}
 
-		public int GetHashCode(IShelf<IDictionary<string, string>> obj)
+		public int GetHashCode(IStore<IDictionary<string, string>> obj)
 		{
 			throw new NotImplementedException();
 		}
@@ -64,7 +64,7 @@ namespace Lighthouse.Storage.Memory
 	}
 
 	public class MemoryShelf 
-		: IShelf<string>		
+		: IStore<string>		
 	{
 		private static readonly ConcurrentDictionary<MemoryShelfKey, string> Records = new ConcurrentDictionary<MemoryShelfKey, string>();
 		public static readonly IList<StoragePolicy> SupportedPolicies = new[] {  StoragePolicy.Ephemeral };
@@ -104,12 +104,12 @@ namespace Lighthouse.Storage.Memory
 			);
 		}
 
-		public bool Equals(IShelf<string> x, IShelf<string> y)
+		public bool Equals(IStore<string> x, IStore<string> y)
 		{
 			return x.Identifier == y.Identifier;
 		}
 
-		public int GetHashCode(IShelf<string> obj)
+		public int GetHashCode(IStore<string> obj)
 		{
 			// TODO: this is TERRIBLE, because it means that another shelf with the same ID, could be confused for this one
 			return obj.Identifier.GetHashCode();
