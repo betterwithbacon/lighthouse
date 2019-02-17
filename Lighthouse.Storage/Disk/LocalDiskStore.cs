@@ -1,5 +1,7 @@
-﻿using Lighthouse.Core.IO;
+﻿using Lighthouse.Core;
+using Lighthouse.Core.IO;
 using Lighthouse.Core.Storage;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -9,9 +11,9 @@ using System.Text;
 
 namespace Lighthouse.Storage.Disk
 {
-	public class LocalDiskShelf : IStore<string>
+	public class LocalDiskStore : IKeyValueStore, IObjectStore
 	{
-		private readonly Dictionary<StorageKey, string> FileNames = new Dictionary<StorageKey, string>();
+		private readonly Dictionary<(IStorageScope,string), string> FileNames = new Dictionary<(IStorageScope, string), string>();
 
 		public static readonly List<StoragePolicy> SupportedPolicies = new List<StoragePolicy> { StoragePolicy.Persistent };
 		public string Identifier => Guid.NewGuid().ToString();
@@ -19,34 +21,20 @@ namespace Lighthouse.Storage.Disk
 		public IStorageScope Scope { get; private set; }
 		
 		public IFileSystemProvider FileSystemProvider { get; private set; }
-		
-		public void Append(StorageKey key, string additionalPayload)
-		{
-			throw new NotImplementedException();
-		}
+        public ILighthouseServiceContainer Container { get; private set; }
 
-		public bool CanEnforcePolicies(IEnumerable<StoragePolicy> loadingDockPolicies)
+        public bool CanEnforcePolicies(IEnumerable<StoragePolicy> loadingDockPolicies)
 		{
 			return loadingDockPolicies.Intersect(SupportedPolicies).Any();
 		}
 
-		public bool CanRetrieve(StorageKey key)
+		public bool CanRetrieve(IStorageScope scope, string key)
 		{
-			var file = GetFilePath(key);
+			var file = GetFilePath(scope, key);
 			return FileSystemProvider.FileExists(file);
 		}
-
-		public bool Equals(IStore<string> x, IStore<string> y)
-		{
-			return x.Identifier == y.Identifier;
-		}
-
-		public int GetHashCode(IStore<string> obj)
-		{
-			return obj?.Identifier.GetHashCode() ?? -1;
-		}
-
-		public ShelfManifest GetManifest(StorageKey key)
+        
+		public ShelfManifest GetManifest(IStorageScope scope, string key)
 		{
 			// we can't support returning this data for real yet. It'd be good to pull this data from the file system			
 			var manifest = new ShelfManifest(new[] { StoragePolicy.Persistent }, -1);
@@ -66,10 +54,20 @@ namespace Lighthouse.Storage.Disk
 				throw new ApplicationException("No filesystem could be located.");
 		}
 
-		public string Retrieve(StorageKey key)
+        public T Retrieve<T>(IStorageScope scope, string key)
+        {
+            var stringRep = Retrieve(scope, key);
+
+            if (string.IsNullOrEmpty(stringRep))
+                return default;
+
+            return JsonConvert.DeserializeObject<T>(stringRep);
+        }
+
+        public string Retrieve(IStorageScope scope, string key)
 		{
 			// TODO: don't do this asynchronously YET. I'm delaying converting everything to async, but not yet.
-			var rawData = FileSystemProvider.ReadStringFromFileSystem(GetFilePath(key));
+			var rawData = FileSystemProvider.ReadStringFromFileSystem(GetFilePath(scope, key));
 
 			if (rawData == null || rawData.Length == 0)
 			{
@@ -83,16 +81,26 @@ namespace Lighthouse.Storage.Disk
 			}
 		}
 
-		public void Store(StorageKey key, string payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)
+		public void Store(IStorageScope scope, string key, string payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)
 		{
 			SupportedPolicies.ForEach((ldp) => enforcedPolicies.TryAdd(ldp));
 
-			FileSystemProvider.WriteStringToFileSystem($"\\{key.Scope.Identifier}\\{key.Id}", payload);
+			FileSystemProvider.WriteStringToFileSystem($"\\{scope.Identifier}\\{key}", payload);
 		}
 
-		string GetFilePath(StorageKey key)
+        public void Store(IStorageScope scope, string key, object payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)
+        {
+            throw new NotImplementedException();
+        }
+
+        string GetFilePath(IStorageScope scope, string key)
 		{
-			return $"\\{key.Scope.Identifier}\\{key.Id}";
+			return $"\\{scope.Identifier}\\{key}";
 		}
-	}
+
+        public void Initialize(IWarehouse warehouse)
+        {
+            Container = warehouse?.Container;
+        }
+    }
 }
