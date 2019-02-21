@@ -32,7 +32,7 @@ namespace Lighthouse.Core.Storage
     /// </summary>
     public interface IStore
 	{
-		void Initialize(IWarehouse warehouse);
+		void Initialize(ILighthouseServiceContainer container);
 
 		// Retrieval Operations
 		bool CanRetrieve(IStorageScope scope, string key);

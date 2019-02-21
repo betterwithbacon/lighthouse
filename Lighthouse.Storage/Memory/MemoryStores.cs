@@ -173,7 +173,7 @@ namespace Lighthouse.Storage.Memory
     //}
 
     public class InMemoryObjectStore : IObjectStore
-    {
+    {        
         readonly ConcurrentDictionary<(IStorageScope, string), object> data = new ConcurrentDictionary<(IStorageScope, string), object>();
 
         private ILighthouseServiceContainer Container { get; set; }
@@ -194,9 +194,9 @@ namespace Lighthouse.Storage.Memory
             return new ShelfManifest(new[] { StoragePolicy.Ephemeral }, -1);
         }
 
-        public void Initialize(IWarehouse warehouse)
+        public void Initialize(ILighthouseServiceContainer container)
         {
-            Container = warehouse?.Container;
+            Container = container;
         }
 
         public T Retrieve<T>(IStorageScope scope, string key)
@@ -237,9 +237,9 @@ namespace Lighthouse.Storage.Memory
             return new ShelfManifest(new[] { StoragePolicy.Ephemeral }, key.Length);
         }
 
-        public void Initialize(IWarehouse warehouse)
+        public void Initialize(ILighthouseServiceContainer container)
         {
-            Container = warehouse?.Container;
+            Container = container;
         }
 
         public string Retrieve(IStorageScope scope, string key)

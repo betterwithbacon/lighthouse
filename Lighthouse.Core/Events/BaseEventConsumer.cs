@@ -18,7 +18,7 @@ namespace Lighthouse.Core.Events
 
 		public string ScopeName => Identifier;
 
-		public string Identifier { get; private set; }
+		public string Identifier { get; protected set; }
 
 		public event StatusUpdatedEventHandler StatusUpdated;
 

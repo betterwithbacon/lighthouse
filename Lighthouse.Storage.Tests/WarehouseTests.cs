@@ -27,11 +27,11 @@ namespace Lighthouse.Storage.Tests
 			var warehouse = new Warehouse();
 			var payload = new[] { "Test Test test" };
 			var scope = new ApplicationScope("TestApp");
-			var key = new StorageKey($"key", scope);
+			//var key = new StorageKey($"key", scope);
 
-			var receipt = warehouse.Store(key, payload, new[] { StoragePolicy.Ephemeral });
+			var receipt = warehouse.Store(scope, "key", payload, new[] { StoragePolicy.Ephemeral });
 
-			var returnedValue = warehouse.Retrieve<string>(key).ToList();
+			var returnedValue = warehouse.Retrieve<string>(scope, "key").ToList();
 
 			returnedValue.Should().Contain(payload);
 		}

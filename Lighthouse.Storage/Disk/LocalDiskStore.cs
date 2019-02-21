@@ -102,5 +102,10 @@ namespace Lighthouse.Storage.Disk
         {
             Container = warehouse?.Container;
         }
+
+        public void Initialize(ILighthouseServiceContainer container)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

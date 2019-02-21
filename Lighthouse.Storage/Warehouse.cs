@@ -20,10 +20,10 @@ namespace Lighthouse.Storage
 		// ideally, this will be discovered by reflection
 		public static ConcurrentBag<Type> AvailableShelfTypes;
 		public readonly List<Receipt> SessionReceipts = new List<Receipt>();
-		readonly ConcurrentBag<IStore> Shelves = new ConcurrentBag<IStore>();		
+		readonly ConcurrentBag<IStore> Stores = new ConcurrentBag<IStore>();		
 		private readonly ConcurrentBag<Warehouse> RemoteWarehouses = new ConcurrentBag<Warehouse>();
 
-		protected override bool IsInitialized => Shelves.Count > 0;
+		protected override bool IsInitialized => Stores.Count > 0;
 
 		static Warehouse()
 		{
@@ -42,24 +42,13 @@ namespace Lighthouse.Storage
 		protected override void OnInit()
 		{
 			// Discover shelf types
-			foreach (var shelf in DiscoverShelves())
+			foreach (var store in DiscoverStores())
 			{
-				Shelves.Add(shelf);
+				Stores.Add(store);
 
 				// create all the shelves in the global scope
-				shelf.Initialize(this);
+				store.Initialize(this.Container);
 			}
-
-			//foreach (var shelfType in shelvesToUse)
-			//{
-			//	if (Activator.CreateInstance(shelfType) is IShelf shelf)
-			//	{
-			//		Shelves.Add(shelf);
-
-			//		// create all the shelves in the global scope
-			//		shelf.Initialize(this, StorageScope.Global);
-			//	}
-			//}
 		}
 
 		protected override void OnAfterStart()
@@ -71,32 +60,32 @@ namespace Lighthouse.Storage
 			LoadRemoteWarehouses().RunSynchronously();
 		}
 
-		public IEnumerable<IStore> DiscoverShelves()
+		public IEnumerable<IStore> DiscoverStores()
 		{
-			yield return new MemoryShelf();
+			yield return new InMemoryObjectStore();
+            yield return new InMemoryKeyValueStore();
 
+            //foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) //.SelectMany(a => a.GetTypes()).Where(t => typeof(IShelf).IsAssignableFrom(t) && t.IsClass))
+            //{
+            //	foreach(var type in assembly.GetTypes())
+            //	{
+            //		bool isCorrect = false;
 
-			//foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) //.SelectMany(a => a.GetTypes()).Where(t => typeof(IShelf).IsAssignableFrom(t) && t.IsClass))
-			//{
-			//	foreach(var type in assembly.GetTypes())
-			//	{
-			//		bool isCorrect = false;
+            //		try
+            //		{
+            //			if (typeof(IShelf).IsAssignableFrom(type) && type.IsClass)
+            //			{
+            //				isCorrect = true;
+            //			}
+            //		}
+            //		catch (Exception) { }
 
-			//		try
-			//		{
-			//			if (typeof(IShelf).IsAssignableFrom(type) && type.IsClass)
-			//			{
-			//				isCorrect = true;
-			//			}
-			//		}
-			//		catch (Exception) { }
-
-			//		if(isCorrect)
-			//			yield return Activator.CreateInstance(type) as IShelf;
-			//	}
-			//	//yield return Activator.CreateInstance(type) as IShelf;
-			//}
-		}
+            //		if(isCorrect)
+            //			yield return Activator.CreateInstance(type) as IShelf;
+            //	}
+            //	//yield return Activator.CreateInstance(type) as IShelf;
+            //}
+        }
 
 		private async Task LoadRemoteWarehouses()
 		{
@@ -144,10 +133,11 @@ namespace Lighthouse.Storage
 			ConcurrentBag<StoragePolicy> enforcedPolicies = new ConcurrentBag<StoragePolicy>();
 
 			// resolve the appropriate store, based on the policy
-			Parallel.ForEach(ResolveShelves<T>(loadingDockPolicies), (shelf) =>
-			{
-				shelf.Store(key,data, enforcedPolicies);
-			});
+			//Parallel.ForEach(ResolveShelves<T>(loadingDockPolicies), (shelf) =>
+			//{
+			//	shelf.Store(key,data, enforcedPolicies);
+			//});
+
 
 			// the receipt is largely what was passed in when it was stored
 			var receipt = new Receipt(enforcedPolicies.Any())
@@ -171,30 +161,30 @@ namespace Lighthouse.Storage
             throw new NotImplementedException();
         }
 
-        public T Retrieve<T>(StorageKey key)			
-		{
-			ThrowIfNotInitialized();
-			var foundShelf = Shelves
-					.OfType<IStore<T>>()
-					.FirstOrDefault(shelf => shelf.CanRetrieve(key));
+  //      public T Retrieve<T>(StorageKey key)			
+		//{
+		//	ThrowIfNotInitialized();
+		//	var foundShelf = Stores
+		//			.OfType<IStore<T>>()
+		//			.FirstOrDefault(shelf => shelf.CanRetrieve(key));
 
-			if (foundShelf == null)
-			{
-				throw new ApplicationException($"Can't store this type of data: {typeof(T)}.");
-			}
+		//	if (foundShelf == null)
+		//	{
+		//		throw new ApplicationException($"Can't store this type of data: {typeof(T)}.");
+		//	}
 
-			var val = foundShelf.Retrieve(key);
+		//	var val = foundShelf.Retrieve(key);
 
-			if (val != null)
-				return val;
-			else
-				return default;
-		}
+		//	if (val != null)
+		//		return val;
+		//	else
+		//		return default;
+		//}
 
-		public IEnumerable<IStore<T>> ResolveShelves<T>(IEnumerable<StoragePolicy> loadingDockPolicies)
-		{
-			return Shelves.OfType<IStore<T>>().Where(s => s.CanEnforcePolicies(loadingDockPolicies));
-		}
+		//public IEnumerable<IStore<T>> ResolveShelves<T>(IEnumerable<StoragePolicy> loadingDockPolicies)
+		//{
+		//	return Stores.OfType<IStore<T>>().Where(s => s.CanEnforcePolicies(loadingDockPolicies));
+		//}
 
 		void ThrowIfNotInitialized()
 		{

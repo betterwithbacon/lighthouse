@@ -82,11 +82,12 @@ namespace Lighthouse.Storage.Tests.Collections
 
 		private void ThenStoreIsCalled()
 		{
-			Thread.Sleep(500);
-			warehouse.ReceivedWithAnyArgs(1).Store<IDictionary<string, string>>(
-				Arg.Any<StorageKey>(),
-				Arg.Any<IDictionary<string, string>>(),
-				Arg.Any<IEnumerable<StoragePolicy>>());
+            //Thread.Sleep(500);
+            //warehouse.ReceivedWithAnyArgs(1).Store<IDictionary<string, string>>(
+            //	Arg.Any<StorageKey>(),
+            //	Arg.Any<IDictionary<string, string>>(),
+            //	Arg.Any<IEnumerable<StoragePolicy>>());
+            Assert.False(true);
 		}
 
 		void WithExpectedManifest()
@@ -95,12 +96,12 @@ namespace Lighthouse.Storage.Tests.Collections
 			{
 				StoragePolicies = new[] { StoragePolicy.Ephemeral } 
 			};
-			warehouse.GetManifest(Arg.Any<StorageKey>()).Returns(expectedManifest);
+			//warehouse.GetManifest(Arg.Any<StorageKey>()).Returns(expectedManifest);
 		}
 
 		void GivenStartingDictionary()
 		{
-			warehouse.Retrieve<Dictionary<string, string>>(Arg.Any<StorageKey>()).ReturnsForAnyArgs(actualDictionary);			
+			//warehouse.Retrieve<Dictionary<string, string>>(Arg.Any<StorageKey>()).ReturnsForAnyArgs(actualDictionary);			
 			dictionary = new WarehouseDictionary<string, string>(warehouse, testScope, "testDictionary");
 		}
 		#endregion
