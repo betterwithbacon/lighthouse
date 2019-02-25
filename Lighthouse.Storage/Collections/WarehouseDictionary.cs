@@ -16,29 +16,31 @@ namespace Lighthouse.Storage.Collections
 	public class WarehouseDictionary<TKey, TValue> : IDictionary<TKey, TValue>
 	{
 		private readonly IWarehouse Warehouse;
-		private readonly string dictionaryName;
-		// TODO: do we really want to expose the underlying warehouse infra. 
-		// I can see it from both perspectives TBH
-		public StorageKey StorageKey { get; private set; }
+		private readonly string dictionaryName;        
+        private readonly IStorageScope storageScope;
 		private readonly Dictionary<TKey, TValue> internalDictionary = new Dictionary<TKey, TValue>();
+        public readonly IEnumerable<StoragePolicy> DefaultStoragePolicies = new[] { StoragePolicy.Ephemeral };
 
-		public WarehouseDictionary(IWarehouse warehouse, IStorageScope storageScope, string dictionaryName)
+        public WarehouseDictionary(IWarehouse warehouse, IStorageScope storageScope, string dictionaryName)
 		{
 			Warehouse = warehouse;
 			this.dictionaryName = dictionaryName;
-			StorageKey = new StorageKey(dictionaryName, storageScope);
-
+			
 			// retrieve the current values from the warehouse
 			internalDictionary = new Dictionary<TKey, TValue>();
 
-			// copy all of the items over
-			var existingDictionary = Warehouse.Retrieve<Dictionary<TKey, TValue>>(StorageKey);
+            this.storageScope = storageScope;
 
-			if (existingDictionary != null)
-				foreach (var keyVal in existingDictionary)
-				{
-					internalDictionary.Add(keyVal.Key, keyVal.Value);
-				}
+            // copy all of the items over
+            var existingDictionary = Warehouse.Retrieve<Dictionary<TKey, TValue>>(this.storageScope, this.dictionaryName);
+
+            if (existingDictionary != null)
+            {
+                foreach (var keyVal in existingDictionary)
+                {
+                    internalDictionary.Add(keyVal.Key, keyVal.Value);
+                }
+            }
 
 			// the two dictionaries are now disconnected, anytime a change is made it should be made to both
 		}
@@ -55,10 +57,18 @@ namespace Lighthouse.Storage.Collections
 				// always push to local cache first
 				internalDictionary[key] = value;
 
-				// then push to warehouse
-				Warehouse.Append(StorageKey, KeyValuePair.Create(key, value));
-			}
+                UpdateDictionaryToWarehouse();
+            }
 		}
+
+        private void UpdateDictionaryToWarehouse()
+        {
+            // the storage policies from before
+            var metadata = Warehouse.GetManifest(storageScope, dictionaryName);
+
+            // then push to warehouse
+            Warehouse.Store(storageScope, dictionaryName, internalDictionary, metadata?.StoragePolicies ?? DefaultStoragePolicies);
+        }
 
 		public ICollection<TKey> Keys => internalDictionary.Keys;
 
@@ -78,30 +88,29 @@ namespace Lighthouse.Storage.Collections
 		{
 			internalDictionary.Add(item.Key, item.Value);
 
-			// TODO: do this later in a task
-			// do warehouse stuff, in a task
-			//Warehouse.Container.Do((container) 
-			//=> 
-			Warehouse.Append(StorageKey, KeyValuePair.Create(item.Key, item.Value)); //);
-		}
+            // TODO: do this later in a task
+            // do warehouse stuff, in a task
+            //Warehouse.Container.Do((container) 
+            //=> 
+            UpdateDictionaryToWarehouse();
+        }
 
-		public void Clear()
+        public void Clear()
 		{
 			internalDictionary.Clear();
 
 			// do warehouse stuff, in a task
 			//Warehouse.Container.Do((container) =>
 			//	{
-					// figure out what the old policies were
-					var metadata = Warehouse.GetManifest(StorageKey);
+			// figure out what the old policies were
+			var metadata = Warehouse.GetManifest(storageScope, dictionaryName);
 
-					// overwrite what was there
-					Warehouse.Store<IDictionary<TKey, TValue>>(StorageKey, internalDictionary, metadata.StoragePolicies);
-			//	}
-			//);
-		}
+            // overwrite what was there
+            UpdateDictionaryToWarehouse();
 
-		public bool Contains(KeyValuePair<TKey, TValue> item)
+        }
+
+        public bool Contains(KeyValuePair<TKey, TValue> item)
 		{
 			return ((ICollection<KeyValuePair<TKey, TValue>>)internalDictionary).Contains(item);			
 		}
@@ -126,10 +135,8 @@ namespace Lighthouse.Storage.Collections
 			var val = internalDictionary.Remove(key);
 			Warehouse.Container.Do((container) =>
 				{
-					// figure out what the old policies were
-					var metadata = Warehouse.GetManifest(StorageKey);
-					// overwrite what was there (I don't like this, but we don't support fine-grained actions
-					Warehouse.Store(StorageKey, internalDictionary, metadata.StoragePolicies);
+
+                    UpdateDictionaryToWarehouse();
 				}
 			);
 
@@ -139,13 +146,10 @@ namespace Lighthouse.Storage.Collections
 		public bool Remove(KeyValuePair<TKey, TValue> item)
 		{
 			var val = ((ICollection<KeyValuePair<TKey, TValue>>)internalDictionary).Remove(item);
-			Warehouse.Container.Do((container) =>
-			{
-				// figure out what the old policies were
-				var metadata = Warehouse.GetManifest(StorageKey);
-				// overwrite what was there (I don't like this, but we don't support fine-grained actions
-				Warehouse.Store(StorageKey, internalDictionary, metadata.StoragePolicies);
-			});
+			//Warehouse.Container.Do((container) =>
+			//{
+            UpdateDictionaryToWarehouse();
+			//});
 			return val;
 		}
 

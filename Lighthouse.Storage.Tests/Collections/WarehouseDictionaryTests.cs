@@ -49,8 +49,8 @@ namespace Lighthouse.Storage.Tests.Collections
 		public void Add_RecordPushedToPermanentStorage()
 		{
 			GivenStartingDictionary();			
-			dictionary.Add("test", SomeData);			
-			ThenAppendIsCalled();			
+			dictionary.Add("test", SomeData);
+            ThenStoreIsCalled();			
 		}
 
 		[Fact]
@@ -58,7 +58,7 @@ namespace Lighthouse.Storage.Tests.Collections
 		{
 			GivenStartingDictionary();			
 			dictionary["test"] = SomeData;
-			ThenAppendIsCalled();
+			ThenStoreIsCalled();
 		}
 
 		[Fact]
@@ -73,12 +73,6 @@ namespace Lighthouse.Storage.Tests.Collections
 
 		#region Assertions
 		private readonly string SomeData = Guid.NewGuid().ToString();
-
-		private void ThenAppendIsCalled()
-		{
-			Thread.Sleep(200);			
-			warehouse.ReceivedWithAnyArgs(1).Append(Arg.Any<StorageKey>(), Arg.Any<KeyValuePair<string, string>>());
-		}
 
 		private void ThenStoreIsCalled()
 		{
@@ -116,7 +110,7 @@ namespace Lighthouse.Storage.Tests.Collections
 		private readonly IStorageScope testScope;
 		private readonly Dictionary<string, string> actualDictionary = new Dictionary<string, string>();
 		private readonly ILighthouseServiceContainer container;
-
+        private readonly string key = "key";
 
 		public WarehouseDictionaryIntegrationTests(ITestOutputHelper output)
 		{
@@ -135,7 +129,7 @@ namespace Lighthouse.Storage.Tests.Collections
 			GivenStartingDictionary();
 			dictionary.Add("test", "test");
 			Thread.Sleep(100); // give the dictionary some time to write to the warehouse
-			var warehouseDictionary = warehouse.Retrieve<Dictionary<string, string>>(dictionary.StorageKey);
+			var warehouseDictionary = warehouse.Retrieve<Dictionary<string, string>>(testScope, key);
 			warehouseDictionary.Should().NotBeNull();
 		}
 

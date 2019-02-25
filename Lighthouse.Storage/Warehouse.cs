@@ -132,15 +132,14 @@ namespace Lighthouse.Storage
 
 			ConcurrentBag<StoragePolicy> enforcedPolicies = new ConcurrentBag<StoragePolicy>();
 
-			// resolve the appropriate store, based on the policy
-			//Parallel.ForEach(ResolveShelves<T>(loadingDockPolicies), (shelf) =>
-			//{
-			//	shelf.Store(key,data, enforcedPolicies);
-			//});
+            // resolve the appropriate store, based on the policy
+            Parallel.ForEach(ResolveShelves<IObjectStore>(loadingDockPolicies), (shelf) =>
+            {
+                shelf.Store(scope, key, data, enforcedPolicies);
+            });
 
-
-			// the receipt is largely what was passed in when it was stored
-			var receipt = new Receipt(enforcedPolicies.Any())
+            // the receipt is largely what was passed in when it was stored
+            var receipt = new Receipt(enforcedPolicies.Any())
 			{
 				UUID = uuid,
 				Key = key,
@@ -158,35 +157,37 @@ namespace Lighthouse.Storage
 
         public Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null)
         {
-            throw new NotImplementedException();
+            ConcurrentBag<StoragePolicy> enforcedPolicies = new ConcurrentBag<StoragePolicy>();
+            Parallel.ForEach(ResolveShelves<IKeyValueStore>(loadingDockPolicies), (shelf) =>
+            {
+                shelf.Store(scope, key, data, enforcedPolicies);
+            });
+
+            var uuid = Guid.NewGuid();
+
+            var receipt = new Receipt(enforcedPolicies.Any())
+            {
+                UUID = uuid,
+                Key = key,
+                Scope = scope,
+                // add the policies that were upheld during the store, this is necessary, 
+                // because this warehouse might not be able to satisfy all of the policies				
+                Policies = enforcedPolicies.Distinct().ToList(),
+                SHA256Checksum = CalculateChecksum(data)
+            };
+
+            SessionReceipts.Add(receipt);
+
+            return receipt;
         }
 
-  //      public T Retrieve<T>(StorageKey key)			
-		//{
-		//	ThrowIfNotInitialized();
-		//	var foundShelf = Stores
-		//			.OfType<IStore<T>>()
-		//			.FirstOrDefault(shelf => shelf.CanRetrieve(key));
+        public IEnumerable<T> ResolveShelves<T>(IEnumerable<StoragePolicy> loadingDockPolicies)
+            where T : IStore
+        {
+            return Stores.OfType<T>().Where(s => s.CanEnforcePolicies(loadingDockPolicies));
+        }
 
-		//	if (foundShelf == null)
-		//	{
-		//		throw new ApplicationException($"Can't store this type of data: {typeof(T)}.");
-		//	}
-
-		//	var val = foundShelf.Retrieve(key);
-
-		//	if (val != null)
-		//		return val;
-		//	else
-		//		return default;
-		//}
-
-		//public IEnumerable<IStore<T>> ResolveShelves<T>(IEnumerable<StoragePolicy> loadingDockPolicies)
-		//{
-		//	return Stores.OfType<IStore<T>>().Where(s => s.CanEnforcePolicies(loadingDockPolicies));
-		//}
-
-		void ThrowIfNotInitialized()
+        void ThrowIfNotInitialized()
 		{
 			if (!IsInitialized)
 				throw new InvalidOperationException("Warehouse not initialized.");
@@ -236,12 +237,44 @@ namespace Lighthouse.Storage
 
         public T Retrieve<T>(IStorageScope scope, string key)
         {
-            throw new NotImplementedException();
+            ThrowIfNotInitialized();
+            // this is a hack until we can figure out which store to pick (different versions of the same file?)
+            var objectStore = Stores
+                    .OfType<IObjectStore>()
+                    .FirstOrDefault(store => store.CanRetrieve(scope, key));
+
+            if (objectStore == null)
+            {
+                throw new ApplicationException($"Data can't be found: {key} ({typeof(T)}).");
+            }
+
+            var val = objectStore.Retrieve<T>(scope, key);
+
+            if (val != null)
+                return val;
+            else
+                return default;
         }
 
         public string Retrieve(IStorageScope scope, string key)
         {
-            throw new NotImplementedException();
+            ThrowIfNotInitialized();
+            // this is a hack until we can figure out which store to pick (different versions of the same file?)
+            var keyValStore = Stores
+                    .OfType<IKeyValueStore>()
+                    .FirstOrDefault(store => store.CanRetrieve(scope, key));
+
+            if (keyValStore == null)
+            {
+                throw new ApplicationException($"Can't find any KeyValue stores that have the data.");
+            }
+
+            var val = keyValStore.Retrieve(scope, key);
+
+            if (val != null)
+                return val;
+            else
+                return default;
         }
     }
 }
