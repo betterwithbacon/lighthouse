@@ -64,14 +64,14 @@ namespace Lighthouse.Core.Hosting
 
 			var proxies = new List<LighthouseServiceProxy<T>>();
 
-			// TODO: fail silently here, I guess <-- #pureLaziness
-			//if(findServiceResponse == null)
-			//{
-			//	return proxies;
-			//}
+            // TODO: fail silently here, I guess <-- #pureLaziness
+            if (findServiceResponse == null)
+            {
+                return proxies;
+            }
 
-			// convert service descriptors into proxies
-			foreach (var serviceDescriptor in findServiceResponse.Payload)
+            // convert service descriptors into proxies
+            foreach (var serviceDescriptor in findServiceResponse.Payload)
 			{
 				// TODO: add service resolution, to this. 
 				//Technically, I'm not sure how you could request a service without it also being local, so this is more of a sanity check I think.

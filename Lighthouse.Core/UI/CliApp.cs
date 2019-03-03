@@ -50,7 +50,7 @@ namespace Lighthouse.Core.UI
 			WriteToConsole(message);
 		}
 
-		public void Start(IList<string> args)
+		public async Task Start(IList<string> args)
 		{
 			// get those args loaded up
 			try
@@ -77,7 +77,7 @@ namespace Lighthouse.Core.UI
 				else
 				{
 					// the app is valid, and ready to go, so do the commands that are connected
-					SelectedCommand.Execute(
+					await SelectedCommand.Execute(
 							SelectedCommandArgValues
 							.Select(acav => new KeyValuePair<string, string>(acav.Argument.ArgumentName, acav.Value))
 							.ToImmutableDictionary()

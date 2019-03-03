@@ -173,13 +173,13 @@ namespace Lighthouse.Core.Tests.UI
 			public static readonly ConcurrentBag<string> MockAppCommandExecutorArgumentsProvided = new ConcurrentBag<string>();
 			public async Task Handle(IDictionary<string, string> args, IAppContext context)
 			{
-				await Task.Run( () => MockAppCommandExecutorArgumentsProvided.Add(args.Keys.First()));
+				await Task.Run( () => MockAppCommandExecutorArgumentsProvided.Add(args.First().Value));
 			}
 		}
 
 		[Fact]
 		[Trait("CommandActivation-TypeBased", "Succeeds")]
-		public void ValidCommand_ValidArg_ValidType_Succeeds()
+		public async Task ValidCommand_ValidArg_ValidType_Succeeds()
 		{
 			string commandArg = "actualArg";
 
@@ -187,7 +187,7 @@ namespace Lighthouse.Core.Tests.UI
 			App.AddCommand<MockAppCommandExecutor>("command1")
 				.AddArgument("commandArg1", true);
 
-			StartAppWithArguments($"command1 commandArg1={commandArg}");
+			await StartAppWithArguments($"command1 commandArg1={commandArg}");
 
 			MockAppCommandExecutor.MockAppCommandExecutorArgumentsProvided.Single().Should().Be(commandArg);
 		}
@@ -295,14 +295,14 @@ namespace Lighthouse.Core.Tests.UI
 			return LinesToWrite.Dequeue();
 		}
 
-		private void StartAppWithArguments(string arguments = null)
+		private async Task StartAppWithArguments(string arguments = null)
 		{
 			var args = new[] { App.Name };
 			var commandLine = arguments == null ? args : (IList<string>)args.Concat(arguments.Split(" ")).ToList();
 
 			Output.WriteLine($"#Console Start: {string.Join(" ", commandLine)}");
 
-			App.Start(commandLine);
+			await App.Start(commandLine);
 		}
 
 		private ConsoleKeyInfo ConsoleAnyKey () => new ConsoleKeyInfo(' ', ConsoleKey.Spacebar, false, false, false);

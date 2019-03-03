@@ -126,11 +126,16 @@ namespace Lighthouse.Storage
         //public Receipt Store<T>(StorageKey key, T data, IEnumerable<StoragePolicy> loadingDockPolicies)
         public Receipt Store(IStorageScope scope, string key, object data, IEnumerable<StoragePolicy> loadingDockPolicies = null)
         {
-			ThrowIfNotInitialized();
+            ThrowIfNotInitialized();
 
-			var uuid = Guid.NewGuid();
+            var uuid = Guid.NewGuid();
 
-			ConcurrentBag<StoragePolicy> enforcedPolicies = new ConcurrentBag<StoragePolicy>();
+            ConcurrentBag<StoragePolicy> enforcedPolicies = new ConcurrentBag<StoragePolicy>();
+
+            if (loadingDockPolicies == null)
+            {
+                loadingDockPolicies = new[] { StoragePolicy.Ephemeral };
+            }
 
             // resolve the appropriate store, based on the policy
             Parallel.ForEach(ResolveShelves<IObjectStore>(loadingDockPolicies), (shelf) =>
@@ -157,6 +162,11 @@ namespace Lighthouse.Storage
 
         public Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null)
         {
+            if (loadingDockPolicies == null)
+            {
+                loadingDockPolicies = new[] { StoragePolicy.Ephemeral };
+            }
+
             ConcurrentBag<StoragePolicy> enforcedPolicies = new ConcurrentBag<StoragePolicy>();
             Parallel.ForEach(ResolveShelves<IKeyValueStore>(loadingDockPolicies), (shelf) =>
             {
@@ -238,6 +248,13 @@ namespace Lighthouse.Storage
         public T Retrieve<T>(IStorageScope scope, string key)
         {
             ThrowIfNotInitialized();
+
+            if(typeof(T) == typeof(string))
+            {
+                // TODO: another hack
+                throw new InvalidOperationException("Should not store strings with this method. Use the non-generic version for that.");
+            }
+
             // this is a hack until we can figure out which store to pick (different versions of the same file?)
             var objectStore = Stores
                     .OfType<IObjectStore>()

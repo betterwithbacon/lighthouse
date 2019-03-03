@@ -26,10 +26,12 @@ namespace Lighthouse.Core.Tests.Hosting
 			var mockNetworkProvider = Substitute.For<INetworkProvider>();
 			mockNetworkProvider.SupportedProtocols.Returns(new[] { NetworkProtocol.HTTP });
 			mockNetworkProvider.SupportedScopes.Returns(new[] { NetworkScope.Local });
-			mockNetworkProvider.GetStringAsync(Arg.Any<Uri>()).Returns(LighthouseContainerCommunicationUtil.Messages.OK);
+            mockNetworkProvider
+                .GetObjectAsync<LighthouseServerStatus>(Arg.Any<Uri>())
+                .Returns((LighthouseServerStatus)null);
 
-			// inform the container of this provider
-			Container.RegisterResourceProvider(mockNetworkProvider);
+            // inform the container of this provider
+            Container.RegisterResourceProvider(mockNetworkProvider);
 
 			var connection = new NetworkLighthouseServiceContainerConnection(Container, System.Net.IPAddress.Parse(ip));
 
@@ -52,7 +54,9 @@ namespace Lighthouse.Core.Tests.Hosting
 			var mockNetworkProvider = Substitute.For<INetworkProvider>();
 			mockNetworkProvider.SupportedProtocols.Returns(new[] { NetworkProtocol.HTTP });
 			mockNetworkProvider.SupportedScopes.Returns(new[] { NetworkScope.Local });
-			mockNetworkProvider.GetStringAsync(Arg.Any<Uri>()).Returns("nope");
+			mockNetworkProvider
+                .GetObjectAsync<LighthouseServerStatus>(Arg.Any<Uri>())
+                .Returns( (LighthouseServerStatus)null);
 
 			// inform the container of this provider
 			Container.RegisterResourceProvider(mockNetworkProvider);
@@ -65,7 +69,7 @@ namespace Lighthouse.Core.Tests.Hosting
 
 			(connectionHistory.EffectiveDate.Date - DateTime.Now).Seconds.Should().BeLessOrEqualTo(30); // the status time should be in the last 30 seconds, probably much less
 			connectionHistory.WasConnected.Should().BeFalse();
-			connectionHistory.Exception.Message.Should().Contain("nope");
+			connectionHistory.Exception.Message.Should().Contain("Could not contact server");
 		}
 
 		[Fact]

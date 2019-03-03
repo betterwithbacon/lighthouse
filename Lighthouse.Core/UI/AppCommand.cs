@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Core.UI
 {
@@ -35,16 +36,16 @@ namespace Lighthouse.Core.UI
 			return Arguments.Any(c => c.ArgumentName.Equals(argKey, StringComparison.OrdinalIgnoreCase));
 		}
 
-		public void Execute(IDictionary<string, string> argValues)
+		public async Task Execute(IDictionary<string, string> argValues)
 		{
 			if (ExecutionActionType != null)
 			{
 				var executor = Activator.CreateInstance(ExecutionActionType) as IAppCommandHandler;
-				executor?.Handle(argValues, App);
+				await executor?.Handle(argValues, App);
 			}
 			else
 			{
-				ExecutionAction?.Invoke(argValues);
+                await Task.Run(() => ExecutionAction?.Invoke(argValues));                    
 			}
 		}
 	}
@@ -70,12 +71,4 @@ namespace Lighthouse.Core.UI
 		{
 		}
 	}
-
-	//public enum AppCommandValidationResultType
-	//{
-	//	Valid,
-	//	Failed,
-	//	Informational,
-	//	Obsolete
-	//}
 }

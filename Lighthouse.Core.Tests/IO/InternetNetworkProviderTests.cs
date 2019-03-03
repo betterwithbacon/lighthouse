@@ -7,6 +7,7 @@ using Xunit.Abstractions;
 
 namespace Lighthouse.Core.Tests.IO
 {
+    [Collection("network tests")]
 	public class InternetNetworkProviderTests : LighthouseTestsBase
 	{
 		public InternetNetworkProviderTests(ITestOutputHelper output) : base(output)
@@ -40,7 +41,7 @@ namespace Lighthouse.Core.Tests.IO
 		{
 			var provider = new InternetNetworkProvider(Container);
 
-			var port = 51515;
+			var port = 51516;
 			var uri = new UriBuilder(Uri.UriSchemeHttp, "127.0.0.1", port,"/PING").Uri;
 			var exepectedResponse = "PING";
 
