@@ -273,6 +273,7 @@ namespace Lighthouse.Server.Tests
 		[Trait("Category", "Unit")]
 		public void GetFileSystemProviders_ShouldFindProvider()
 		{
+            Container.AddAvailableFileSystemProviders();
 			Container.GetFileSystemProviders().Should().NotBeEmpty();
 		}
 

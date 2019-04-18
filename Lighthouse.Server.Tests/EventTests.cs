@@ -47,7 +47,7 @@ namespace Lighthouse.Server.Tests
 
 		[Fact]
 		[Trait("Category", "Unit")]
-		public void TimeEventShouldTriggerLogWriteEventWhichShouldThenWriteToLog()
+		public async Task TimeEventShouldTriggerLogWriteEventWhichShouldThenWriteToLog()
 		{
 			// create the orchestrator			
 			var time = DateTime.Parse("01/01/2018 10:00AM");
@@ -73,7 +73,7 @@ namespace Lighthouse.Server.Tests
 			// run and ensure the listeners are all responding
 			Container.Start();
 
-			Container.EmitEvent(new TimeEvent(Container, time), null);
+			await Container.EmitEvent(new TimeEvent(Container, time), null);
 			Thread.Sleep(50); // just wait a bit for the events to be handled
 			Container.AssertEventExists<TimeEvent>();
 			Container.AssertEventExists<LogEvent>();
@@ -92,12 +92,15 @@ namespace Lighthouse.Server.Tests
 
 			// create a consumer that when it receives a time event, that matches it's schedule, it will trigger a log write event
 			var timeEventConsumer = new TimeEventConsumer();
-			timeEventConsumer.EventAction = (triggerTime) => Container.EmitEvent(
-				new LogEvent(Container, timeEventConsumer)
-				{
-					Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}"					
-				}, timeEventConsumer
-			);
+            timeEventConsumer.EventAction = (triggerTime) =>
+               {
+                   Container.EmitEvent(
+                           new LogEvent(Container, timeEventConsumer)
+                           {
+                               Message = $"Log of: TimeEvent hit at: {triggerTime.Ticks}"
+                           }, timeEventConsumer
+                       );
+               };
 
 			// create a schedule that will only fire the Action when the time matches the event time
 			timeEventConsumer.AddSchedule(new Schedule(time));
@@ -111,9 +114,9 @@ namespace Lighthouse.Server.Tests
 			// run and ensure the listeners are all responding
 			Container.Start();
 
-			Container.EmitEvent(new TimeEvent(Container, time), null);
-			Container.EmitEvent(new TimeEvent(Container, time.AddDays(-10)), null);
-			Container.EmitEvent(new TimeEvent(Container, time.AddDays(10)), null);			
+			await Container.EmitEvent(new TimeEvent(Container, time), null);
+            await Container.EmitEvent(new TimeEvent(Container, time.AddDays(-10)), null);
+            await Container.EmitEvent(new TimeEvent(Container, time.AddDays(10)), null);			
 			await Container.Stop();
 
 			Thread.Sleep(500); // just wait a bit for the events to be handled

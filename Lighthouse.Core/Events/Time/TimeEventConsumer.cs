@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Core.Events.Time
 {
@@ -31,12 +32,12 @@ namespace Lighthouse.Core.Events.Time
 		{
 			Container.Log(LogLevel.Debug, LogType.EventReceived, this, timeEvent.ToString());
 
-			// evaluate all of the schedules to see if one is a hit, if so, then run the action configured for this consumer
-			if (Schedules.Any(s => s.Key.IsMatch(Schedules[s.Key], timeEvent.EventTime)))
-			{
-				Container.Do((o) => EventAction(timeEvent.EventTime));
-			}
-		}
+            // evaluate all of the schedules to see if one is a hit, if so, then run the action configured for this consumer
+            if (Schedules.Any(s => s.Key.IsMatch(Schedules[s.Key], timeEvent.EventTime)))
+            {
+                Container.Do((container) => EventAction?.Invoke(timeEvent.EventTime));
+            }
+        }
 
 		public void AddSchedule(Schedule schedule)
 		{

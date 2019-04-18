@@ -73,8 +73,9 @@ namespace Lighthouse.CLI.Tests
 		{
 			GivenAContext(withFoundServices:
 				new[] {
-					new ServiceDescriptor{ Name ="testApp"}					
-				}
+					new ServiceDescriptor{ Name ="testApp"},
+                    new ServiceDescriptor{ Name ="testApp"}
+                }
 			);
 			WithArgValue(Arguments.APP_NAME, "testApp");
 			WithArgValue(Arguments.TARGET_SERVER, "127.0.0.1");

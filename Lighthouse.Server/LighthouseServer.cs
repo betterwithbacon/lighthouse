@@ -267,14 +267,14 @@ namespace Lighthouse.Server
 		{
 			var allConfigs = GetResourceProviders<IAppConfigurationProvider>();
 
-			if (!allConfigs.Any())
+            ServicePort = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT;
+
+            if (!allConfigs.Any())
 			{
 				// if no config, just leave, and use the "base" config
 				// throw new InvalidOperationException("No  app config provider found.");
 				return;
 			}
-
-			ServicePort = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT;
 
 			if (allConfigs.Count() > 1)
 				throw new InvalidOperationException("Too many app configuration providers found. There should only be one.");
