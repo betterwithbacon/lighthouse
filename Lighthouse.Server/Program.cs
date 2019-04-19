@@ -22,7 +22,7 @@ namespace Lighthouse.Server
 			//else
 			//{
 				RunHeadlessMode();
-			//}
+			//} 
 		}
 
 		static void RunConsoleMode(string[] args)
