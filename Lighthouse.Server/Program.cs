@@ -8,13 +8,7 @@ namespace Lighthouse.Server
         static void Main(string[] args)
         {
             Console.WriteLine("Starting lighthouse server");
-			//var server = LighthouseLauncher<LighthouseServer>
-			//	.Create<LighthouseServer>("Lighthouse Server")
-			//	.AddLocalLogger((message) => Console.WriteLine(message))
-			//	.Build();
-
-			// block the console thread
-
+			
 			//if (args.Length > 1)
 			//{
 			//	RunConsoleMode(args);
