@@ -10,7 +10,9 @@ namespace Lighthouse.Core.Configuration.Formats.YAML
 		public string Name { get; set; }
 		public string Type { get; set; }
 		public string Alias { get; set; }
-	}
+
+        public Version Version { get; set; }
+    }
 
 	public static class LighthouseYamlConfigServiceDescriptorExtensions
 	{

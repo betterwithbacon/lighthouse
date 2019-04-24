@@ -316,6 +316,7 @@ namespace Lighthouse.Server
 			CancellationTokenSource.Cancel();
 
 			Log(LogLevel.Debug,LogType.Info,this, "[Lighthouse Server Stopped]");
+            await Task.CompletedTask; //< -- temp hackj
 		}
 
 		void AssertIsRunning()
@@ -418,7 +419,7 @@ namespace Lighthouse.Server
 			return Enumerable.Empty<ServiceLaunchRequestValidationResult>();
 		}
 
-		public async Task Launch(ILighthouseService service)
+		public void Launch(ILighthouseService service)
 		{
 			AssertIsRunning();
 
@@ -426,7 +427,7 @@ namespace Lighthouse.Server
 			RegisterComponent(service);			
 			
 			// start it, in a separate thread, that will run the business logic for this
-			await Task.Run(() => service.Start(), CancellationTokenSource.Token).ContinueWith(
+			Task.Run(() => service.Start(), CancellationTokenSource.Token).ContinueWith(
 				(task) =>
 				{
 					// handle errors
