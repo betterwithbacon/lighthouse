@@ -25,17 +25,6 @@ namespace Lighthouse.Core
 		/// <param name="message"></param>
 		void Log(LogLevel level, LogType logType,  ILighthouseLogSource sender, string message = null, Exception exception = null, bool emitEvent = true);
 
-		IEnumerable<T> FindComponent<T>() where T : ILighthouseComponent;
-
-		/// <summary>
-		/// Finds lighthouse services that are hosted within this container.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <returns></returns>
-		IEnumerable<T> FindServices<T>() where T : ILighthouseService;
-
-		IEnumerable<ILighthouseServiceDescriptor> FindServiceDescriptor(string serviceName);
-
 		/// <summary>
 		/// Returns remote services from other attached contexts. Will NOT return services from this context. 
 		/// Any command issued on the local object. will be forwarded to the other service, executed, and results returned.
@@ -45,7 +34,7 @@ namespace Lighthouse.Core
 		Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>() where T : class, ILighthouseService;
 
 		/// <summary>
-		/// The current time, based on the lighthouse service.
+		/// The current container time
 		/// </summary>
 		/// <returns></returns>
 		DateTime GetNow();
@@ -77,11 +66,6 @@ namespace Lighthouse.Core
 		void RegisterComponent(ILighthouseComponent component);
 
 		/// <summary>
-		/// An event hook for changes to the status of the lighthouse service
-		/// </summary>
-		event StatusUpdatedEventHandler StatusUpdated;
-
-		/// <summary>
 		/// The working directory of the Lighthouse runtime
 		/// </summary>
 		string WorkingDirectory { get; }
@@ -111,13 +95,12 @@ namespace Lighthouse.Core
 		/// </summary>
 		IWarehouse Warehouse { get; }
 
-		/// <summary>
-		/// Represents a way to introspect the state of the container for management purposes.
-		/// These APIs shouldn't be used by local services for operational purposes. merely for other containers and/or internal services
-		/// </summary>
-		/// <param name="routeName"></param>
-		/// <param name="payload"></param>
-		/// <returns></returns>
+
+
+
+		/*
+         * This is the weird part, it seems like all of thgese pieces should only be called from "outside" the service ocntainer
+         */
 		ManagementInterfaceResponse HandleManagementRequest(ManagementRequestType routeName, string payload);
 
 		IEnumerable<ILighthouseServiceContainerConnection> FindServers();
@@ -130,7 +113,5 @@ namespace Lighthouse.Core
 		void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest, bool persist = false, bool autoStart = false);
 
 		LighthouseServerStatus GetStatus();
-
-		IEnumerable<LighthouseServiceRun> GetRunningServices(Func<LighthouseServiceRun, bool> filter = null);
 	}
 }

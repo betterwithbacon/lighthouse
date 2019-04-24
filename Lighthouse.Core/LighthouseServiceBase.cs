@@ -10,8 +10,7 @@ namespace Lighthouse.Core
 	{
 		public string Id { get; private set; }
 		public LighthouseServiceRunState RunState { get; protected set; }
-		public ILighthouseServiceContainer Container { get; private set; }
-		public event StatusUpdatedEventHandler StatusUpdated;
+		public ILighthouseServiceContainer Container { get; private set; }		
 		private readonly List<Action<ILighthouseServiceContainer>> StartupActions = new List<Action<ILighthouseServiceContainer>>();
 		protected virtual bool IsInitialized { get; }
 		public string ScopeName => Identifier;
@@ -51,8 +50,7 @@ namespace Lighthouse.Core
 
 		public virtual void Stop()
 		{
-			RaiseStatusUpdated(LighthouseServiceRunState.PendingStop);
-			StatusUpdated?.Invoke(this, $"Service shutting down.");
+			RaiseStatusUpdated(LighthouseServiceRunState.PendingStop);			
 			OnStop();
 			RaiseStatusUpdated(LighthouseServiceRunState.Stopped);
 		}
@@ -64,14 +62,8 @@ namespace Lighthouse.Core
 
 
 		protected void RaiseStatusUpdated(LighthouseServiceRunState newState)
-		{
-			StatusUpdated?.Invoke(this, $"Status changing from {RunState} to {newState}");
+		{	
 			RunState = newState;
-		}
-
-		protected void RaiseStatusUpdated(string message)
-		{
-			StatusUpdated?.Invoke(this, message);
 		}
 
 		public void Initialize(ILighthouseServiceContainer context)

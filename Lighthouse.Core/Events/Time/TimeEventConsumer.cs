@@ -49,7 +49,7 @@ namespace Lighthouse.Core.Events.Time
 		{
 			if (ScheduleHistoryRepository == null)
 			{
-				ScheduleHistoryRepository = Container.FindServices<IScheduleHistoryRepository>().FirstOrDefault();
+				//ScheduleHistoryRepository = Container.FindServices<IScheduleHistoryRepository>().FirstOrDefault();
 			}
 		}
 	}

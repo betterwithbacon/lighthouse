@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Lighthouse.CLI": {
-      "commandName": "Project",
-      "commandLineArgs": "test=yup"
-    }
-  }
-}

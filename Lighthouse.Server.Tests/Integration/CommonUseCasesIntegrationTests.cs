@@ -98,16 +98,16 @@ services:
 			Thread.Sleep(100);
 
 			Output.WriteLine("Running Client Services:");
-			foreach(var service in clientNode.GetRunningServices())
-			{
-				Output.WriteLine($"service running: {service}");
-			}
+			//foreach(var service in clientNode.GetRunningServices())
+			//{
+			//	Output.WriteLine($"service running: {service}");
+			//}
 
-			Output.WriteLine("Running Server Services:");
-			foreach (var service in serverNode.GetRunningServices())
-			{
-				Output.WriteLine($"service running: {service}");
-			}
+			//Output.WriteLine("Running Server Services:");
+			//foreach (var service in serverNode.GetRunningServices())
+			//{
+			//	Output.WriteLine($"service running: {service}");
+			//}
 		}
 
 		//[Fact]

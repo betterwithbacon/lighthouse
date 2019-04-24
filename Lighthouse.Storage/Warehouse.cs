@@ -56,8 +56,8 @@ namespace Lighthouse.Storage
 			// schedule server maintainence to be done each hour
 			Container.AddScheduledAction(schedule: new Schedule(ScheduleFrequency.Hourly) , taskToPerform: (time) => { PerformStorageMaintenance(time); });
 
-			// populate the remote warehouses			
-			LoadRemoteWarehouses().RunSynchronously();
+			//// populate the remote warehouses			
+			//LoadRemoteWarehouses().RunSynchronously();
 		}
 
 		public IEnumerable<IStore> DiscoverStores()
@@ -87,37 +87,37 @@ namespace Lighthouse.Storage
             //}
         }
 
-		private async Task LoadRemoteWarehouses()
-		{
-			// the container is how remote lighthouse resources are found
-			if (Container != null)
-			{
-				Container.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, "Loading remote warehouses.");
+		//private async Task LoadRemoteWarehouses()
+		//{
+		//	// the container is how remote lighthouse resources are found
+		//	if (Container != null)
+		//	{
+		//		Container.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, "Loading remote warehouses.");
 
-				// the Lighthouse context should know about the other services that are running
-				foreach (var remoteWarehouse in Container.FindServices<Warehouse>())
-				{
-					// skip THIS service.
-					if (remoteWarehouse.Id == this.Id)
-						continue;
+		//		// the Lighthouse context should know about the other services that are running
+		//		foreach (var remoteWarehouse in Container.FindServices<Warehouse>())
+		//		{
+		//			// skip THIS service.
+		//			if (remoteWarehouse.Id == this.Id)
+		//				continue;
 
-					RemoteWarehouses.Add(remoteWarehouse);
-					Container.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Container local warehouse {remoteWarehouse} was added.");
-				}
+		//			RemoteWarehouses.Add(remoteWarehouse);
+		//			Container.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Container local warehouse {remoteWarehouse} was added.");
+		//		}
 
-				// this is where an network discovery will occur. to reach other points, not local to this lighthouse runtime.
-				// currently, this isn't implemented, but ideally
-				foreach (var remoteWarehouseProxy in await Container.FindRemoteServices<Warehouse>())
-				{
-					//// skip THIS service.
-					//if (remoteWarehouseProxy.Service.Id == this.Id)
-					//	continue;
+		//		// this is where an network discovery will occur. to reach other points, not local to this lighthouse runtime.
+		//		// currently, this isn't implemented, but ideally
+		//		foreach (var remoteWarehouseProxy in await Container.FindRemoteServices<Warehouse>())
+		//		{
+		//			//// skip THIS service.
+		//			//if (remoteWarehouseProxy.Service.Id == this.Id)
+		//			//	continue;
 
-					//RemoteWarehouses.Add(remoteWarehouse);
-					//LighthouseContainer.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Remote warehouse {remoteWarehouse} was added.");
-				}
-			}
-		}
+		//			//RemoteWarehouses.Add(remoteWarehouse);
+		//			//LighthouseContainer.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Remote warehouse {remoteWarehouse} was added.");
+		//		}
+		//	}
+		//}
 		
 		private void PerformStorageMaintenance(DateTime date)
 		{
