@@ -9,7 +9,6 @@ namespace Lighthouse.Core
 	public abstract class LighthouseServiceBase : ILighthouseService, IStorageScope
 	{
 		public string Id { get; private set; }
-		public LighthouseServiceRunState RunState { get; protected set; }
 		public ILighthouseServiceContainer Container { get; private set; }		
 		private readonly List<Action<ILighthouseServiceContainer>> StartupActions = new List<Action<ILighthouseServiceContainer>>();
 		protected virtual bool IsInitialized { get; }
@@ -26,8 +25,7 @@ namespace Lighthouse.Core
 			if (Container == null)
 				throw new InvalidOperationException("Service not initialized. (No container set)");
 
-			OnStart();
-			RaiseStatusUpdated(LighthouseServiceRunState.Running);
+			OnStart();			
 			OnAfterStart();
 			PerformStartupTasks();
 		}
@@ -50,9 +48,7 @@ namespace Lighthouse.Core
 
 		public virtual void Stop()
 		{
-			RaiseStatusUpdated(LighthouseServiceRunState.PendingStop);			
-			OnStop();
-			RaiseStatusUpdated(LighthouseServiceRunState.Stopped);
+			OnStop();			
 		}
 
 		protected virtual void OnStop()
@@ -61,19 +57,13 @@ namespace Lighthouse.Core
 		#endregion
 
 
-		protected void RaiseStatusUpdated(LighthouseServiceRunState newState)
-		{	
-			RunState = newState;
-		}
-
 		public void Initialize(ILighthouseServiceContainer context)
 		{
 			if (IsInitialized)
 				return;
 
 			Container = context;
-			OnInit();
-			RaiseStatusUpdated(LighthouseServiceRunState.PendingStart);
+			OnInit();			
 		}
 
 		protected virtual void OnInit()

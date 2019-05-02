@@ -12,23 +12,26 @@ namespace Lighthouse.Server.Host
         {
         }
 
-        public IEnumerable<T> Load<T>(string folder)
+        public IEnumerable<Type> Load<T>(string folder, Func<Type, bool> additionalFilter = null)
             where T : class
         {
-            IList<T> vals = new List<T>();
+            IList<Type> vals = new List<Type>();
             var files = Directory.GetFiles(folder, "*.dll");
             foreach (var file in files)
-            {
-                
+            {   
                 try
                 {
                     var assembly = Assembly.LoadFile(file);
-                    var allRootTypes = assembly.ExportedTypes.Where(typeinfo => typeof(T).IsAssignableFrom(typeinfo)).ToList();
+                    var allRootTypes = assembly
+                        .ExportedTypes
+                        .Where(typeinfo => 
+                            typeof(T).IsAssignableFrom(typeinfo) && 
+                            (additionalFilter?.Invoke(typeinfo) ?? true)
+                        ).ToList();
 
                     foreach (var type in allRootTypes)
-                    {
-                        var package = Activator.CreateInstance(type) as T;
-                        vals.Add(package);
+                    {   
+                        vals.Add(type);
                     }
                 }
                 catch (Exception ex)

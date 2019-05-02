@@ -37,13 +37,15 @@ namespace Lighthouse.Server.Host
             // go to the service repository
             // load the assemblies locally, and expose them as types within this domain
             // TODO: should the lighthouse container be able to fetch the type and launch it, for now, lets just give the container the types
-            var localDirectory = Directory.GetCurrentDirectory();            
-            var servicesToRun = LighthouseFetcher.Fetch(config.ServiceRepository,localDirectory, config.ServicesToRun);
+            var localDirectory = Directory.GetCurrentDirectory();
 
-            // inform the runtime to run the following services
-            foreach (var service in servicesToRun)
+            foreach (var serviceDescriptor in config.ServicesToRun)
             {
-                lighthouseServer.Launch(service);
+                var serviceToRun = LighthouseFetcher.Fetch(serviceDescriptor.Name, config.ServiceRepository, localDirectory);
+
+                // inform the runtime to run the following services                
+                // TODO: i'm not crazy about this, but it'll do for now
+                lighthouseServer.Launch(serviceToRun.ServiceType);
             }
 
             var waitToKill = Console.ReadLine();
@@ -55,30 +57,47 @@ namespace Lighthouse.Server.Host
 
     public static class LighthouseFetcher
     {
-        public static ConcurrentBag<ILighthouseService> AllFoundServices = new ConcurrentBag<ILighthouseService>();
+        public static ConcurrentBag<ILighthouseServiceDescriptor> AllFoundServices = new ConcurrentBag<ILighthouseServiceDescriptor>();
 
-        public static IEnumerable<ILighthouseService> Fetch(Uri serviceRepository, string currentDirectory, IEnumerable<ILighthouseServiceDescriptor> servicesToRun)
+        public static ILighthouseServiceDescriptor Fetch(string serviceName, Uri serviceRepository, string currentDirectory)
         {
-            var services = new List<ILighthouseService>();
-            
-            // load local assemblies
-            var dllTypeLoader = new DllTypeLoader();
+            // cache hit
+            var foundService = AllFoundServices.FirstOrDefault(service => service.Name == serviceName);
 
-            foreach(var foundService in dllTypeLoader.Load<ILighthouseService>(currentDirectory))
+            if (foundService != null)
             {
-                if(!AllFoundServices.Contains(foundService))
+                return foundService;
+            }
+            else {
+                // load local assemblies
+                var dllTypeLoader = new DllTypeLoader();
+
+                foreach (var service in 
+                            dllTypeLoader.Load<ILighthouseService>(
+                                currentDirectory, 
+                                    (t) => 
+                                    {
+                                        var attrs = t.GetCustomAttributes(typeof(ExternalLighthouseServiceAttribute), false);
+                                        return attrs != null && attrs.Length > 0;
+                                    }
+                                    ))
                 {
-                    AllFoundServices.Add(foundService);
+                    var typeDescriptor = service.ToServiceDescriptor();
+                    if (!AllFoundServices.Contains(typeDescriptor))
+                    {
+                        AllFoundServices.Add(typeDescriptor);
+                        return typeDescriptor;
+                    }
                 }
-            }
-            
-            // load remote services, not found locally
-            if (serviceRepository != null)
-            {
 
-            }
+                // load remote services, not found locally
+                if (serviceRepository != null)
+                {
+                    
+                }
 
-            return services;
+                return null;
+            }
         }
     }
 

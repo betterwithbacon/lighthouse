@@ -11,9 +11,13 @@ namespace Lighthouse.Server.Host.Tests
         [Fact]
         public void Fetch_ShouldReturnTypes()
         {
+            var serviceName = "ping";
+
             var currentDirectory = Directory.GetCurrentDirectory();
-            var foundTypes = LighthouseFetcher.Fetch(null, currentDirectory, new[] { new ServiceDescriptor { Name = "test_app" } });
-            foundTypes.Should().NotBeNullOrEmpty();
+            var foundType = LighthouseFetcher.Fetch(serviceName, null, currentDirectory);
+            foundType.Should().NotBeNull();
+
+            foundType.Name.Should().Be(serviceName);
         }
     }
 }

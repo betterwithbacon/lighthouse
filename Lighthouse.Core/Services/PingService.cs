@@ -1,32 +1,31 @@
 ﻿using Lighthouse.Core.Configuration.ServiceDiscovery;
+using Lighthouse.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Core.Services
 {
     [ExternalLighthouseService("ping")]
     public class PingService : ILighthouseService
-    {
-        public string Id => throw new NotImplementedException();
+    {   
+        public string Id => "ping";
 
-        public LighthouseServiceRunState RunState => throw new NotImplementedException();
+        public ILighthouseServiceContainer Container { get; private set; }
 
-        public ILighthouseServiceContainer Container => throw new NotImplementedException();
-
-        public void Initialize(ILighthouseServiceContainer context)
+        public void Initialize(ILighthouseServiceContainer container)
         {
-            throw new NotImplementedException();
+            Container = container;
         }
 
         public void Start()
         {
-            throw new NotImplementedException();
+            Container.Log(LogLevel.Info, LogType.Info, this, $"ping: {Container.GetNow()}");
         }
 
         public void Stop()
-        {
-            throw new NotImplementedException();
+        {            
         }
     }
 }

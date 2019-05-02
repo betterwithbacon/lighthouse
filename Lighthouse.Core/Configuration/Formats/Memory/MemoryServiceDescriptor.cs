@@ -12,6 +12,8 @@ namespace Lighthouse.Core.Configuration.Formats.Memory
 		public string Alias { get; set; }
 
         public Version Version { get; set; }
+
+        public Type ServiceType { get; set; }
     }
 
 	public static class MemoryServiceDescriptorExtensions

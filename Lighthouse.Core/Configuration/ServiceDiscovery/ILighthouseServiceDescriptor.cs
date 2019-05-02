@@ -6,6 +6,7 @@ namespace Lighthouse.Core.Configuration.ServiceDiscovery
 	{
 		string Name { get; }
         Version Version { get; }
+        Type ServiceType { get; }
 
         [Obsolete]
         string Type { get; }
