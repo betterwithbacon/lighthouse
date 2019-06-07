@@ -97,6 +97,7 @@ namespace Lighthouse.Server
 			Action<string> localLogger = null,
 			string workingDirectory = null,
 			Action<LighthouseServer> preLoadOperations = null,
+            string[] configFileData = null,
 			bool enableManagementService = false)
 		{
 			ServerName = serverName;
@@ -110,7 +111,7 @@ namespace Lighthouse.Server
 			Log(LogLevel.Debug, LogType.Info, this, "Lighthouse server initializing...");
 
 			// configure the default clock
-			GlobalClock = new TimeEventProducer(DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS);
+			//GlobalClock = new TimeEventProducer(DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS);
 
 			// perform some operations before the server loads it's configuration, the most likely operations are actually adding support for loading the configuration.			
 			preLoadOperations?.Invoke(this);
@@ -151,6 +152,14 @@ namespace Lighthouse.Server
 			}
 		}
 
+        public void SetServerName(string serverName)
+        {
+            if (IsRunning)
+                throw new ApplicationException("Can not change server name, while running ");
+
+            ServerName = serverName;
+        }
+
 		public void AddLocalLogger(Action<string> logAction)
 		{
 			if(logAction != null)
@@ -168,7 +177,7 @@ namespace Lighthouse.Server
 			if(EventQueue != null)
 				RegisterEventProducer(new QueueEventProducer(EventQueue, 1000));
 
-			AddBaseProducers();
+			//AddBaseProducers();
 
 			AddBaseConsumers();
 

@@ -6,33 +6,30 @@ using System.Reflection;
 
 namespace Lighthouse.Server.Host
 {
-    public class DllTypeLoader
+    public static class DllTypeLoader
     {
-        public DllTypeLoader()
-        {
-        }
-
-        public IEnumerable<Type> Load<T>(string folder, Func<Type, bool> additionalFilter = null)
+        public static IEnumerable<Type> Load<T>(string folder, Func<Type, bool> additionalFilter = null)
             where T : class
         {
-            IList<Type> vals = new List<Type>();
+            List<Type> vals = new List<Type>();
             var files = Directory.GetFiles(folder, "*.dll");
+
+            var targetName = typeof(T).FullName;
             foreach (var file in files)
             {   
                 try
                 {
-                    var assembly = Assembly.LoadFile(file);
+                    var assembly = Assembly.LoadFile(file);                    
                     var allRootTypes = assembly
                         .ExportedTypes
-                        .Where(typeinfo => 
-                            typeof(T).IsAssignableFrom(typeinfo) && 
-                            (additionalFilter?.Invoke(typeinfo) ?? true)
-                        ).ToList();
+                        .Where(typeinfo =>
+                            typeinfo.GetInterfaces().Select(t => t.FullName).Contains(targetName) &&
+                            typeinfo.IsClass && typeinfo.IsPublic &&
+                            (additionalFilter?.Invoke(typeinfo) ?? true))
+                        .ToList();
 
-                    foreach (var type in allRootTypes)
-                    {   
-                        vals.Add(type);
-                    }
+                    vals.AddRange(allRootTypes);
+                    
                 }
                 catch (Exception ex)
                 {
@@ -42,7 +39,6 @@ namespace Lighthouse.Server.Host
             }
 
             return vals;
-
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Lighthouse.Core;
+﻿using CommandLine;
+using Lighthouse.Core;
 using Lighthouse.Core.Configuration.Formats.Memory;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using System;
@@ -10,99 +11,90 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Server.Host
 {
+    public class LighthouseServerLaunchOptions
+    {
+        public LighthouseServerLaunchOptions(string config, string app)
+        {
+            Config = config;
+            App = app;
+        }
+
+        [Option('c', SetName="type")]
+        public string Config { get; }
+
+        [Option('a', SetName = "type")]
+        public string App { get; }
+
+    }
+
     class Program
     {
         static async Task Main(string[] args)
         {
             Console.WriteLine("Lighthouse Host starting...");
 
-            // load local config    
+            LighthouseServer lighthouseServer = null;
 
-            if(args.Length < 2)
-            {
-                throw new ApplicationException("Configuration file not loaded");
-            }
+            var result = Parser.Default.ParseArguments<LighthouseServerLaunchOptions>(args);
+            var results = result
+                .WithParsed(options =>
+                {
+                    lighthouseServer = LighthouseLauncher.Launch(options);
+                });
+                //.WithNotParsed((errors) => {
+                //    foreach (var error in errors)
+                //    {
+                //        Console.WriteLine(error);
+                //    }
+                //});
 
-            var configFile = File.ReadAllLines(args[1]);
-            
-            var config = LighthouseLoader.GetLighthouseHostConfig();
-            
-            // create runtime
-            var lighthouseServer = new LighthouseServer(
-                    serverName: config.ServerName,
+            //var waitToKill = Console.ReadLine();
+
+            //// let it kill all processes
+            //await lighthouseServer.Stop();
+        }
+    }
+
+    public static class LighthouseLauncher
+    {
+        public static LighthouseServer Launch(LighthouseServerLaunchOptions options)
+        {
+            var localDirectory = Directory.GetCurrentDirectory();            
+            var server = new LighthouseServer(
                     localLogger: Console.WriteLine,
-                    workingDirectory: Directory.GetCurrentDirectory()                
+                    workingDirectory: localDirectory
                 );
 
-            // go to the service repository
-            // load the assemblies locally, and expose them as types within this domain
-            // TODO: should the lighthouse container be able to fetch the type and launch it, for now, lets just give the container the types
-            var localDirectory = Directory.GetCurrentDirectory();
-
-            foreach (var serviceDescriptor in config.ServicesToRun)
+            if (!string.IsNullOrEmpty(options.Config))
             {
-                var serviceToRun = LighthouseFetcher.Fetch(serviceDescriptor.Name, config.ServiceRepository, localDirectory);
-
-                // inform the runtime to run the following services                
-                // TODO: i'm not crazy about this, but it'll do for now
-                lighthouseServer.Launch(serviceToRun.ServiceType);
+                var config = GetLighthouseHostConfig();
+                var configFile = File.ReadAllLines(options.Config);
+                
+                server.Start();
+                server.Launch(config.ServicesToRun.Select(s => new ServiceLaunchRequest(s.Name)));
             }
-
-            var waitToKill = Console.ReadLine();
-
-            // let it kill all processes
-            await lighthouseServer.Stop();
-        }
-    }
-
-    public static class LighthouseFetcher
-    {
-        public static ConcurrentBag<ILighthouseServiceDescriptor> AllFoundServices = new ConcurrentBag<ILighthouseServiceDescriptor>();
-
-        public static ILighthouseServiceDescriptor Fetch(string serviceName, Uri serviceRepository, string currentDirectory)
-        {
-            // cache hit
-            var foundService = AllFoundServices.FirstOrDefault(service => service.Name == serviceName);
-
-            if (foundService != null)
+            else if (!string.IsNullOrEmpty(options.App))
             {
-                return foundService;
-            }
-            else {
-                // load local assemblies
-                var dllTypeLoader = new DllTypeLoader();
+                server.Start();
+                var serviceDescriptor = LighthouseFetcher.Fetch(options.App, null, localDirectory);
 
-                foreach (var service in 
-                            dllTypeLoader.Load<ILighthouseService>(
-                                currentDirectory, 
-                                    (t) => 
-                                    {
-                                        var attrs = t.GetCustomAttributes(typeof(ExternalLighthouseServiceAttribute), false);
-                                        return attrs != null && attrs.Length > 0;
-                                    }
-                                    ))
-                {
-                    var typeDescriptor = service.ToServiceDescriptor();
-                    if (!AllFoundServices.Contains(typeDescriptor))
-                    {
-                        AllFoundServices.Add(typeDescriptor);
-                        return typeDescriptor;
-                    }
+                if(serviceDescriptor != null)
+                {                    
+                    server.Launch(serviceDescriptor.ToServiceLaunchRequest());
                 }
-
-                // load remote services, not found locally
-                if (serviceRepository != null)
+                else
                 {
-                    
+                    throw new ApplicationException($"Type '{options.App}' not found.");
                 }
-
-                return null;
             }
+            else
+            {
+                throw new ApplicationException($"must select either app or provide a path to a configuration path");
+            }
+
+            return server;
         }
-    }
 
-    public static class LighthouseLoader
-    {
         public static LighthouseHostConfig GetLighthouseHostConfig()
         {
             // bunch of test stuff
@@ -123,6 +115,45 @@ namespace Lighthouse.Server.Host
                 new ServiceDescriptor {  Name = "test_app", Version = Version.Parse("1.0.0") }
             };
             return config;
+        }
+    }
+
+    public static class LighthouseFetcher
+    {
+        public static ConcurrentBag<ILighthouseServiceDescriptor> AllFoundServices = new ConcurrentBag<ILighthouseServiceDescriptor>();
+
+        public static ILighthouseServiceDescriptor Fetch(string serviceName, Uri serviceRepository, string currentDirectory)
+        {
+            // load local assemblies            
+            foreach (var service in
+                        DllTypeLoader.Load<ILighthouseService>(
+                            currentDirectory,
+                                (t) =>
+                                {
+                                    var attrs = t.CustomAttributes.Where(att => att.AttributeType.Name == typeof(ExternalLighthouseServiceAttribute).Name);
+                                    if (attrs != null && attrs.Count() > 0)
+                                    {
+                                        if ((attrs.First().ConstructorArguments[0].Value as string).Equals(serviceName, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            return true;
+                                        }
+                                    }
+
+                                    return false;
+                                }
+                    ))
+            {
+                return service.ToServiceDescriptor();
+            }
+
+            // load remote services, not found locally
+            if (serviceRepository != null)
+            {
+
+            }
+
+            return null;
+
         }
     }
 
