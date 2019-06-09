@@ -19,7 +19,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Lighthouse.Core\Lighthouse.Core.csproj" />
-    <ProjectReference Include="..\Lighthouse.Monitor\Lighthouse.Monitor.csproj" />
     <ProjectReference Include="..\Lighthouse.Storage\Lighthouse.Storage.csproj" />
   </ItemGroup>
 

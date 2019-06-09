@@ -13,7 +13,8 @@ namespace Lighthouse.Core.Configuration.ServiceDiscovery
 			{
 				Name = type.Name,
 				Type = type.AssemblyQualifiedName,
-				Alias = type.Name
+				Alias = type.Name,
+                ServiceType = type
 			};
 		}
 	}

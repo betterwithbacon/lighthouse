@@ -326,7 +326,7 @@ namespace Lighthouse.Server.Tests
 		public void AddScheduledAction_ScheduleAdded()
 		{
 			Container.AddScheduledAction(new Core.Scheduling.Schedule(Core.Scheduling.ScheduleFrequency.Hourly, 1, "Test"), (_) => { });
-			Container.GetSchedules().Where(schedule => schedule.Name == "Test").Should().NotBeEmpty();
+			Container.Schedules.Where(schedule => schedule.Key == "Test").Should().NotBeEmpty();
 		}
 		#endregion
 

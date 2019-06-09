@@ -5,12 +5,16 @@ using System.Text;
 
 namespace Lighthouse.Core.Configuration.Formats.YAML
 {
-	public class LighthouseYamlConfigServiceDescriptor : ILighthouseServiceDescriptor
-	{
-		public string Name { get; set; }
-		public string Type { get; set; }
-		public string Alias { get; set; }
-	}
+    public class LighthouseYamlConfigServiceDescriptor : ILighthouseServiceDescriptor
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public string Alias { get; set; }
+
+        public Version Version { get; set; }
+
+        public Type ServiceType { get; set; }
+    }
 
 	public static class LighthouseYamlConfigServiceDescriptorExtensions
 	{

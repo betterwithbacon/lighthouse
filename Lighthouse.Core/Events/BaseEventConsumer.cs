@@ -20,8 +20,6 @@ namespace Lighthouse.Core.Events
 
 		public string Identifier { get; protected set; }
 
-		public event StatusUpdatedEventHandler StatusUpdated;
-
 		private readonly IReadOnlyDictionary<Type, MethodInfo> MethodCache;
 
 		public BaseEventConsumer()

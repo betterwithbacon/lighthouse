@@ -40,13 +40,14 @@ namespace Lighthouse.Core.Hosting
 		public Task<IEnumerable<LighthouseServiceProxy<T>>> FindServices<T>()
 			where T : class, ILighthouseService
 		{
-			// this container is local, so we're sharing the same memory pool,
-			return Task.FromResult(
-				RemoteContainer
-					.FindServices<T>()
-					.OfType<T>()
-					.Select(s => new LighthouseServiceProxy<T>(this, s))
-				);
+            // this container is local, so we're sharing the same memory pool,
+            //return Task.FromResult(
+            //	RemoteContainer
+            //		.FindRemoteServices<T>()
+            //		.OfType<T>()
+            //		.Select(s => new LighthouseServiceProxy<T>(this, s))
+            //	);
+            return null;
 		}
 
 		public Task<ManagementInterfaceResponse> SubmitManagementRequest(IManagementRequest managementRequest)

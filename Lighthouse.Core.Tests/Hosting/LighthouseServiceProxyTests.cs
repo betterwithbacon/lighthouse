@@ -59,8 +59,6 @@ namespace Lighthouse.Core.Tests.Hosting
 		public string Id { get; }
 		public int MethodCallCounter { get; private set; } = 0;
 
-		public LighthouseServiceRunState RunState => LighthouseServiceRunState.Running;
-
 		public ILighthouseServiceContainer Container { get; private set; }
 
 		public ClassToProxy()

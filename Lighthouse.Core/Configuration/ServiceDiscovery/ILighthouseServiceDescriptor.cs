@@ -1,9 +1,17 @@
-﻿namespace Lighthouse.Core.Configuration.ServiceDiscovery
+﻿using System;
+
+namespace Lighthouse.Core.Configuration.ServiceDiscovery
 {
 	public interface ILighthouseServiceDescriptor
 	{
 		string Name { get; }
-		string Type { get; }
-		string Alias { get; }
+        Version Version { get; }
+        Type ServiceType { get; }
+
+        [Obsolete]
+        string Type { get; }
+
+        [Obsolete]
+        string Alias { get; }
 	}
 }

@@ -51,8 +51,6 @@ namespace Lighthouse.Core.IO
 	{
 		public ILighthouseServiceContainer LighthouseContainer => throw new NotImplementedException();
 
-		public event StatusUpdatedEventHandler StatusUpdated;
-
 		public Task AppendToFileOnFileSystem(string fileName, byte[] data)
 		{
 			throw new NotImplementedException();

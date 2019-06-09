@@ -1,21 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2026
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.156
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Server", "Lighthouse.Server\Lighthouse.Server.csproj", "{E90D8B7C-211F-4C36-B3B2-6F6A54B4883B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Core", "Lighthouse.Core\Lighthouse.Core.csproj", "{210673EB-C539-4726-B245-429E712B0EA3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.CLI", "Lighthouse.CLI\Lighthouse.CLI.csproj", "{86C6199E-BDDC-4551-8287-F5F9F4A633B6}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Core.Tests", "Lighthouse.Core.Tests\Lighthouse.Core.Tests.csproj", "{67456481-4647-4274-851D-2DB06C9E8143}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Monitor", "Lighthouse.Monitor\Lighthouse.Monitor.csproj", "{811ABEE8-704A-4317-B05D-A8B234A2EAE8}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lighthouse Monitor", "Lighthouse Monitor", "{DC617E2E-BF48-479D-9C95-AE389B1BC150}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Monitor.Tests", "Lighthouse.Monitor.Tests\Lighthouse.Monitor.Tests.csproj", "{A9CA9414-ECFB-4918-B0A0-D8F7794149C7}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lighthouse Core", "Lighthouse Core", "{DC733B74-11BC-465A-95A6-2425D0A99550}"
 EndProject
@@ -28,8 +20,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Storage", "Lighthouse.Storage\Lighthouse.Storage.csproj", "{97B20529-51C0-4410-B664-173E70733A20}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Storage.Tests", "Lighthouse.Storage.Tests\Lighthouse.Storage.Tests.csproj", "{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lighthouse.CLI.Tests", "Lighthouse.CLI.Tests\Lighthouse.CLI.Tests.csproj", "{2ACFF9DA-F313-4A0E-B2F3-6C49E1F5EFAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,22 +35,10 @@ Global
 		{210673EB-C539-4726-B245-429E712B0EA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{210673EB-C539-4726-B245-429E712B0EA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{210673EB-C539-4726-B245-429E712B0EA3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{86C6199E-BDDC-4551-8287-F5F9F4A633B6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{86C6199E-BDDC-4551-8287-F5F9F4A633B6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{86C6199E-BDDC-4551-8287-F5F9F4A633B6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{86C6199E-BDDC-4551-8287-F5F9F4A633B6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{67456481-4647-4274-851D-2DB06C9E8143}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{67456481-4647-4274-851D-2DB06C9E8143}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{67456481-4647-4274-851D-2DB06C9E8143}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{67456481-4647-4274-851D-2DB06C9E8143}.Release|Any CPU.Build.0 = Release|Any CPU
-		{811ABEE8-704A-4317-B05D-A8B234A2EAE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{811ABEE8-704A-4317-B05D-A8B234A2EAE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{811ABEE8-704A-4317-B05D-A8B234A2EAE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{811ABEE8-704A-4317-B05D-A8B234A2EAE8}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A9CA9414-ECFB-4918-B0A0-D8F7794149C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A9CA9414-ECFB-4918-B0A0-D8F7794149C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A9CA9414-ECFB-4918-B0A0-D8F7794149C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A9CA9414-ECFB-4918-B0A0-D8F7794149C7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{70AAA9AC-EF43-44B7-9D84-ACB44EB9B6F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{70AAA9AC-EF43-44B7-9D84-ACB44EB9B6F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{70AAA9AC-EF43-44B7-9D84-ACB44EB9B6F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -73,10 +51,6 @@ Global
 		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2ACFF9DA-F313-4A0E-B2F3-6C49E1F5EFAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2ACFF9DA-F313-4A0E-B2F3-6C49E1F5EFAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2ACFF9DA-F313-4A0E-B2F3-6C49E1F5EFAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2ACFF9DA-F313-4A0E-B2F3-6C49E1F5EFAB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -84,14 +58,10 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{E90D8B7C-211F-4C36-B3B2-6F6A54B4883B} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
 		{210673EB-C539-4726-B245-429E712B0EA3} = {DC733B74-11BC-465A-95A6-2425D0A99550}
-		{86C6199E-BDDC-4551-8287-F5F9F4A633B6} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
 		{67456481-4647-4274-851D-2DB06C9E8143} = {DC733B74-11BC-465A-95A6-2425D0A99550}
-		{811ABEE8-704A-4317-B05D-A8B234A2EAE8} = {DC617E2E-BF48-479D-9C95-AE389B1BC150}
-		{A9CA9414-ECFB-4918-B0A0-D8F7794149C7} = {DC617E2E-BF48-479D-9C95-AE389B1BC150}
 		{70AAA9AC-EF43-44B7-9D84-ACB44EB9B6F7} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
 		{97B20529-51C0-4410-B664-173E70733A20} = {AB445DEA-8ADF-4EEA-908A-92ED306390CF}
 		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA} = {AB445DEA-8ADF-4EEA-908A-92ED306390CF}
-		{2ACFF9DA-F313-4A0E-B2F3-6C49E1F5EFAB} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5FBA757F-7196-4268-9D53-512991999DA1}

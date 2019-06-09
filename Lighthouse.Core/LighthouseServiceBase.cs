@@ -9,9 +9,7 @@ namespace Lighthouse.Core
 	public abstract class LighthouseServiceBase : ILighthouseService, IStorageScope
 	{
 		public string Id { get; private set; }
-		public LighthouseServiceRunState RunState { get; protected set; }
-		public ILighthouseServiceContainer Container { get; private set; }
-		public event StatusUpdatedEventHandler StatusUpdated;
+		public ILighthouseServiceContainer Container { get; private set; }		
 		private readonly List<Action<ILighthouseServiceContainer>> StartupActions = new List<Action<ILighthouseServiceContainer>>();
 		protected virtual bool IsInitialized { get; }
 		public string ScopeName => Identifier;
@@ -27,8 +25,7 @@ namespace Lighthouse.Core
 			if (Container == null)
 				throw new InvalidOperationException("Service not initialized. (No container set)");
 
-			OnStart();
-			RaiseStatusUpdated(LighthouseServiceRunState.Running);
+			OnStart();			
 			OnAfterStart();
 			PerformStartupTasks();
 		}
@@ -51,10 +48,7 @@ namespace Lighthouse.Core
 
 		public virtual void Stop()
 		{
-			RaiseStatusUpdated(LighthouseServiceRunState.PendingStop);
-			StatusUpdated?.Invoke(this, $"Service shutting down.");
-			OnStop();
-			RaiseStatusUpdated(LighthouseServiceRunState.Stopped);
+			OnStop();			
 		}
 
 		protected virtual void OnStop()
@@ -63,25 +57,13 @@ namespace Lighthouse.Core
 		#endregion
 
 
-		protected void RaiseStatusUpdated(LighthouseServiceRunState newState)
-		{
-			StatusUpdated?.Invoke(this, $"Status changing from {RunState} to {newState}");
-			RunState = newState;
-		}
-
-		protected void RaiseStatusUpdated(string message)
-		{
-			StatusUpdated?.Invoke(this, message);
-		}
-
 		public void Initialize(ILighthouseServiceContainer context)
 		{
 			if (IsInitialized)
 				return;
 
 			Container = context;
-			OnInit();
-			RaiseStatusUpdated(LighthouseServiceRunState.PendingStart);
+			OnInit();			
 		}
 
 		protected virtual void OnInit()

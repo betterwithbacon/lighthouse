@@ -36,6 +36,7 @@ namespace Lighthouse.Core.Events.Time
             if (Schedules.Any(s => s.Key.IsMatch(Schedules[s.Key], timeEvent.EventTime)))
             {
                 Container.Do((container) => EventAction?.Invoke(timeEvent.EventTime));
+                //Schedules.Where
             }
         }
 
@@ -49,7 +50,7 @@ namespace Lighthouse.Core.Events.Time
 		{
 			if (ScheduleHistoryRepository == null)
 			{
-				ScheduleHistoryRepository = Container.FindServices<IScheduleHistoryRepository>().FirstOrDefault();
+				//ScheduleHistoryRepository = Container.FindServices<IScheduleHistoryRepository>().FirstOrDefault();
 			}
 		}
 	}
