@@ -21,10 +21,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Storage", "Light
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Storage.Tests", "Lighthouse.Storage.Tests\Lighthouse.Storage.Tests.csproj", "{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Server.Host", "Lighthouse.Server.Host\Lighthouse.Server.Host.csproj", "{08831227-6D26-4A67-8372-32AE587CBBEA}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lighthouse.Server.Host.Tests", "Lighthouse.Server.Host.Tests\Lighthouse.Server.Host.Tests.csproj", "{4F07842F-6D1B-4DF0-8EC5-05A1A4DCAE7D}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,14 +51,6 @@ Global
 		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{08831227-6D26-4A67-8372-32AE587CBBEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{08831227-6D26-4A67-8372-32AE587CBBEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{08831227-6D26-4A67-8372-32AE587CBBEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{08831227-6D26-4A67-8372-32AE587CBBEA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4F07842F-6D1B-4DF0-8EC5-05A1A4DCAE7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4F07842F-6D1B-4DF0-8EC5-05A1A4DCAE7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4F07842F-6D1B-4DF0-8EC5-05A1A4DCAE7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4F07842F-6D1B-4DF0-8EC5-05A1A4DCAE7D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,8 +62,6 @@ Global
 		{70AAA9AC-EF43-44B7-9D84-ACB44EB9B6F7} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
 		{97B20529-51C0-4410-B664-173E70733A20} = {AB445DEA-8ADF-4EEA-908A-92ED306390CF}
 		{573E51BA-B260-4D63-A902-BE9F4A4E1EDA} = {AB445DEA-8ADF-4EEA-908A-92ED306390CF}
-		{08831227-6D26-4A67-8372-32AE587CBBEA} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
-		{4F07842F-6D1B-4DF0-8EC5-05A1A4DCAE7D} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5FBA757F-7196-4268-9D53-512991999DA1}

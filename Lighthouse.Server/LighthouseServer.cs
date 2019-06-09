@@ -37,7 +37,7 @@ namespace Lighthouse.Server
 		}
 
 		#region Fields - Server Defaults
-		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 10 * 10; // per minute		
+		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 10 * 10 * 10; // once per second
 		#endregion
 
 		#region Fields - Server Metadata
@@ -61,7 +61,7 @@ namespace Lighthouse.Server
 		}
 
 		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();		
-		private readonly ConcurrentBag<Schedule> Schedules = new ConcurrentBag<Schedule>();
+		public readonly ConcurrentDictionary<string, (Schedule, TimeEventConsumer)> Schedules = new ConcurrentDictionary<string, (Schedule, TimeEventConsumer)>();
 		public bool IsRunning { get; private set; }
 		#endregion
 
@@ -111,7 +111,7 @@ namespace Lighthouse.Server
 			Log(LogLevel.Debug, LogType.Info, this, "Lighthouse server initializing...");
 
 			// configure the default clock
-			//GlobalClock = new TimeEventProducer(DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS);
+			GlobalClock = new TimeEventProducer(DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS);
 
 			// perform some operations before the server loads it's configuration, the most likely operations are actually adding support for loading the configuration.			
 			preLoadOperations?.Invoke(this);
@@ -177,7 +177,7 @@ namespace Lighthouse.Server
 			if(EventQueue != null)
 				RegisterEventProducer(new QueueEventProducer(EventQueue, 1000));
 
-			//AddBaseProducers();
+			AddBaseProducers();
 
 			AddBaseConsumers();
 
@@ -606,25 +606,19 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Scheduling
-		public IEnumerable<Schedule> GetSchedules()
+	    public void AddScheduledAction(Schedule schedule, Action<DateTime> actionToPerform)
 		{
-			return Schedules.ToArray();
-		}
-
-		public void AddScheduledAction(Schedule schedule, Action<DateTime> actionToPerform)
-		{
-			Schedules.Add(schedule);
 			var consumer = new TimeEventConsumer();
 			consumer.AddSchedule(schedule);
 			consumer.EventAction = (time) => actionToPerform(time);
-			RegisterEventConsumer<TimeEvent>(consumer);
+            Schedules.TryAdd(schedule.Name, (schedule, consumer));
+            RegisterEventConsumer<TimeEvent>(consumer);
 		}
 
-		public void CreateSchedule<TAction>()
-			where TAction : IScheduledAction
-		{
-			// a schedule embedded in a type? is that practical/valuable? (daily backup?)
-		}
+        public void RemoveScheduledAction(string scheduleName)
+        {
+            Schedules.Remove(scheduleName, out var _);
+        }
 		#endregion
 
 		#region Events
@@ -806,6 +800,6 @@ namespace Lighthouse.Server
 				ServerName, 
 				GetNow()
 			);
-		}
-	}
+		}        
+    }
 }

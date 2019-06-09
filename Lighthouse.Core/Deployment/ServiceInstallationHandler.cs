@@ -1,7 +1,6 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.Management;
-using Lighthouse.Core.UI;
 using System;
 using System.Collections.Generic;
 using System.Linq;

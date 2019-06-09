@@ -55,14 +55,14 @@ namespace Lighthouse.Core.Scheduling
 					break;
 			}
 
-			return nextRunTime.RemoveSeconds();
+            return nextRunTime;
 		}
 
 		public bool IsMatch(DateTime? lastRun, DateTime now)
 		{	
 			// if the next time it should run is now or in the past, run right now
 			// TODO: do some work to create a window (remove seconds? anything else?)
-			return GetNextRunTime(lastRun, now) <= now.RemoveSeconds();
+			return GetNextRunTime(lastRun, now) <= now;
 		}
 	}
 

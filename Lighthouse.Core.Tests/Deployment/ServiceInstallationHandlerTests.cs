@@ -6,7 +6,6 @@ using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.Management;
 using Lighthouse.Core.Tests;
-using Lighthouse.Core.UI;
 using Lighthouse.Server;
 using NSubstitute;
 using System;

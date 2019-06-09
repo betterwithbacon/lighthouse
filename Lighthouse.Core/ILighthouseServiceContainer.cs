@@ -24,14 +24,15 @@ namespace Lighthouse.Core
 		/// <param name="sender"></param>
 		/// <param name="message"></param>
 		void Log(LogLevel level, LogType logType,  ILighthouseLogSource sender, string message = null, Exception exception = null, bool emitEvent = true);
+        void RemoveScheduledAction(string scheduleName);
 
-		/// <summary>
-		/// Returns remote services from other attached contexts. Will NOT return services from this context. 
-		/// Any command issued on the local object. will be forwarded to the other service, executed, and results returned.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <returns></returns>
-		Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>() where T : class, ILighthouseService;
+        /// <summary>
+        /// Returns remote services from other attached contexts. Will NOT return services from this context. 
+        /// Any command issued on the local object. will be forwarded to the other service, executed, and results returned.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>() where T : class, ILighthouseService;
 
 		/// <summary>
 		/// The current container time
