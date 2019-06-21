@@ -29,7 +29,7 @@ namespace Lighthouse.Server.Tests
 
 			// create a schedule that will only fire the Action when the time matches the event time
 			Container.AddScheduledAction(
-				new Schedule(ScheduleFrequency.Secondly,1),
+				new Schedule(ScheduleFrequency.Secondly,5),
 				(hitTime) => { Output.WriteLine($"EVENT HIT: {hitTime}"); reached = true; }
 			);
 

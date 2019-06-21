@@ -1,18 +1,22 @@
 ﻿using Lighthouse.Core.Logging;
 using Lighthouse.Core.Scheduling;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Lighthouse.Core.Events.Time
 {
 	public class TimeEventConsumer : BaseEventConsumer
 	{
-		public Dictionary<Schedule, DateTime?> Schedules { get; private set; }
+		public Schedule Schedule { get; private set; }
+        private DateTime? lastRunTime; // { get; private set; }
+        private static readonly object locker = new object();
 
-		public Action<DateTime> EventAction { get; set;}
+        public Action<DateTime> EventAction { get; set;}
 
 		public override IList<Type> Consumes { get; } = new[] { typeof(TimeEvent) };
 
@@ -20,7 +24,6 @@ namespace Lighthouse.Core.Events.Time
 
 		public TimeEventConsumer(IScheduleHistoryRepository scheduleHistoryRepository = null)
 		{
-			Schedules = new Dictionary<Schedule, DateTime?>();
 			ScheduleHistoryRepository = scheduleHistoryRepository;
 		}
 
@@ -30,21 +33,32 @@ namespace Lighthouse.Core.Events.Time
 		/// <param name="timeEvent"></param>
 		public void HandleEvent(TimeEvent timeEvent)
 		{
-			Container.Log(LogLevel.Debug, LogType.EventReceived, this, timeEvent.ToString());
-
-            // evaluate all of the schedules to see if one is a hit, if so, then run the action configured for this consumer
-            if (Schedules.Any(s => s.Key.IsMatch(Schedules[s.Key], timeEvent.EventTime)))
+            if (Schedule != null && EventAction != null)
             {
-                Container.Do((container) => EventAction?.Invoke(timeEvent.EventTime));
-                //Schedules.Where
+                var nextRunTime = Schedule.GetNextRunTime(lastRunTime, Container.GetNow());
+                var now = Container.GetNow();
+                Container.Log(LogLevel.Debug, LogType.EventReceived, this, $"now: {now}, event time: {timeEvent.ToString()}: nextRunTime: {nextRunTime}");
+
+                if (nextRunTime <= now)
+                {
+                    Container.Do((container) => EventAction?.Invoke(timeEvent.EventTime));
+
+                    lock (locker)
+                    {
+                        lastRunTime = now;
+                    }
+                }
             }
         }
 
-		public void AddSchedule(Schedule schedule)
+		public void SetSchedule(Schedule schedule)
 		{
-			// no schedules have run yet, so null them out			
-			Schedules.Add(schedule, ScheduleHistoryRepository?.GetLastRunDate(schedule));
-		}
+            // no schedules have run yet, so null them out			
+            Schedule = schedule;
+
+            // also load new schedule history?
+            //var lastRunTime = ScheduleHistoryRepository.GetLastRunDate(Schedule);
+        }
 
 		protected override void OnInit()
 		{

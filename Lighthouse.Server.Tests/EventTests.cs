@@ -62,7 +62,7 @@ namespace Lighthouse.Server.Tests
 			);
 
 			// create a schedule that will only fire the Action when the time matches the event time
-			timeEventConsumer.AddSchedule(new Schedule(time));
+			timeEventConsumer.SetSchedule(new Schedule(time));
 
 			// create a consumer that will see the evenets and write to the log
 			var logWriteConsumer = new LogEventConsumer();
@@ -103,7 +103,7 @@ namespace Lighthouse.Server.Tests
                };
 
 			// create a schedule that will only fire the Action when the time matches the event time
-			timeEventConsumer.AddSchedule(new Schedule(time));
+			timeEventConsumer.SetSchedule(new Schedule(time));
 
 			// create a consumer that will see the evenets and write to the log
 			var logWriteConsumer = new LogEventConsumer();

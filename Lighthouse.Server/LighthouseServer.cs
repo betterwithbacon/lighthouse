@@ -463,17 +463,6 @@ namespace Lighthouse.Server
 				service.Initialize(this);
 		}
 
-		///// <summary>
-		///// Registers this new type with the local service repository. This type will now be available for other apps and 
-		///// </summary>
-		///// <param name="type"></param>
-		//public void RegisterComponentType<T>()
-		//{
-		//	Log(LogLevel.Debug, LogType.Info, this, $"Registered component: {typeof(T)}.");
-		//	var localRepo = 
-			
-		//}
-
 		public void RegisterResourceProvider(IResourceProvider resourceProvider)
 		{
 			Log(LogLevel.Debug, LogType.Info, this, $"Added resource: {resourceProvider}.");
@@ -609,7 +598,7 @@ namespace Lighthouse.Server
 	    public void AddScheduledAction(Schedule schedule, Action<DateTime> actionToPerform)
 		{
 			var consumer = new TimeEventConsumer();
-			consumer.AddSchedule(schedule);
+			consumer.SetSchedule(schedule);
 			consumer.EventAction = (time) => actionToPerform(time);
             Schedules.TryAdd(schedule.Name, (schedule, consumer));
             RegisterEventConsumer<TimeEvent>(consumer);
