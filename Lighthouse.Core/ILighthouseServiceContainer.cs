@@ -113,9 +113,9 @@ namespace Lighthouse.Core
 		void Start();
 		Task Stop();
 
-		void AddServiceRepository(IServiceRepository serviceRepository);
+		//void AddServiceRepository(IServiceRepository serviceRepository);
 
-		void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest, bool persist = false, bool autoStart = false);
+		//void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest, bool persist = false, bool autoStart = false);
 
 		LighthouseServerStatus GetStatus();
 	}

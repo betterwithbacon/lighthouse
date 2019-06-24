@@ -52,7 +52,7 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 		}
 	}
 
-	public class FileBasedConfigProvider<T> : IConfigurationProvider
+	public class FileBasedConfigProvider<T>
 		where T : LighthouseYamlBaseConfig
 	{
 		private readonly string ConfigFilePath;
@@ -61,11 +61,6 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 		public LighthouseConfigType ConfigType { get; private set; }
 		private IFileContentProvider FileContentProvider { get; }
 		protected T Config { get; set; }
-		
-		//Dictionary<LighthouseConfigType, Type> ConfigTypeTypeMappings = new Dictionary<LighthouseConfigType, Type>
-		//{
-		//	{ LighthouseConfigType.App, typeof(LighthouseYamlAppConfig)}
-		//};
 
 		public FileBasedConfigProvider(ILighthouseServiceContainer lighthouseContainer, IFileContentProvider fileContentProvider)
 		{

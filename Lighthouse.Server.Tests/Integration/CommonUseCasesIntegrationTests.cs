@@ -1,12 +1,5 @@
 ﻿using Lighthouse.Core;
-using Lighthouse.Core.Configuration.Formats.Memory;
-using Lighthouse.Core.Configuration.Formats.YAML;
-using Lighthouse.Core.Configuration.Providers.Local;
-using Lighthouse.Core.Configuration.ServiceDiscovery.Local;
 using Lighthouse.Core.Hosting;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading;
 using Xunit;
 using Xunit.Abstractions;
@@ -46,8 +39,8 @@ services:
 			//		.Build();
 
 			var clientNode = new LighthouseServer(
-				serverName: "Client Lighthouse",
-				preLoadOperations: (server) => { server.LoadConfigurationAppYaml(clientConfig); }
+				serverName: "Client Lighthouse"//,				
+                //preLoadOperations: (server) => { server.LoadConfigurationAppYaml(clientConfig); }
 			);
 			clientNode.AddLocalLogger((message) => Output.WriteLine($"Client: {message}"));
 			//clientNode.LoadConfigurationAppYaml(clientConfig);
@@ -70,8 +63,8 @@ services:
 
 			// create server environment
 			var serverNode = new LighthouseServer(
-				serverName: "Server Lighthouse",
-				preLoadOperations: (server) => { server.LoadConfigurationAppYaml(serverConfig); }
+				serverName: "Server Lighthouse" //,
+				//preLoadOperations: (server) => { server.LoadConfigurationAppYaml(serverConfig); }
 			);
 			serverNode.AddLocalLogger((message) => Output.WriteLine($"Server: {message}"));
 

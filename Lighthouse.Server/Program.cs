@@ -15,7 +15,7 @@ namespace Lighthouse.Server
                 localLogger: Console.WriteLine);
 
             server.Start();
-            server.Launch(new ServiceLaunchRequest(typeof(PingService)));
+            server.Launch(typeof(PingService));
             _ = Console.ReadLine();
             await server.Stop();
         }

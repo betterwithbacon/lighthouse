@@ -1,7 +1,4 @@
 ﻿using Lighthouse.Core;
-using Lighthouse.Core.Configuration.Providers;
-using Lighthouse.Core.Configuration.ServiceDiscovery;
-using Lighthouse.Core.Configuration.ServiceDiscovery.Local;
 using Lighthouse.Core.Events;
 using Lighthouse.Core.Events.Queueing;
 using Lighthouse.Core.Hosting;
@@ -63,10 +60,10 @@ namespace Lighthouse.Server
         #endregion
 
         #region Fields - Configuration
-        private IAppConfigurationProvider AppConfiguration { get; set; }
-		// Local cache of ALL repositories. this will likely include more than the initial config
-		private IList<IServiceRepository> ServiceRepositories { get; set; } = new List<IServiceRepository>();
-		public IList<ServiceLaunchRequest> ServiceLaunchRequests { get; private set; } = new List<ServiceLaunchRequest>();		
+  //      private IAppConfigurationProvider AppConfiguration { get; set; }
+		//// Local cache of ALL repositories. this will likely include more than the initial config
+		//private IList<IServiceRepository> ServiceRepositories { get; set; } = new List<IServiceRepository>();
+		//public IList<ServiceLaunchRequest> ServiceLaunchRequests { get; private set; } = new List<ServiceLaunchRequest>();		
 		public int ServicePort { get; private set; }
 		#endregion
 
@@ -110,7 +107,7 @@ namespace Lighthouse.Server
 			preLoadOperations?.Invoke(this);
 
 			// laod up app specific details
-			LoadAppConfiguration();
+			//LoadAppConfiguration();
 
             InitScheduler().GetAwaiter().GetResult();
         }
@@ -176,7 +173,7 @@ namespace Lighthouse.Server
 
 			AddBaseConsumers();
 
-			LaunchConfiguredServices();
+			//LaunchConfiguredServices();
         }
 
 		private void AddBaseConsumers()
@@ -186,91 +183,61 @@ namespace Lighthouse.Server
 			);
 		}
 
-		private void LaunchConfiguredServices()
-		{
-			// TODO: right now, it's one, but it COULD be more, what's that like?!
+		//private void LaunchConfiguredServices()
+		//{
+		//	// TODO: right now, it's one, but it COULD be more, what's that like?!
 
-			//// reigster all of the service requests, from the config providers.
-			foreach (var request in ServiceLaunchRequests)
-			{
-				Log(LogLevel.Debug, LogType.Info, this, $"Preparing to start {request}");
+		//	//// reigster all of the service requests, from the config providers.
+		//	foreach (var request in ServiceLaunchRequests)
+		//	{
+		//		Log(LogLevel.Debug, LogType.Info, this, $"Preparing to start {request}");
 				
-				// launch the service
-				Launch(request);
-			}
-		}
+		//		// launch the service
+		//		Launch(request);
+		//	}
+		//}
 
-		private void LoadAppConfiguration()
-		{
-			var allConfigs = GetResourceProviders<IAppConfigurationProvider>();
+		//private void LoadAppConfiguration()
+		//{
+		//	var allConfigs = GetResourceProviders<IAppConfigurationProvider>();
 
-            ServicePort = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT;
+  //          ServicePort = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT;
 
-            if (!allConfigs.Any())
-			{
-				// if no config, just leave, and use the "base" config
-				// throw new InvalidOperationException("No  app config provider found.");
-				return;
-			}
+  //          if (!allConfigs.Any())
+		//	{
+		//		// if no config, just leave, and use the "base" config
+		//		// throw new InvalidOperationException("No  app config provider found.");
+		//		return;
+		//	}
 
-			if (allConfigs.Count() > 1)
-				throw new InvalidOperationException("Too many app configuration providers found. There should only be one.");
+		//	if (allConfigs.Count() > 1)
+		//		throw new InvalidOperationException("Too many app configuration providers found. There should only be one.");
 
-			RequestHandlerMappings.Add(ManagementRequestType.Ping, typeof(PingManagementRequestHandler));
-			RequestHandlerMappings.Add(ManagementRequestType.Services, typeof(ServicesManagementRequestHandler));
-			RequestHandlerMappings.Add(ManagementRequestType.ServerManagement, typeof(ServerManagementRequestHandler));
+		//	RequestHandlerMappings.Add(ManagementRequestType.Ping, typeof(PingManagementRequestHandler));
+		//	RequestHandlerMappings.Add(ManagementRequestType.Services, typeof(ServicesManagementRequestHandler));
+		//	RequestHandlerMappings.Add(ManagementRequestType.ServerManagement, typeof(ServerManagementRequestHandler));
 
-			AppConfiguration = allConfigs.Single();
+		//	AppConfiguration = allConfigs.Single();
 
-			Log(LogLevel.Debug, LogType.Info, this, $"Loading config file data {AppConfiguration}");
-			AppConfiguration.Load();
+		//	Log(LogLevel.Debug, LogType.Info, this, $"Loading config file data {AppConfiguration}");
+		//	AppConfiguration.Load();
 
-			foreach (var slr in AppConfiguration.GetServiceRepositories())			
-				AddServiceRepository(slr);
+		//	foreach (var slr in AppConfiguration.GetServiceRepositories())			
+		//		AddServiceRepository(slr);
 
-			// manually add "local repo" 
-			// this will be everything native to the service, such as install, uninstall, etc.
-			AddServiceRepository(new LocalServiceRepository(this));
+		//	// manually add "local repo" 
+		//	// this will be everything native to the service, such as install, uninstall, etc.
+		//	AddServiceRepository(new LocalServiceRepository(this));
 
-			foreach (var slr in AppConfiguration.GetServiceLaunchRequests().Where(s => s != null))
-				AddServiceLaunchRequest(slr);
-		}
+		//	foreach (var slr in AppConfiguration.GetServiceLaunchRequests().Where(s => s != null))
+		//		AddServiceLaunchRequest(slr);
+		//}
 
 		public void BindServicePort(int servicePort)
 		{
 			ServicePort = servicePort;
 			
 			// TODO: Need to restart the listening I assume?
-
-		}
-
-		public void AddServiceRepository(IServiceRepository serviceRepository)
-		{
-			Log(LogLevel.Debug, LogType.Info, this, $"Loading service launch request: {serviceRepository}");
-			ServiceRepositories.Add(serviceRepository);
-		}
-
-		public void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest, bool persist = false, bool autoStart = false)
-		{
-			Log(LogLevel.Debug, LogType.Info, this, $"Loading service launch request: {launchRequest}");
-			ServiceLaunchRequests.Add(launchRequest);
-
-			// TODO: "install" should nominally mean that this server is now capable of running this service completely disconnectede
-			// however, in the future, it would be possible for a server to remotely retrieve a package from the remote store into the local container
-
-			if(persist)
-			{
-				// save the current state of the configuration
-				AppConfiguration.AddServiceLaunchRequest(launchRequest);
-				// TODO: obviously, the problem here is ANY other changes to the app config will ALSO be persisted
-				AppConfiguration.Save();
-			}
-
-			// start the service when "installed"
-			if(autoStart)
-			{
-				Launch(launchRequest);
-			}
 		}
 
 		public async Task Stop()
@@ -333,14 +300,6 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Service Launching
-		public void Launch(IEnumerable<ServiceLaunchRequest> launchRequests)
-		{
-			foreach(var request in launchRequests)
-			{
-				Launch(request);
-			}
-		}
-
 		public void Launch(Type serviceType)
 		{
 			AssertIsRunning();
@@ -351,50 +310,6 @@ namespace Lighthouse.Server
 				throw new ApplicationException($"App launch config doesn't represent Lighthouse app. {serviceType.AssemblyQualifiedName}");
 
 			Launch(service);
-		}
-
-		public void Launch(ServiceLaunchRequest launchRequest)
-		{
-			AssertIsRunning();
-
-			Log(LogLevel.Debug,LogType.Info,this, $"Attempting to start service: {launchRequest.ServiceName}.");
-
-			var validationIssues = Validate(launchRequest);
-			if (validationIssues.Any())
-				throw new ApplicationException($"Can't launch service {launchRequest}. Reasons: {string.Join(',',validationIssues)}");
-			
-			// launch based on launch type
-			switch(launchRequest.LaunchType)
-			{
-				case ServiceLaunchRequestType.ByType:
-					Launch(launchRequest.ServiceType);
-					break;
-				case ServiceLaunchRequestType.ByServiceName:
-					Launch(ResolveService(launchRequest.ServiceName));
-					break;
-				case ServiceLaunchRequestType.ByTypeThenName:
-					if (launchRequest.ServiceType != null)
-						Launch(launchRequest.ServiceType);
-					else if (string.IsNullOrEmpty(launchRequest.ServiceName))
-						Launch(ResolveService(launchRequest.ServiceName));
-					else
-						throw new ApplicationException("Can't launch service, with no type nor name.");
-					break;
-				default:
-					throw new ApplicationException($"Unrecognized Launch Type {launchRequest.LaunchType}");					
-			}
-		}
-
-		private ILighthouseService ResolveService(string serviceName)
-		{
-			// iterate over all of the repos and find the name by service
-			// TODO: how do we handle ambiguity
-			throw new NotImplementedException();
-		}
-
-		public IEnumerable<ServiceLaunchRequestValidationResult> Validate(ServiceLaunchRequest serviceLaunchRequest)
-		{
-			return Enumerable.Empty<ServiceLaunchRequestValidationResult>();
 		}
 
 		public void Launch(ILighthouseService service)
@@ -447,11 +362,6 @@ namespace Lighthouse.Server
             Log(LogLevel.Debug, LogType.Info, this, $"App completed successfully. TaskId {task.Id}");  //{RunningServices.FirstOrDefault(lsr => lsr.TaskId == task.Id)?.Service}", emitEvent:false);
 		}
 
-		private void Service_StatusUpdated(ILighthouseLogSource owner, string status)
-		{
-			Log(LogLevel.Debug, LogType.Info, owner, status, emitEvent: false);
-		}
-
 		public void Log(LogLevel level, LogType logType, ILighthouseLogSource sender, string message = null, Exception exception = null, bool emitEvent = true)
 		{
 			string log = $"[{DateTime.Now.ToLighthouseLogString()}] [{sender}] [{logType}]: {message}";
@@ -467,28 +377,7 @@ namespace Lighthouse.Server
 		}
 		#endregion
 
-		#region Service Discovery		
-		public IEnumerable<T> FindServices<T>() where T : ILighthouseService
-		{
-            return null;
-			//return RunningServices.Select(st => st.Service).OfType<T>();
-		}
-
-		public IEnumerable<ILighthouseServiceDescriptor> FindServiceDescriptor(string serviceName)
-		{
-			if(ServiceRepositories == null)
-			{
-				throw new ApplicationException("Service repositorioes haven't been initialized. Ensure server is started.");
-			}
-
-			foreach(var repo in ServiceRepositories)
-			{
-				// TODO: do some sort of name spacing
-				foreach (var foundDescriptor in repo.GetServiceDescriptors().Where((descriptor) => descriptor.Name.Equals(serviceName, StringComparison.Ordinal)))
-					yield return foundDescriptor;
-			}
-		}
-
+		#region Service Discovery
 		public async Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>()
 			where T : class, ILighthouseService
 		{
@@ -785,8 +674,8 @@ namespace Lighthouse.Server
         public LighthouseServerStatus GetStatus()
 		{
 			return new LighthouseServerStatus(
-				new Version(AppConfiguration?.Version ?? "0.0.0.0"),
-				ServerName, 
+				new Version("0.0.0.0"), // AppConfiguration?.Version ?? 
+                ServerName, 
 				GetNow()
 			);
 		}

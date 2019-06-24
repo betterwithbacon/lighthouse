@@ -4,11 +4,11 @@ namespace Lighthouse.Core.Management
 {
 	public class ServiceInstallationRequest : IManagementRequest
 	{
-		ILighthouseServiceDescriptor ServiceDescriptor { get; }
+		//ILighthouseServiceDescriptor ServiceDescriptor { get; }
 
-		public ServiceInstallationRequest(ILighthouseServiceDescriptor serviceDescriptor)
-		{
-			ServiceDescriptor = serviceDescriptor;
-		}
+		//public ServiceInstallationRequest(ILighthouseServiceDescriptor serviceDescriptor)
+		//{
+		//	ServiceDescriptor = serviceDescriptor;
+		//}
 	}
 }

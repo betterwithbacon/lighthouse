@@ -63,7 +63,7 @@ namespace Lighthouse.Server.Tests
 
 		protected void GivenAContainer(
 			IWorkQueue<IEvent> workQueue = null,			
-			IAppConfigurationProvider launchConfiguration = null, 
+			//IAppConfigurationProvider launchConfiguration = null, 
 			string workingDirectory = null,
 			IWorkQueue<IEvent> eventQueue = null)
 		{
@@ -94,17 +94,6 @@ namespace Lighthouse.Server.Tests
 
 		#region Service Discovery
 		[Fact]
-		[Trait("Tag", "Logging")]
-		[Trait("Category", "Unit")]
-		public void FindServices_ShouldFindService()
-		{	
-			Container.Start();
-			Container.Launch(new TestApp());
-			var foundTestApp = Container.FindServices<TestApp>();
-			foundTestApp.Should().NotBeEmpty();
-		}
-
-		[Fact]
 		[Trait("Tag", "ServiceDiscovery")]
 		[Trait("Category", "Unit")]
 		public async Task FindRemoteServices_ShouldFindService()
@@ -126,130 +115,130 @@ namespace Lighthouse.Server.Tests
 			foundTestApp.Should().NotBeEmpty();
 		}
 
-		[Fact]
-		[Trait("Tag", "ServiceDiscovery")]
-		[Trait("Category", "Unit")]
-		public async Task FindRemoteService_LocalConnection_ShouldProxyCommandsCorrectly()
-		{
-			var otherContainer = new LighthouseServer(serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"));
-			// inform the first Container about the other
-			Container.RegisterRemotePeer(new LocalLighthouseServiceContainerConnection(Container, otherContainer));
+		//[Fact]
+		//[Trait("Tag", "ServiceDiscovery")]
+		//[Trait("Category", "Unit")]
+		//public async Task FindRemoteService_LocalConnection_ShouldProxyCommandsCorrectly()
+		//{
+		//	var otherContainer = new LighthouseServer(serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"));
+		//	// inform the first Container about the other
+		//	Container.RegisterRemotePeer(new LocalLighthouseServiceContainerConnection(Container, otherContainer));
 
-			// start both Containers
-			Container.Start();
-			otherContainer.Start();
+		//	// start both Containers
+		//	Container.Start();
+		//	otherContainer.Start();
 
-			// launch the app in the "other" container
-			otherContainer.Launch(typeof(TestApp));
-			bool hit = false;
+		//	// launch the app in the "other" container
+		//	otherContainer.Launch(typeof(TestApp));
+		//	bool hit = false;
 
-			var originalApp = otherContainer.FindServices<TestApp>().First();
+		//	var originalApp = otherContainer.FindServices<TestApp>().First();
 
-			// configure what this program will "do"
-			originalApp.SetAction(() => { hit = true; originalApp.Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info,originalApp, "This action was hit"); } );
+		//	// configure what this program will "do"
+		//	originalApp.SetAction(() => { hit = true; originalApp.Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info,originalApp, "This action was hit"); } );
 
-			// the local Container should be able to find the service running in the other one
-			var foundTestApp = await Container.FindRemoteServices<TestApp>();
-			foundTestApp.Should().NotBeEmpty();
-			var proxy = foundTestApp.Single();
+		//	// the local Container should be able to find the service running in the other one
+		//	var foundTestApp = await Container.FindRemoteServices<TestApp>();
+		//	foundTestApp.Should().NotBeEmpty();
+		//	var proxy = foundTestApp.Single();
 
-			// so in this case, the proxy should wrap the call, and perform it on the remote target
-			proxy.Service.PerformAction();
+		//	// so in this case, the proxy should wrap the call, and perform it on the remote target
+		//	proxy.Service.PerformAction();
 
-			// this means that the proxy 
-			hit.Should().BeTrue();
-		}
+		//	// this means that the proxy 
+		//	hit.Should().BeTrue();
+		//}
 
-		[Fact]
-		[Trait("Tag", "ServiceDiscovery")]
-		[Trait("Category", "Unit")]
-		public async Task FindRemoteService_NetworkConnection_ShouldProxyCommandsCorrectly()
-		{
-			var serverPort = 54546;
-			Container.AddAvailableNetworkProviders();
+		//[Fact]
+		//[Trait("Tag", "ServiceDiscovery")]
+		//[Trait("Category", "Unit")]
+		//public async Task FindRemoteService_NetworkConnection_ShouldProxyCommandsCorrectly()
+		//{
+		//	var serverPort = 54546;
+		//	Container.AddAvailableNetworkProviders();
 
-			var otherContainer = new LighthouseServer(
-				serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"),
-				enableManagementService: true
-			);
-			otherContainer.AddAvailableNetworkProviders();
-			otherContainer.AddHttpManagementInterface();
+		//	var otherContainer = new LighthouseServer(
+		//		serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"),
+		//		enableManagementService: true
+		//	);
+		//	otherContainer.AddAvailableNetworkProviders();
+		//	otherContainer.AddHttpManagementInterface();
 
-			// this server will listen on this port for other lighthouse containers
-			otherContainer.BindServicePort(serverPort);
+		//	// this server will listen on this port for other lighthouse containers
+		//	otherContainer.BindServicePort(serverPort);
 
-			var otherContainerAddress = $"127.0.0.1";
+		//	var otherContainerAddress = $"127.0.0.1";
 
-			// inform the first Container about the other
-			Container.RegisterRemotePeer(
-				new NetworkLighthouseServiceContainerConnection(Container, IPAddress.Parse(otherContainerAddress)));
+		//	// inform the first Container about the other
+		//	Container.RegisterRemotePeer(
+		//		new NetworkLighthouseServiceContainerConnection(Container, IPAddress.Parse(otherContainerAddress)));
 
-			// start both Containers
-			Container.Start();
-			otherContainer.Start();
+		//	// start both Containers
+		//	Container.Start();
+		//	otherContainer.Start();
 
-			// launch the app in the "other" container
-			otherContainer.Launch(typeof(TestApp));
-			bool hit = false;
+		//	// launch the app in the "other" container
+		//	otherContainer.Launch(typeof(TestApp));
+		//	bool hit = false;
 
-			var originalApp = otherContainer.FindServices<TestApp>().First();
+		//	var originalApp = otherContainer.FindServices<TestApp>().First();
 
-			// configure what this program will "do"
-			originalApp.SetAction(() => { hit = true; originalApp.Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, originalApp, "This action was hit"); });
+		//	// configure what this program will "do"
+		//	originalApp.SetAction(() => { hit = true; originalApp.Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, originalApp, "This action was hit"); });
 
-			// the local Container should be able to find the service running in the other one
-			var foundTestApp = await Container.FindRemoteServices<TestApp>();
-			foundTestApp.Should().NotBeEmpty();
-			var proxy = foundTestApp.Single();
+		//	// the local Container should be able to find the service running in the other one
+		//	var foundTestApp = await Container.FindRemoteServices<TestApp>();
+		//	foundTestApp.Should().NotBeEmpty();
+		//	var proxy = foundTestApp.Single();
 
-			// so in this case, the proxy should wrap the call, and perform it on the remote target
-			proxy.Service.PerformAction();
+		//	// so in this case, the proxy should wrap the call, and perform it on the remote target
+		//	proxy.Service.PerformAction();
 
-			// this means that the proxy 
-			hit.Should().BeTrue();
-		}
+		//	// this means that the proxy 
+		//	hit.Should().BeTrue();
+		//}
 
-		[Fact]
-		[Trait("Tag", "ServiceDiscovery")]
-		[Trait("Category", "Unit")]
-		public async Task FindRemoteService_NetworkConnection_ShouldFindOtherService()
-		{
-			var serverPort = 54546;
-			Container.AddAvailableNetworkProviders();
+		//[Fact]
+		//[Trait("Tag", "ServiceDiscovery")]
+		//[Trait("Category", "Unit")]
+		//public async Task FindRemoteService_NetworkConnection_ShouldFindOtherService()
+		//{
+		//	var serverPort = 54546;
+		//	Container.AddAvailableNetworkProviders();
 
-			var otherContainer = new LighthouseServer(
-				serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"),
-				enableManagementService: true
-			);
-			otherContainer.AddAvailableNetworkProviders();
-			otherContainer.AddHttpManagementInterface();
+		//	var otherContainer = new LighthouseServer(
+		//		serverName: "Lighthouse Server #2", localLogger: (message) => Output.WriteLine($"Lighthouse Server #2: {message}"),
+		//		enableManagementService: true
+		//	);
+		//	otherContainer.AddAvailableNetworkProviders();
+		//	otherContainer.AddHttpManagementInterface();
 
-			// this server will listen on this port for other lighthouse containers
-			otherContainer.BindServicePort(serverPort);
+		//	// this server will listen on this port for other lighthouse containers
+		//	otherContainer.BindServicePort(serverPort);
 
-			var otherContainerAddress = $"127.0.0.1";
+		//	var otherContainerAddress = $"127.0.0.1";
 
-			// inform the first Container about the other
-			Container.RegisterRemotePeer(
-				new NetworkLighthouseServiceContainerConnection(Container, IPAddress.Parse(otherContainerAddress)));
+		//	// inform the first Container about the other
+		//	Container.RegisterRemotePeer(
+		//		new NetworkLighthouseServiceContainerConnection(Container, IPAddress.Parse(otherContainerAddress)));
 
-			// start both Containers
-			Container.Start();
-			otherContainer.Start();
+		//	// start both Containers
+		//	Container.Start();
+		//	otherContainer.Start();
 
-			// launch the app in the "other" container
-			otherContainer.Launch(typeof(TestApp));
-			bool hit = false;
+		//	// launch the app in the "other" container
+		//	otherContainer.Launch(typeof(TestApp));
+		//	bool hit = false;
 
-			var originalApp = otherContainer.FindServices<TestApp>().First();
+		//	var originalApp = otherContainer.FindServices<TestApp>().First();
 
-			// configure what this program will "do"
-			originalApp.SetAction(() => { hit = true; originalApp.Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, originalApp, "This action was hit"); });
+		//	// configure what this program will "do"
+		//	originalApp.SetAction(() => { hit = true; originalApp.Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, originalApp, "This action was hit"); });
 
-			// the local Container should be able to find the service running in the other one
-			var foundTestApp = await Container.FindRemoteServices<TestApp>();
-			foundTestApp.Should().NotBeEmpty();			
-		}
+		//	// the local Container should be able to find the service running in the other one
+		//	var foundTestApp = await Container.FindRemoteServices<TestApp>();
+		//	foundTestApp.Should().NotBeEmpty();			
+		//}
 
 		#endregion
 
@@ -379,22 +368,5 @@ namespace Lighthouse.Server.Tests
 		public ILighthouseServiceContainer LighthouseContainer { get; }
 
 		public DateTime EventTime { get; private set; }
-	}
-
-	public static class LighthouseServerConfigurationExtensions
-	{
-		public static LighthouseServer AssertLaunchConfigurationExists(this LighthouseServer Container)
-		{
-			//Assert.NotNull(Container.LaunchConfiguration);
-			return Container;
-		}
-
-		public static LighthouseServer AssertLaunchRequestsExists(this LighthouseServer Container, Func<ServiceLaunchRequest, bool> filter = null )
-		{
-			Container.AssertLaunchConfigurationExists();
-			Container.ServiceLaunchRequests.Where(slr => filter?.Invoke(slr) ?? true).Should().NotBeEmpty();
-			
-			return Container;
-		}
 	}
 }

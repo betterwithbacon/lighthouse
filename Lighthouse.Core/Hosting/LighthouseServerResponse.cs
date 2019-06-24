@@ -1,9 +1,5 @@
-﻿using Lighthouse.Core.Configuration.Formats.Memory;
-using Lighthouse.Core.Configuration.ServiceDiscovery;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Text;
 
 namespace Lighthouse.Core.Hosting
 {
@@ -34,14 +30,14 @@ namespace Lighthouse.Core.Hosting
 		}
 	}
 
-	public class ListServicesRequest
-	{
-		public ServiceDescriptor ServiceDescriptorToFind { get; set; }
-	}
+    //public class ListServicesRequest
+    //{
+    //    public ServiceDescriptor ServiceDescriptorToFind { get; set; }
+    //}
 
-	//public enum LighthouseServicesResponseStatus
-	//{
-	//	Succeeded,
-	//	Failed
-	//}
+    //public enum LighthouseServicesResponseStatus
+    //{
+    //	Succeeded,
+    //	Failed
+    //}
 }
