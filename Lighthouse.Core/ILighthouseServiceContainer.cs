@@ -4,7 +4,6 @@ using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using Lighthouse.Core.Management;
-using Lighthouse.Core.Scheduling;
 using Lighthouse.Core.Storage;
 using System;
 using System.Collections.Generic;
@@ -24,8 +23,7 @@ namespace Lighthouse.Core
 		/// <param name="sender"></param>
 		/// <param name="message"></param>
 		void Log(LogLevel level, LogType logType,  ILighthouseLogSource sender, string message = null, Exception exception = null, bool emitEvent = true);
-        void RemoveScheduledAction(string scheduleName);
-
+        
         /// <summary>
         /// Returns remote services from other attached contexts. Will NOT return services from this context. 
         /// Any command issued on the local object. will be forwarded to the other service, executed, and results returned.
@@ -78,9 +76,18 @@ namespace Lighthouse.Core
 		/// <param name="actions"></param>
 		Task Do(Action<ILighthouseServiceContainer> action, string logMessage = "");
 
-		void AddScheduledAction(Schedule schedule, Action<DateTime> taskToPerform);
+        /// <summary>
+        /// Add a scheduled action attached to the object that created them
+        /// </summary>
+        /// <param name="owner"></param>
+        /// <param name="taskToPerform"></param>
+        /// <param name="minuteFrequency"></param>
+		void AddScheduledAction(ILighthouseService owner, Action<DateTime> taskToPerform, decimal minuteFrequency = 1);
+        
+        // removes all scheduled actions created by this owner
+        void RemoveScheduledActions(ILighthouseService owner);
 
-		void RegisterEventProducer(IEventProducer eventSource);
+        void RegisterEventProducer(IEventProducer eventSource);
 
 		void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer)
 			where TEvent : IEvent;

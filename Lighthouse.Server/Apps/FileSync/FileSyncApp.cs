@@ -1,11 +1,8 @@
 ﻿using Lighthouse.Core;
-using Lighthouse.Core.Scheduling;
 using Lighthouse.Storage.Collections;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 
 namespace Lighthouse.Server.Apps.FileSync
@@ -25,9 +22,9 @@ namespace Lighthouse.Server.Apps.FileSync
 		{
 			// sync every 10 minutes 
 			// TODO: make this time configurable
-			Container.AddScheduledAction(
-				new Schedule(ScheduleFrequency.Minutely, 10), 
-				(time) => Sync(time) );
+			//Container.AddScheduledAction(
+			//	new Schedule(ScheduleFrequency.Minutely, 10), 
+			//	(time) => Sync(time) );
 
 			// c:\folder1 --> FileSyncFolderStatus
 			//	FileSyncFolderStatus 
