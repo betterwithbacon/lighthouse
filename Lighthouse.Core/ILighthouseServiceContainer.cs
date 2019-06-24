@@ -82,10 +82,10 @@ namespace Lighthouse.Core
         /// <param name="owner"></param>
         /// <param name="taskToPerform"></param>
         /// <param name="minuteFrequency"></param>
-		void AddScheduledAction(ILighthouseService owner, Action<DateTime> taskToPerform, decimal minuteFrequency = 1);
-        
+		Task AddScheduledAction(ILighthouseService owner, Action<DateTime> taskToPerform, int minuteFrequency = 1, string scheduleName = null);
+
         // removes all scheduled actions created by this owner
-        void RemoveScheduledActions(ILighthouseService owner);
+        void RemoveScheduledActions(ILighthouseService owner, string scheduleName = null);
 
         void RegisterEventProducer(IEventProducer eventSource);
 
@@ -102,9 +102,6 @@ namespace Lighthouse.Core
 		/// A common warehouse, where abstracted storage interfaces are exposed. Otherwarehouses might be attached to this container, but this is a container guaranteed to exist, and expose local resources.
 		/// </summary>
 		IWarehouse Warehouse { get; }
-
-
-
 
 		/*
          * This is the weird part, it seems like all of thgese pieces should only be called from "outside" the service ocntainer

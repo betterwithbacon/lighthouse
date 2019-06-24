@@ -22,6 +22,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Async;
 using System.Net;
+using System.Collections.Specialized;
+using Quartz.Impl;
+using Quartz;
 
 namespace Lighthouse.Server
 {
@@ -38,10 +41,12 @@ namespace Lighthouse.Server
 		public string Identifier => ServerName;
 		public string WorkingDirectory { get; private set; } = @"C:\";
 		public readonly OSPlatform OS;
-		#endregion
+        private static string GetDefaultScheduleName(ILighthouseService owner, string scheduleName = null) => scheduleName ?? owner.Id + "_timer";
+        private const string SchedulerSerializedObjectKeyName = "actionToPerform";
+        #endregion
 
-		#region Fields - Log
-		private readonly ConcurrentBag<Action<string>> LocalLoggers = new ConcurrentBag<Action<string>>();		
+        #region Fields - Log
+        private readonly ConcurrentBag<Action<string>> LocalLoggers = new ConcurrentBag<Action<string>>();		
 		#endregion
 
 		#region Fields - Task Management
@@ -55,10 +60,10 @@ namespace Lighthouse.Server
 		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
 		
 		public bool IsRunning { get; private set; }
-		#endregion
+        #endregion
 
-		#region Fields - Configuration
-		private IAppConfigurationProvider AppConfiguration { get; set; }
+        #region Fields - Configuration
+        private IAppConfigurationProvider AppConfiguration { get; set; }
 		// Local cache of ALL repositories. this will likely include more than the initial config
 		private IList<IServiceRepository> ServiceRepositories { get; set; } = new List<IServiceRepository>();
 		public IList<ServiceLaunchRequest> ServiceLaunchRequests { get; private set; } = new List<ServiceLaunchRequest>();		
@@ -106,7 +111,9 @@ namespace Lighthouse.Server
 
 			// laod up app specific details
 			LoadAppConfiguration();
-		}
+
+            InitScheduler().GetAwaiter().GetResult();
+        }
 		#endregion
 
 		#region Server Lifecycle
@@ -161,14 +168,16 @@ namespace Lighthouse.Server
 			// the service is now runnable
 			IsRunning = true;
 
-			// configure a producer, that will periodically read from an event stream, and emit those events within the context.			
-			if(EventQueue != null)
+            StartScheduler().GetAwaiter().GetResult();
+
+            // configure a producer, that will periodically read from an event stream, and emit those events within the context.			
+            if (EventQueue != null)
 				RegisterEventProducer(new QueueEventProducer(EventQueue, 1000));
 
 			AddBaseConsumers();
 
 			LaunchConfiguredServices();
-		}
+        }
 
 		private void AddBaseConsumers()
 		{
@@ -266,21 +275,23 @@ namespace Lighthouse.Server
 
 		public async Task Stop()
 		{
-			//// call stop on all of the services
-			//RunningServices.ToList().ForEach(serviceRun => { serviceRun.Service.Stop(); });
+            //// call stop on all of the services
+            //RunningServices.ToList().ForEach(serviceRun => { serviceRun.Service.Stop(); });
 
-			//int iter = 1;
-			
-			//// just do some kindness before killing the thread. Most thread terminations should be instantaneous.
-			//while(GetRunningServices().Any() && iter < 3)
-			//{
-			//	Log(LogLevel.Debug,LogType.Info,this, $"[Stopping] Waiting for services to finish. attempt {iter}");
-			//	await Task.Delay(500);
-			//	iter++;
-			//}
+            //int iter = 1;
 
-			// wait some period of time, for the services to stop by themselves, then just kill the threads out right.
-			CancellationTokenSource.Cancel();
+            //// just do some kindness before killing the thread. Most thread terminations should be instantaneous.
+            //while(GetRunningServices().Any() && iter < 3)
+            //{
+            //	Log(LogLevel.Debug,LogType.Info,this, $"[Stopping] Waiting for services to finish. attempt {iter}");
+            //	await Task.Delay(500);
+            //	iter++;
+            //}
+
+            await Scheduler.Shutdown();
+
+            // wait some period of time, for the services to stop by themselves, then just kill the threads out right.
+            CancellationTokenSource.Cancel();
 
 			Log(LogLevel.Debug,LogType.Info,this, "[Lighthouse Server Stopped]");
             await Task.CompletedTask; //< -- temp hackj
@@ -725,15 +736,50 @@ namespace Lighthouse.Server
         #endregion
 
         #region Scheduling
-        public void AddScheduledAction(ILighthouseService owner, Action<DateTime> taskToPerform, decimal minuteFrequency = 1)
+        private async Task InitScheduler()
         {
-            throw new NotImplementedException();
+            NameValueCollection props = new NameValueCollection
+                {
+                    { "quartz.serializer.type", "binary" }
+                };
+            StdSchedulerFactory factory = new StdSchedulerFactory(props);
+            Scheduler = await factory.GetScheduler();
         }
 
-        public void RemoveScheduledActions(ILighthouseService owner)
+        private IScheduler Scheduler { get; set; }
+
+        private async Task StartScheduler()
         {
-            throw new NotImplementedException();
+            // and start it off
+            await Scheduler.Start();
         }
+
+        public async Task AddScheduledAction(ILighthouseService owner, Action<DateTime> taskToPerform, int minuteFrequency = 1, string scheduleName = null)
+        {
+            scheduleName = GetDefaultScheduleName(owner, scheduleName);
+            IJobDetail job = JobBuilder.Create<ScheduledActionJob>()
+                .WithIdentity(scheduleName, owner.Id)
+                .Build();
+
+            job.JobDataMap.Put(SchedulerSerializedObjectKeyName, taskToPerform);
+
+            ITrigger trigger = TriggerBuilder.Create()
+                .WithIdentity(scheduleName, owner.Id)
+                .StartNow()
+                .WithSimpleSchedule(x => x
+                    .WithIntervalInMinutes(minuteFrequency)                    
+                    .RepeatForever())
+                .Build();
+
+            // Tell quartz to schedule the job using our trigger
+            await Scheduler.ScheduleJob(job, trigger);
+        }
+
+        public void RemoveScheduledActions(ILighthouseService owner, string scheduleName)
+        {
+            Scheduler.UnscheduleJob(new TriggerKey(GetDefaultScheduleName(owner, scheduleName), owner.Id));
+        }
+
         #endregion
 
         public LighthouseServerStatus GetStatus()
@@ -745,6 +791,20 @@ namespace Lighthouse.Server
 			);
 		}
 
+        private class ScheduledActionJob : IJob
+        {
+            public Task Execute(IJobExecutionContext context)
+            {
+                var actionSerialized = context.JobDetail.JobDataMap.Get(SchedulerSerializedObjectKeyName);
+                if(actionSerialized == null)
+                {
+                    throw new ApplicationException("The serialized action function could not be found.");
+                }
 
+                var action = (Action<DateTime>)actionSerialized;
+                action.Invoke(context.FireTimeUtc.LocalDateTime);                
+                return Task.CompletedTask;
+            }
+        }
     }
 }

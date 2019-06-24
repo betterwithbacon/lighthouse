@@ -22,7 +22,7 @@ namespace Lighthouse.Core.Services
         public void Start()
         {
             Container.AddScheduledAction(this, (time) => Container.Log(LogLevel.Info, LogType.Info, this, $"ping: time: {time}. Container Time: {Container.GetNow()}"),
-                minuteFrequency: 1);
+                minuteFrequency: 1).GetAwaiter().GetResult();
         }
 
         public void Stop()
