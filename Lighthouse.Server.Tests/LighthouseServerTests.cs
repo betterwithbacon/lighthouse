@@ -62,8 +62,7 @@ namespace Lighthouse.Server.Tests
 		}
 
 		protected void GivenAContainer(
-			IWorkQueue<IEvent> workQueue = null,
-			double defaultScheduleTimeIntervalInMilliseconds = LighthouseServer.DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS,
+			IWorkQueue<IEvent> workQueue = null,			
 			IAppConfigurationProvider launchConfiguration = null, 
 			string workingDirectory = null,
 			IWorkQueue<IEvent> eventQueue = null)
@@ -76,9 +75,6 @@ namespace Lighthouse.Server.Tests
 				},				
 				workingDirectory: workingDirectory
 			);
-
-			if(defaultScheduleTimeIntervalInMilliseconds != LighthouseServer.DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS)
-				container.OverrideGlobalClock(fireEvery:defaultScheduleTimeIntervalInMilliseconds);
 
 			if(eventQueue != null)
 				container.AddEventQueue(eventQueue);
@@ -316,17 +312,6 @@ namespace Lighthouse.Server.Tests
 			Thread.Sleep(50);
 
 			reached.Should().BeTrue();
-		}
-		#endregion
-
-		#region Processing
-		[Fact]
-		[Trait("Tag", "Scheduling")]
-		[Trait("Category", "Unit")]
-		public void AddScheduledAction_ScheduleAdded()
-		{
-			Container.AddScheduledAction(new Core.Scheduling.Schedule(Core.Scheduling.ScheduleFrequency.Hourly, 1, "Test"), (_) => { });
-			Container.Schedules.Where(schedule => schedule.Key == "Test").Should().NotBeEmpty();
 		}
 		#endregion
 

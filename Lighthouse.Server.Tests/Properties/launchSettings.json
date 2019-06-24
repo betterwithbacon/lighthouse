@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Lighthouse.Server.Tests": {
+      "commandName": "Project",
+      "commandLineArgs": "-a ping"
+    }
+  }
+}

@@ -1,17 +1,13 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Configuration.Providers;
-using Lighthouse.Core.Configuration.Providers.Local;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Configuration.ServiceDiscovery.Local;
 using Lighthouse.Core.Events;
-using Lighthouse.Core.Events.Logging;
 using Lighthouse.Core.Events.Queueing;
-using Lighthouse.Core.Events.Time;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using Lighthouse.Core.Management;
-using Lighthouse.Core.Scheduling;
 using Lighthouse.Core.Storage;
 using Lighthouse.Core.Utils;
 using Lighthouse.Server.Management;
@@ -36,10 +32,6 @@ namespace Lighthouse.Server
 			return null;
 		}
 
-		#region Fields - Server Defaults
-		public const double DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS = 10 * 10 * 10; // once per second
-		#endregion
-
 		#region Fields - Server Metadata
 		public string ServerName { get; private set; }
 		public const string DEFAULT_APP_NAME = "Lighthouse Server";
@@ -60,8 +52,8 @@ namespace Lighthouse.Server
 				RegisterComponent(new QueueEventProducer(eventQueue, pollFrequencyInMilliseconds));
 		}
 
-		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();		
-		public readonly ConcurrentDictionary<string, (Schedule, TimeEventConsumer)> Schedules = new ConcurrentDictionary<string, (Schedule, TimeEventConsumer)>();
+		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
+		
 		public bool IsRunning { get; private set; }
 		#endregion
 
@@ -84,8 +76,7 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Fields - Resources
-		private readonly ConcurrentBag<IResourceProvider> Resources = new ConcurrentBag<IResourceProvider>();
-		TimeEventProducer GlobalClock { get; set; } // raise an event every minute, like a clock (a not very good clock)
+		private readonly ConcurrentBag<IResourceProvider> Resources = new ConcurrentBag<IResourceProvider>();		
 		public IWarehouse Warehouse { get; } = new Warehouse();
 		private readonly ConcurrentBag<ILighthouseManagementInterface> ManagementInterfaces = new ConcurrentBag<ILighthouseManagementInterface>();
 		private readonly Dictionary<ManagementRequestType, Type> RequestHandlerMappings = new Dictionary<ManagementRequestType, Type>();
@@ -109,9 +100,6 @@ namespace Lighthouse.Server
 						
 			// the server is now actually configuring itself
 			Log(LogLevel.Debug, LogType.Info, this, "Lighthouse server initializing...");
-
-			// configure the default clock
-			GlobalClock = new TimeEventProducer(DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS);
 
 			// perform some operations before the server loads it's configuration, the most likely operations are actually adding support for loading the configuration.			
 			preLoadOperations?.Invoke(this);
@@ -177,17 +165,9 @@ namespace Lighthouse.Server
 			if(EventQueue != null)
 				RegisterEventProducer(new QueueEventProducer(EventQueue, 1000));
 
-			AddBaseProducers();
-
 			AddBaseConsumers();
 
 			LaunchConfiguredServices();
-		}
-
-		private void AddBaseProducers()
-		{
-			// always add the global clock. this clock will be used to drive scheduled events
-			RegisterEventProducer(GlobalClock);
 		}
 
 		private void AddBaseConsumers()
@@ -195,28 +175,6 @@ namespace Lighthouse.Server
 			RegisterEventConsumer<ServiceInstallationEvent>(
 				new ServiceInstallationEventConsumer()
 			);
-		}
-
-		public void OverrideGlobalClock(TimeEventProducer time )
-		{
-			if (IsRunning)
-				throw new ApplicationException("Can't override clock after sevice starts");
-
-			// just set this
-			GlobalClock = time;
-		}
-
-		/// <summary>
-		/// Overrides the behavior of the default clock
-		/// </summary>
-		/// <param name="fireEvery">The frequency in milliseconds to fire time events.</param>
-		public void OverrideGlobalClock(double fireEvery = DEFAULT_SCHEDULE_TIME_INTERVAL_IN_MS)
-		{
-			if (IsRunning)
-				throw new ApplicationException("Can't override clock after sevice starts");
-
-			// just set this
-			GlobalClock.UpdateFrequency(fireEvery);
 		}
 
 		private void LaunchConfiguredServices()
@@ -463,17 +421,6 @@ namespace Lighthouse.Server
 				service.Initialize(this);
 		}
 
-		///// <summary>
-		///// Registers this new type with the local service repository. This type will now be available for other apps and 
-		///// </summary>
-		///// <param name="type"></param>
-		//public void RegisterComponentType<T>()
-		//{
-		//	Log(LogLevel.Debug, LogType.Info, this, $"Registered component: {typeof(T)}.");
-		//	var localRepo = 
-			
-		//}
-
 		public void RegisterResourceProvider(IResourceProvider resourceProvider)
 		{
 			Log(LogLevel.Debug, LogType.Info, this, $"Added resource: {resourceProvider}.");
@@ -603,22 +550,6 @@ namespace Lighthouse.Server
 		{
 			return ServerName;
 		}
-		#endregion
-
-		#region Scheduling
-	    public void AddScheduledAction(Schedule schedule, Action<DateTime> actionToPerform)
-		{
-			var consumer = new TimeEventConsumer();
-			consumer.AddSchedule(schedule);
-			consumer.EventAction = (time) => actionToPerform(time);
-            Schedules.TryAdd(schedule.Name, (schedule, consumer));
-            RegisterEventConsumer<TimeEvent>(consumer);
-		}
-
-        public void RemoveScheduledAction(string scheduleName)
-        {
-            Schedules.Remove(scheduleName, out var _);
-        }
 		#endregion
 
 		#region Events
@@ -791,15 +722,29 @@ namespace Lighthouse.Server
 				uri.Port
 			);
 		}
-		#endregion
+        #endregion
 
-		public LighthouseServerStatus GetStatus()
+        #region Scheduling
+        public void AddScheduledAction(ILighthouseService owner, Action<DateTime> taskToPerform, decimal minuteFrequency = 1)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveScheduledActions(ILighthouseService owner)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
+
+        public LighthouseServerStatus GetStatus()
 		{
 			return new LighthouseServerStatus(
 				new Version(AppConfiguration?.Version ?? "0.0.0.0"),
 				ServerName, 
 				GetNow()
 			);
-		}        
+		}
+
+
     }
 }

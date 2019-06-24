@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +7,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Lighthouse.Core;
-using Lighthouse.Core.Scheduling;
 using Lighthouse.Core.Storage;
 using Lighthouse.Storage.Memory;
 
@@ -54,7 +52,7 @@ namespace Lighthouse.Storage
 		protected override void OnAfterStart()
 		{
 			// schedule server maintainence to be done each hour
-			Container.AddScheduledAction(schedule: new Schedule(ScheduleFrequency.Hourly) , taskToPerform: (time) => { PerformStorageMaintenance(time); });
+			Container.AddScheduledAction(this, (time) => { PerformStorageMaintenance(time); }, 60);
 
 			//// populate the remote warehouses			
 			//LoadRemoteWarehouses().RunSynchronously();

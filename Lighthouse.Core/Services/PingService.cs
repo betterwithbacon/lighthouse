@@ -11,8 +11,7 @@ namespace Lighthouse.Core.Services
     public class PingService : ILighthouseService
     {   
         public string Id => "ping";
-        private const string ScheduleName = "PingSchedule";
-
+        
         public ILighthouseServiceContainer Container { get; private set; }
 
         public void Initialize(ILighthouseServiceContainer container)
@@ -22,13 +21,13 @@ namespace Lighthouse.Core.Services
 
         public void Start()
         {
-            Container.AddScheduledAction(new Scheduling.Schedule(Scheduling.ScheduleFrequency.Secondly, 5, name: ScheduleName), 
-                (time) => Container.Log(LogLevel.Info, LogType.Info, this, $"ping: time: {time}. Container Time: {Container.GetNow()}"));            
+            Container.AddScheduledAction(this, (time) => Container.Log(LogLevel.Info, LogType.Info, this, $"ping: time: {time}. Container Time: {Container.GetNow()}"),
+                minuteFrequency: 1);
         }
 
         public void Stop()
         {
-            Container.RemoveScheduledAction(ScheduleName);
+            Container.RemoveScheduledActions(this);
         }
     }
 }
