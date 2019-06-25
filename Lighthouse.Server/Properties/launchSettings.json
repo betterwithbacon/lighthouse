@@ -3,6 +3,9 @@
     "Lighthouse.Server": {
       "commandName": "Project",
       "commandLineArgs": "-a ping"
+    },
+    "Docker": {
+      "commandName": "Docker"
     }
   }
 }
