@@ -54,7 +54,7 @@ namespace Lighthouse.Server
 		{
 			// wrap the queue in a queue event producer that will read of of this
 			if (eventQueue != null)			
-				RegisterComponent(new QueueEventProducer(eventQueue, pollFrequencyInMilliseconds));
+				RegisterEventProducer(new QueueEventProducer(eventQueue, pollFrequencyInMilliseconds));
 		}
 
 		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
@@ -325,11 +325,6 @@ namespace Lighthouse.Server
 
 			Log(LogLevel.Error,LogType.Error,null,message: $"Error occurred running task: {e.Message}", exception: e);
 		}
-
-		public void LogError(Exception exception, ILighthouseLogSource source = null)
-		{
-			
-		}
 		#endregion
 
 		#region Service Launching
@@ -363,26 +358,8 @@ namespace Lighthouse.Server
 			if (validationIssues.Any())
 				throw new ApplicationException($"Can't launch service {launchRequest}. Reasons: {string.Join(',',validationIssues)}");
 			
-			// launch based on launch type
-			switch(launchRequest.LaunchType)
-			{
-				case ServiceLaunchRequestType.ByType:
-					Launch(launchRequest.ServiceType);
-					break;
-				case ServiceLaunchRequestType.ByServiceName:
-					Launch(ResolveService(launchRequest.ServiceName));
-					break;
-				case ServiceLaunchRequestType.ByTypeThenName:
-					if (launchRequest.ServiceType != null)
-						Launch(launchRequest.ServiceType);
-					else if (string.IsNullOrEmpty(launchRequest.ServiceName))
-						Launch(ResolveService(launchRequest.ServiceName));
-					else
-						throw new ApplicationException("Can't launch service, with no type nor name.");
-					break;
-				default:
-					throw new ApplicationException($"Unrecognized Launch Type {launchRequest.LaunchType}");					
-			}
+			// launch based on launch type			
+            Launch(launchRequest.ServiceType);
 		}
 
 		private ILighthouseService ResolveService(string serviceName)
@@ -402,7 +379,7 @@ namespace Lighthouse.Server
 			AssertIsRunning();
 
 			// put the service in a runnable state
-			RegisterComponent(service);			
+			//RegisterComponent(service);			
 			
 			// start it, in a separate thread, that will run the business logic for this
 			Task.Run(() => service.Start(), CancellationTokenSource.Token).ContinueWith(
@@ -420,18 +397,6 @@ namespace Lighthouse.Server
 				}, CancellationTokenSource.Token);
 		}
 
-		/// <summary>
-		/// Initializes a copy of this component in the current container.
-		/// </summary>
-		/// <param name="component"></param>
-		public void RegisterComponent(ILighthouseComponent component)
-		{
-			Log(LogLevel.Debug,LogType.Info,this, $"Added component: {component}.");
-			
-			if(component is ILighthouseService service)
-				service.Initialize(this);
-		}
-
 		public void RegisterResourceProvider(IResourceProvider resourceProvider)
 		{
 			Log(LogLevel.Debug, LogType.Info, this, $"Added resource: {resourceProvider}.");
@@ -447,12 +412,12 @@ namespace Lighthouse.Server
             Log(LogLevel.Debug, LogType.Info, this, $"App completed successfully. TaskId {task.Id}");  //{RunningServices.FirstOrDefault(lsr => lsr.TaskId == task.Id)?.Service}", emitEvent:false);
 		}
 
-		private void Service_StatusUpdated(ILighthouseLogSource owner, string status)
+		private void Service_StatusUpdated(object owner, string status)
 		{
 			Log(LogLevel.Debug, LogType.Info, owner, status, emitEvent: false);
 		}
 
-		public void Log(LogLevel level, LogType logType, ILighthouseLogSource sender, string message = null, Exception exception = null, bool emitEvent = true)
+		public void Log(LogLevel level, LogType logType, object sender, string message = null, Exception exception = null, bool emitEvent = true)
 		{
 			string log = $"[{DateTime.Now.ToLighthouseLogString()}] [{sender}] [{logType}]: {message}";
 
@@ -580,21 +545,14 @@ namespace Lighthouse.Server
 					}
 					catch (Exception e)
 					{
-						LogError(e);
+						Log(LogLevel.Error,LogType.Error,this, exception: e);
 						throw;
 					}
 				}, this, 100, 1000
 			);
 		}
 
-		private void AssertProducerIsReady(IEventProducer producer)
-		{
-			// if the containers aren't equal, this the producer's not ready.	
-			if (producer.Container != this)
-				throw new ApplicationException($"Producer: {producer} is not ready.");
-		}
-
-		public async Task EmitEvent(IEvent ev, ILighthouseLogSource logSource = null)
+		public async Task EmitEvent(IEvent ev, object logSource = null)
 		{	
 			// log the event was raised within the context
 			// but don't log events emitted by the source itself
@@ -633,12 +591,10 @@ namespace Lighthouse.Server
 			Producers.Add(eventProducer);
 
 			// and register this as the context with the producer
-			eventProducer.Init(this);
-
+			//eventProducer.Init(this);
+            
 			Log(LogLevel.Debug, LogType.ProducerRegistered, eventProducer);
 			
-			AssertProducerIsReady(eventProducer);
-
 			// after registered, go ahead and start the producer.
 			eventProducer.Start();
 		}
@@ -647,8 +603,6 @@ namespace Lighthouse.Server
 			where TEvent : IEvent
 		{
 			Consumers.GetOrAdd(typeof(TEvent), new List<IEventConsumer> { eventConsumer });
-
-			eventConsumer.Init(this);
 
 			Log(LogLevel.Debug, LogType.ConsumerRegistered, eventConsumer);
 		}

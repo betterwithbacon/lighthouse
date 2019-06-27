@@ -2,7 +2,7 @@
 
 namespace Lighthouse.Core.Configuration.ServiceDiscovery
 {
-	public interface IServiceRepository : ILighthouseComponent
+	public interface IServiceRepository
 	{
 		IEnumerable<ILighthouseServiceDescriptor> GetServiceDescriptors();
 	}

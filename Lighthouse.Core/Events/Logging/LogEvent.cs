@@ -6,9 +6,9 @@ namespace Lighthouse.Core.Events.Logging
 	public class LogEvent : BaseEvent
 	{
 		public string Message { get; set; }
-		public ILighthouseComponent Source { get; }
+		public object Source { get; }
 
-		public LogEvent(ILighthouseServiceContainer container, ILighthouseComponent source)
+		public LogEvent(ILighthouseServiceContainer container, object source)
 			: base(container)
 		{
 			Source = source;

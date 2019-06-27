@@ -10,7 +10,7 @@ namespace Lighthouse.Core.Hosting
 	/// Exposes operations for a remote lighthouse server. 
 	/// The connection should abstract any networking requirements, but should not perform business transformations itself, only providing a stable proxy.
 	/// </summary>
-	public interface ILighthouseServiceContainerConnection : ILighthouseComponent
+	public interface ILighthouseServiceContainerConnection
 	{
 		// indicates if the container is still connected. it's up to the connection itself to determine "connected" whether by a ping or connection history, so this flag might be innacurate or out of date for ephemeral connections.
 		bool IsConnected { get; }

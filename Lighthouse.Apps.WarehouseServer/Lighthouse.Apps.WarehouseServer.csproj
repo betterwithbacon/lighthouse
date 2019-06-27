@@ -4,4 +4,8 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Lighthouse.Core\Lighthouse.Core.csproj" />
+  </ItemGroup>
+
 </Project>

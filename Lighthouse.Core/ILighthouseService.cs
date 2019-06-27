@@ -2,12 +2,14 @@
 
 namespace Lighthouse.Core
 {
-    public interface ILighthouseService : ILighthouseComponent
+    public interface ILighthouseService
     {
 		string Id { get; }
 
-		// Puts the service in a runnable state. 		
-		void Initialize(ILighthouseServiceContainer container);
+        ILighthouseServiceContainer Container { get; }
+
+        // Puts the service in a runnable state. 		
+        void Initialize(ILighthouseServiceContainer container);
 
 		// Begins execution of the service
 		void Start();

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Core
 {
-	public interface ILighthouseServiceContainer : ILighthouseLogSource
+	public interface ILighthouseServiceContainer
 	{
 		string ServerName { get; }
 
@@ -22,7 +22,7 @@ namespace Lighthouse.Core
 		/// <param name="level"></param>
 		/// <param name="sender"></param>
 		/// <param name="message"></param>
-		void Log(LogLevel level, LogType logType,  ILighthouseLogSource sender, string message = null, Exception exception = null, bool emitEvent = true);
+		void Log(LogLevel level, LogType logType, object sender, string message = null, Exception exception = null, bool emitEvent = true);
         
         /// <summary>
         /// Returns remote services from other attached contexts. Will NOT return services from this context. 
@@ -59,12 +59,6 @@ namespace Lighthouse.Core
 		void RegisterResourceProvider(IResourceProvider resourceProvider);
 
 		/// <summary>
-		/// Registers any component passed to it. This is the best way to ensure logging and resource access is availabe
-		/// </summary>
-		/// <param name="component"></param>
-		void RegisterComponent(ILighthouseComponent component);
-
-		/// <summary>
 		/// The working directory of the Lighthouse runtime
 		/// </summary>
 		string WorkingDirectory { get; }
@@ -92,7 +86,7 @@ namespace Lighthouse.Core
 		void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer)
 			where TEvent : IEvent;
 
-		Task EmitEvent(IEvent ev, ILighthouseLogSource source = null);
+		Task EmitEvent(IEvent ev, object source = null);
 
 		IEnumerable<IEvent> GetAllReceivedEvents(PointInTime since = null);
 		

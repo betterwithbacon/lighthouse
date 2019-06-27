@@ -19,7 +19,7 @@ namespace Lighthouse.Core
 			StartupActions.Add(task);
 		}
 
-		public virtual void Start()
+		public void Start()
 		{
 			if (Container == null)
 				throw new InvalidOperationException("Service not initialized. (No container set)");

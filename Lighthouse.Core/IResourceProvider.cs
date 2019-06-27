@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Lighthouse.Core
 {
-    public interface IResourceProvider : ILighthouseLogSource
+    public interface IResourceProvider
 	{
     }
 }

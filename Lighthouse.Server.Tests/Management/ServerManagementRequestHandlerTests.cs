@@ -27,7 +27,7 @@ namespace Lighthouse.Server.Tests.Management
 			var managementRequest = new ServerManagementRequest();
 			managementRequest.RequestParameters.Add(ServerManagementRequest.RequestTypes.Install.Arguments.ServiceName, "testName");
 			await handler.Handle(managementRequest.SerializeForManagementInterface(), mockContext);
-			await mockContainer.ReceivedWithAnyArgs().EmitEvent(Arg.Any<IEvent>(), Arg.Any<ILighthouseLogSource>());
+			await mockContainer.ReceivedWithAnyArgs().EmitEvent(Arg.Any<IEvent>(), Arg.Any<object>());
 		}
 
 		[Fact]

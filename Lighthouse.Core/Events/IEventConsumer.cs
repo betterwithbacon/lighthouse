@@ -6,13 +6,11 @@ using System.Text;
 
 namespace Lighthouse.Core.Events
 {
-	public interface IEventConsumer : IEventActionTrigger, ILighthouseLogSource, ILighthouseComponent
+	public interface IEventConsumer
 	{
 		IList<Type> Consumes { get; }
 
 		void HandleEvent(IEvent ev);
-
-		void Init(ILighthouseServiceContainer container);
 	}
 
 	public static class IEventExtensions

@@ -75,7 +75,7 @@ namespace Lighthouse.Core.Tests.Configuration.Providers.Local
 
 			var mockLighthouse = Substitute.For<ILighthouseServiceContainer>();
 			// LogLevel level, LogType logType,  ILighthouseLogSource sender, string message = null, Exception exception = null, bool emitEvent = true
-			mockLighthouse.Log(Arg.Any<LogLevel>(), Arg.Any<LogType>(), Arg.Any<ILighthouseLogSource>());
+			mockLighthouse.Log(Arg.Any<LogLevel>(), Arg.Any<LogType>(), Arg.Any<object>());
 			var filesystem = new WindowsFileSystemProvider(Environment.CurrentDirectory, mockLighthouse);					
 			mockLighthouse.GetFileSystemProviders().Returns(new[] { filesystem });
 

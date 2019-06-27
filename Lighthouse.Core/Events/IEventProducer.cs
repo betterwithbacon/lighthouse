@@ -2,10 +2,8 @@
 
 namespace Lighthouse.Core.Events
 {
-    public interface IEventProducer : ILighthouseComponent
+    public interface IEventProducer
     {
-		void Init(ILighthouseServiceContainer context);
-
 		void Start();
 	}
 }

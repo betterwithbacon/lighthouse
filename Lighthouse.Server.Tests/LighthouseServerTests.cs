@@ -119,7 +119,7 @@ namespace Lighthouse.Server.Tests
 			otherContainer.Start();
 
 			// launch the app in the "other"
-			otherContainer.Launch(new TestApp());
+			otherContainer.Launch(typeof(TestApp));
 
 			// the local Container should be able to find the service running in the other one
 			var foundTestApp = await Container.FindRemoteServices<TestApp>();
@@ -287,16 +287,6 @@ namespace Lighthouse.Server.Tests
 		public void WorkingDirectory_ShouldMatchEnvironment()
 		{
 			Container.WorkingDirectory.Should().Be(Environment.CurrentDirectory);
-		}
-		#endregion
-
-		#region ComponentModel		
-		[Fact]
-		[Trait("Tag", "Logging")]
-		[Trait("Category", "Unit")]
-		public void RegisterComponent_ComponentShouldBeRegistered()
-		{
-
 		}
 		#endregion
 

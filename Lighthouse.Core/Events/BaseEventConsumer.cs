@@ -10,7 +10,7 @@ using Lighthouse.Core.Storage;
 
 namespace Lighthouse.Core.Events
 {
-	public abstract class BaseEventConsumer : IEventConsumer, IStorageScope, ILighthouseComponent
+	public abstract class BaseEventConsumer : IEventConsumer, IStorageScope
 	{		
 		public abstract IList<Type> Consumes { get; }
 

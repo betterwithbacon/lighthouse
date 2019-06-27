@@ -4,12 +4,14 @@ using System.Collections.Generic;
 
 namespace Lighthouse.Core.Storage
 {
-	public interface IWarehouse : ILighthouseComponent // : IDictionary<StorageKey, TData><-- one day!
+	public interface IWarehouse // : IDictionary<StorageKey, TData><-- one day!
 	{
-		///// <summary>
-		///// Places the warehouse in a state where it can store and retrieve data
-		///// </summary>
-		//void Initialize(ILighthouseServiceContainer lighthouseContainer, params Type[] shelfTypes);
+        ///// <summary>
+        ///// Places the warehouse in a state where it can store and retrieve data
+        ///// </summary>
+        //void Initialize(ILighthouseServiceContainer lighthouseContainer, params Type[] shelfTypes);
+
+        ILighthouseServiceContainer Container { get; }
 
 		/// <summary>
 		/// Stores the provided data, with the relevant key
