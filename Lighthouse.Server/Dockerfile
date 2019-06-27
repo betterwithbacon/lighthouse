@@ -17,4 +17,4 @@ RUN dotnet publish "Lighthouse.Server.csproj" -c Release -o /app
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app .
-ENTRYPOINT ["dotnet", "Lighthouse.Server.dll"]
+ENTRYPOINT ["dotnet", "Lighthouse.Server.dll", "run", "-app", "ping"]

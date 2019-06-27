@@ -2,7 +2,7 @@
   "profiles": {
     "Lighthouse.Server": {
       "commandName": "Project",
-      "commandLineArgs": "-a ping"
+      "commandLineArgs": "run -a ping"
     },
     "Docker": {
       "commandName": "Docker"
