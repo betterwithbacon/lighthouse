@@ -1,6 +1,4 @@
 ﻿using CommandLine;
-using Lighthouse.Core.Configuration.ServiceDiscovery;
-using Lighthouse.Core.Services;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
