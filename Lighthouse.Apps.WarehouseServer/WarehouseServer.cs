@@ -1,13 +1,15 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Events;
+using Lighthouse.Core.Storage;
+using Lighthouse.Storage;
 using System;
 using System.Collections.Generic;
 
 namespace Lighthouse.Apps.WarehouseServer
 {
     [ExternalLighthouseService("warehouse")]
-    public class WarehouseServer : LighthouseServiceBase, IEventConsumer
+    public class WarehouseServer : LighthouseServiceBase, IRequestHandler<StorageRequest, StorageResponse>
     {
         public WarehouseServer()
         {
@@ -15,16 +17,25 @@ namespace Lighthouse.Apps.WarehouseServer
 
         public IList<Type> Consumes => throw new NotImplementedException();
 
-        public void HandleEvent(IEvent ev)
+        public Warehouse Warehouse { get; private set; }
+
+        public StorageResponse Handle(StorageRequest request)
         {
-            if(ev is StorageEvent storageEvent)
+            switch (request.Action)
             {
-
+                case StorageAction.Store:
+                    Warehouse.Store(StorageScope.Global, request.Key, request.Data, request.LoadingDockPolicies);
+                    return StorageResponse.Stored;
+                case StorageAction.Retrieve:
+                    Warehouse.Retrieve(StorageScope.Global, request.Key);
+                    return new StorageResponse(false, "");
+                case StorageAction.Inspect:
+                    return new StorageResponse(false, "");
+                case StorageAction.Delete:
+                    return new StorageResponse(false, "");
+                default:
+                    return new StorageResponse(false, "");
             }
-        }
-
-        public void Init(ILighthouseServiceContainer container)
-        {            
         }
 
         protected override void OnStart()
@@ -38,15 +49,33 @@ namespace Lighthouse.Apps.WarehouseServer
         }
     }
 
-    public class StorageEvent : BaseEvent
+    public class StorageResponse
     {
-        public StorageEvent(ILighthouseServiceContainer container, DateTime? eventTime = null) 
-            : base(container, eventTime)
+        public static StorageResponse Stored = new StorageResponse();
+        
+        public StorageResponse(bool wasSuccessful = true, string message = null)
         {
+            WasSuccessful = wasSuccessful;
+            Message = message;
         }
 
-        public ILighthouseServiceContainer LighthouseContainer => throw new NotImplementedException();
+        public bool WasSuccessful { get; }
+        public string Message { get; }
+    }
 
-        public DateTime EventTime => throw new NotImplementedException();
+    public class StorageRequest
+    {
+        public StorageAction Action { get; set; }
+        public byte[] Data { get; set; }
+        public string Key { get; set; }
+        public IEnumerable<StoragePolicy> LoadingDockPolicies { get; set; }
+    }
+
+    public enum StorageAction
+    {
+        Store,
+        Retrieve,
+        Delete,
+        Inspect
     }
 }
