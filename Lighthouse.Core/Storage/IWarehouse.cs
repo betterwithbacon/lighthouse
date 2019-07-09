@@ -4,13 +4,11 @@ using System.Collections.Generic;
 
 namespace Lighthouse.Core.Storage
 {
-	public interface IWarehouse // : IDictionary<StorageKey, TData><-- one day!
+    // A simple storage abstraction. It sits directly on top of a persistent (or not) storage mechanism...
+    // ... and provides a common interface for writing to and reading from. 
+    // Writing to a single warehouse should also permit replication based on storage type
+	public interface IWarehouse
 	{
-        ///// <summary>
-        ///// Places the warehouse in a state where it can store and retrieve data
-        ///// </summary>
-        //void Initialize(ILighthouseServiceContainer lighthouseContainer, params Type[] shelfTypes);
-
         ILighthouseServiceContainer Container { get; }
 
 		/// <summary>

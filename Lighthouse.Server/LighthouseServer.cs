@@ -63,10 +63,10 @@ namespace Lighthouse.Server
         #endregion
 
         #region Fields - Configuration
-        private IAppConfigurationProvider AppConfiguration { get; set; }
+        //private IAppConfigurationProvider AppConfiguration { get; set; }
 		// Local cache of ALL repositories. this will likely include more than the initial config
-		private IList<IServiceRepository> ServiceRepositories { get; set; } = new List<IServiceRepository>();
-		public IList<ServiceLaunchRequest> ServiceLaunchRequests { get; private set; } = new List<ServiceLaunchRequest>();		
+		//private IList<IServiceRepository> ServiceRepositories { get; set; } = new List<IServiceRepository>();
+		//public IList<ServiceLaunchRequest> ServiceLaunchRequests { get; private set; } = new List<ServiceLaunchRequest>();		
 		public int ServicePort { get; private set; }
 		#endregion
 
@@ -220,20 +220,20 @@ namespace Lighthouse.Server
 			RequestHandlerMappings.Add(ManagementRequestType.Services, typeof(ServicesManagementRequestHandler));
 			RequestHandlerMappings.Add(ManagementRequestType.ServerManagement, typeof(ServerManagementRequestHandler));
 
-			AppConfiguration = allConfigs.Single();
+			//AppConfiguration = allConfigs.Single();
 
-			Log(LogLevel.Debug, LogType.Info, this, $"Loading config file data {AppConfiguration}");
-			AppConfiguration.Load();
+			//Log(LogLevel.Debug, LogType.Info, this, $"Loading config file data {AppConfiguration}");
+			//AppConfiguration.Load();
 
-			foreach (var slr in AppConfiguration.GetServiceRepositories())			
-				AddServiceRepository(slr);
+			//foreach (var slr in AppConfiguration.GetServiceRepositories())			
+			//	AddServiceRepository(slr);
 
 			// manually add "local repo" 
 			// this will be everything native to the service, such as install, uninstall, etc.
 			AddServiceRepository(new LocalServiceRepository(this));
 
-			foreach (var slr in AppConfiguration.GetServiceLaunchRequests().Where(s => s != null))
-				AddServiceLaunchRequest(slr);
+			//foreach (var slr in AppConfiguration.GetServiceLaunchRequests().Where(s => s != null))
+			//	AddServiceLaunchRequest(slr);
 		}
 
 		public void BindServicePort(int servicePort)
@@ -242,35 +242,6 @@ namespace Lighthouse.Server
 			
 			// TODO: Need to restart the listening I assume?
 
-		}
-
-		public void AddServiceRepository(IServiceRepository serviceRepository)
-		{
-			Log(LogLevel.Debug, LogType.Info, this, $"Loading service launch request: {serviceRepository}");
-			ServiceRepositories.Add(serviceRepository);
-		}
-
-		public void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest, bool persist = false, bool autoStart = false)
-		{
-			Log(LogLevel.Debug, LogType.Info, this, $"Loading service launch request: {launchRequest}");
-			ServiceLaunchRequests.Add(launchRequest);
-
-			// TODO: "install" should nominally mean that this server is now capable of running this service completely disconnectede
-			// however, in the future, it would be possible for a server to remotely retrieve a package from the remote store into the local container
-
-			if(persist)
-			{
-				// save the current state of the configuration
-				AppConfiguration.AddServiceLaunchRequest(launchRequest);
-				// TODO: obviously, the problem here is ANY other changes to the app config will ALSO be persisted
-				AppConfiguration.Save();
-			}
-
-			// start the service when "installed"
-			if(autoStart)
-			{
-				Launch(launchRequest);
-			}
 		}
 
 		public async Task Stop()
@@ -739,11 +710,17 @@ namespace Lighthouse.Server
         public LighthouseServerStatus GetStatus()
 		{
 			return new LighthouseServerStatus(
-				new Version(AppConfiguration?.Version ?? "0.0.0.0"),
-				ServerName, 
+				new Version("0.0.0.0"),//new Version(AppConfiguration?.Version ?? "0.0.0.0"),
+
+                ServerName, 
 				GetNow()
 			);
 		}
+
+        public IConfigurationProvider GetConfigurationProvider()
+        {
+            throw new NotImplementedException();
+        }
 
         private class ScheduledActionJob : IJob
         {

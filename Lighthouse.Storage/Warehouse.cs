@@ -292,4 +292,22 @@ namespace Lighthouse.Storage
                 return default;
         }
     }
+
+    public class WarehouseConfig
+    {
+        public List<WarehouseConnection> Connections { get; set; }
+    }
+
+    public class WarehouseConnection
+    {
+        public WarehouseServerConnectionType Type { get; set; }
+        public string ConnectionString { get; set; }
+    }
+
+    public enum WarehouseServerConnectionType
+    {
+        KeyValue,
+        Relational,
+        Blob
+    }
 }

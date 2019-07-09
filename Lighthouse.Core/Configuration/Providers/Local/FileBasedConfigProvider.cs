@@ -119,5 +119,10 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 			var fileSystemProvider = LighthouseContainer.GetFileSystemProviders().FirstOrDefault();
 			fileSystemProvider.WriteStringToFileSystem(ConfigFilePath, data);
 		}
-	}	
+
+        public T1 GetConfiguration<T1>(string identifier)
+        {
+            throw new NotImplementedException();
+        }
+    }	
 }

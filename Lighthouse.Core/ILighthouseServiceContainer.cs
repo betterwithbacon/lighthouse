@@ -1,4 +1,5 @@
-﻿using Lighthouse.Core.Configuration.ServiceDiscovery;
+﻿using Lighthouse.Core.Configuration.Providers;
+using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Events;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
@@ -68,7 +69,7 @@ namespace Lighthouse.Core
 		/// The work may be queued up, so items performed in parallel should simply be added sequentially.
 		/// </summary>
 		/// <param name="actions"></param>
-		Task Do(Action<ILighthouseServiceContainer> action, string logMessage = "");
+        IConfigurationProvider GetConfigurationProvider();
 
         /// <summary>
         /// Add a scheduled action attached to the object that created them
@@ -76,7 +77,7 @@ namespace Lighthouse.Core
         /// <param name="owner"></param>
         /// <param name="taskToPerform"></param>
         /// <param name="minuteFrequency"></param>
-		Task AddScheduledAction(ILighthouseService owner, Action<DateTime> taskToPerform, int minuteFrequency = 1, string scheduleName = null);
+        Task AddScheduledAction(ILighthouseService owner, Action<DateTime> taskToPerform, int minuteFrequency = 1, string scheduleName = null);
 
         // removes all scheduled actions created by this owner
         void RemoveScheduledActions(ILighthouseService owner, string scheduleName = null);
