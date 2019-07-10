@@ -63,7 +63,7 @@ namespace Lighthouse.Server.Tests
 
 		protected void GivenAContainer(
 			IWorkQueue<IEvent> workQueue = null,			
-			IAppConfigurationProvider launchConfiguration = null, 
+			//IAppConfigurationProvider launchConfiguration = null, 
 			string workingDirectory = null,
 			IWorkQueue<IEvent> eventQueue = null)
 		{
@@ -371,20 +371,20 @@ namespace Lighthouse.Server.Tests
 		public DateTime EventTime { get; private set; }
 	}
 
-	public static class LighthouseServerConfigurationExtensions
-	{
-		public static LighthouseServer AssertLaunchConfigurationExists(this LighthouseServer Container)
-		{
-			//Assert.NotNull(Container.LaunchConfiguration);
-			return Container;
-		}
+	//public static class LighthouseServerConfigurationExtensions
+	//{
+	//	public static LighthouseServer AssertLaunchConfigurationExists(this LighthouseServer Container)
+	//	{
+	//		//Assert.NotNull(Container.LaunchConfiguration);
+	//		return Container;
+	//	}
 
-		public static LighthouseServer AssertLaunchRequestsExists(this LighthouseServer Container, Func<ServiceLaunchRequest, bool> filter = null )
-		{
-			Container.AssertLaunchConfigurationExists();
-			Container.ServiceLaunchRequests.Where(slr => filter?.Invoke(slr) ?? true).Should().NotBeEmpty();
+	//	public static LighthouseServer AssertLaunchRequestsExists(this LighthouseServer Container, Func<ServiceLaunchRequest, bool> filter = null )
+	//	{
+	//		Container.AssertLaunchConfigurationExists();
+	//		//Container.ServiceLaunchRequests.Where(slr => filter?.Invoke(slr) ?? true).Should().NotBeEmpty();
 			
-			return Container;
-		}
-	}
+	//		return Container;
+	//	}
+	//}
 }

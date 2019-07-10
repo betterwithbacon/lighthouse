@@ -9,7 +9,7 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 	/// <summary>
 	/// Represents an in-memory, non-persisted configuration provider 
 	/// </summary>
-	public class MemoryAppConfigurationProvider : IAppConfigurationProvider
+	public class MemoryAppConfigurationProvider : IConfigurationProvider
 	{
 		public string Name { get; }
 
@@ -67,5 +67,10 @@ namespace Lighthouse.Core.Configuration.Providers.Local
 		{
 			// not much to do here really
 		}
-	}
+
+        public T GetConfiguration<T>(string identifier)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

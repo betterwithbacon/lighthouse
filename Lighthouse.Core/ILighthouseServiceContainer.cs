@@ -64,11 +64,13 @@ namespace Lighthouse.Core
 		/// </summary>
 		string WorkingDirectory { get; }
 
-		/// <summary>
-		/// Will perform the action context-attached non-blocking error-resistant environment, meaning they can potentially receive/emit events if the worker threads have subscriber
-		/// The work may be queued up, so items performed in parallel should simply be added sequentially.
-		/// </summary>
-		/// <param name="actions"></param>
+        /// <summary>
+        /// Will perform the action context-attached non-blocking error-resistant environment, meaning they can potentially receive/emit events if the worker threads have subscriber
+        /// The work may be queued up, so items performed in parallel should simply be added sequentially.
+        /// </summary>
+        /// <param name="actions"></param>
+        Task Do(Action<ILighthouseServiceContainer> action, string logMessage = "");
+        
         IConfigurationProvider GetConfigurationProvider();
 
         /// <summary>
@@ -108,9 +110,9 @@ namespace Lighthouse.Core
 		void Start();
 		Task Stop();
 
-		void AddServiceRepository(IServiceRepository serviceRepository);
+		//void AddServiceRepository(IServiceRepository serviceRepository);
 
-		void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest, bool persist = false, bool autoStart = false);
+		//void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest, bool persist = false, bool autoStart = false);
 
 		LighthouseServerStatus GetStatus();
 	}

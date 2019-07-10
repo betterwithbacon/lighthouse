@@ -176,7 +176,7 @@ namespace Lighthouse.Server
 
 			AddBaseConsumers();
 
-			LaunchConfiguredServices();
+			//LaunchConfiguredServices();
         }
 
 		private void AddBaseConsumers()
@@ -186,39 +186,39 @@ namespace Lighthouse.Server
 			);
 		}
 
-		private void LaunchConfiguredServices()
-		{
-			// TODO: right now, it's one, but it COULD be more, what's that like?!
+		//private void LaunchConfiguredServices()
+		//{
+		//	// TODO: right now, it's one, but it COULD be more, what's that like?!
 
-			//// reigster all of the service requests, from the config providers.
-			foreach (var request in ServiceLaunchRequests)
-			{
-				Log(LogLevel.Debug, LogType.Info, this, $"Preparing to start {request}");
+		//	//// reigster all of the service requests, from the config providers.
+		//	foreach (var request in ServiceLaunchRequests)
+		//	{
+		//		Log(LogLevel.Debug, LogType.Info, this, $"Preparing to start {request}");
 				
-				// launch the service
-				Launch(request);
-			}
-		}
+		//		// launch the service
+		//		Launch(request);
+		//	}
+		//}
 
 		private void LoadAppConfiguration()
 		{
-			var allConfigs = GetResourceProviders<IAppConfigurationProvider>();
+			//var allConfigs = GetResourceProviders<IAppConfigurationProvider>();
 
-            ServicePort = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT;
+   //         ServicePort = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT;
 
-            if (!allConfigs.Any())
-			{
-				// if no config, just leave, and use the "base" config
-				// throw new InvalidOperationException("No  app config provider found.");
-				return;
-			}
+   //         if (!allConfigs.Any())
+			//{
+			//	// if no config, just leave, and use the "base" config
+			//	// throw new InvalidOperationException("No  app config provider found.");
+			//	return;
+			//}
 
-			if (allConfigs.Count() > 1)
-				throw new InvalidOperationException("Too many app configuration providers found. There should only be one.");
+			//if (allConfigs.Count() > 1)
+			//	throw new InvalidOperationException("Too many app configuration providers found. There should only be one.");
 
-			RequestHandlerMappings.Add(ManagementRequestType.Ping, typeof(PingManagementRequestHandler));
-			RequestHandlerMappings.Add(ManagementRequestType.Services, typeof(ServicesManagementRequestHandler));
-			RequestHandlerMappings.Add(ManagementRequestType.ServerManagement, typeof(ServerManagementRequestHandler));
+			//RequestHandlerMappings.Add(ManagementRequestType.Ping, typeof(PingManagementRequestHandler));
+			//RequestHandlerMappings.Add(ManagementRequestType.Services, typeof(ServicesManagementRequestHandler));
+			//RequestHandlerMappings.Add(ManagementRequestType.ServerManagement, typeof(ServerManagementRequestHandler));
 
 			//AppConfiguration = allConfigs.Single();
 
@@ -230,7 +230,7 @@ namespace Lighthouse.Server
 
 			// manually add "local repo" 
 			// this will be everything native to the service, such as install, uninstall, etc.
-			AddServiceRepository(new LocalServiceRepository(this));
+			//AddServiceRepository(new LocalServiceRepository(this));
 
 			//foreach (var slr in AppConfiguration.GetServiceLaunchRequests().Where(s => s != null))
 			//	AddServiceLaunchRequest(slr);
@@ -410,20 +410,20 @@ namespace Lighthouse.Server
 			//return RunningServices.Select(st => st.Service).OfType<T>();
 		}
 
-		public IEnumerable<ILighthouseServiceDescriptor> FindServiceDescriptor(string serviceName)
-		{
-			if(ServiceRepositories == null)
-			{
-				throw new ApplicationException("Service repositorioes haven't been initialized. Ensure server is started.");
-			}
+		//public IEnumerable<ILighthouseServiceDescriptor> FindServiceDescriptor(string serviceName)
+		//{
+		//	if(ServiceRepositories == null)
+		//	{
+		//		throw new ApplicationException("Service repositorioes haven't been initialized. Ensure server is started.");
+		//	}
 
-			foreach(var repo in ServiceRepositories)
-			{
-				// TODO: do some sort of name spacing
-				foreach (var foundDescriptor in repo.GetServiceDescriptors().Where((descriptor) => descriptor.Name.Equals(serviceName, StringComparison.Ordinal)))
-					yield return foundDescriptor;
-			}
-		}
+		//	foreach(var repo in ServiceRepositories)
+		//	{
+		//		// TODO: do some sort of name spacing
+		//		foreach (var foundDescriptor in repo.GetServiceDescriptors().Where((descriptor) => descriptor.Name.Equals(serviceName, StringComparison.Ordinal)))
+		//			yield return foundDescriptor;
+		//	}
+		//}
 
 		public async Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>()
 			where T : class, ILighthouseService
