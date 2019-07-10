@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 namespace Lighthouse.Apps.WarehouseServer
 {
-    [ExternalLighthouseService("warehouse")]
+    //[ExternalLighthouseService("warehouse")]
     //public class WarehouseServer : LighthouseServiceBase, IRequestHandler<StorageRequest, StorageResponse>
     //{
     //    public WarehouseServer(IEnumerable<IWarehouse> warehouses)
@@ -113,45 +113,5 @@ namespace Lighthouse.Apps.WarehouseServer
     //}
 
 
-    public class StorageResponse
-    {
-        public static StorageResponse Stored = new StorageResponse();
-        
-        public StorageResponse(bool wasSuccessful = true, string message = null)
-        {
-            WasSuccessful = wasSuccessful;
-            Message = message;
-        }
-
-        public bool WasSuccessful { get; }
-        public string Message { get; }
-        public Receipt Receipt { get; internal set; }
-        public byte[] Data { get; set; }
-        public string StringData { get; set; } // TODO: is this a necessary hack?!
-        public StorageKeyManifest Manifest { get; internal set; }
-    }
-
-    public class StorageRequest
-    {
-        public StoragePayloadType PayloadType { get; set; }
-        public StorageAction Action { get; set; }
-        public byte[] Data { get; set; }
-        public string StringData { get; set; } // TODO: is this a necessary hack?!
-        public string Key { get; set; }
-        public IEnumerable<StoragePolicy> LoadingDockPolicies { get; set; }
-    }
-
-    public enum StorageAction
-    {
-        Store,
-        Retrieve,
-        Delete,
-        Inspect
-    }
-
-    public enum StoragePayloadType
-    {
-        String,
-        Blob
-    }
+    
 }

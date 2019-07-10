@@ -30,8 +30,7 @@ namespace Lighthouse.Core.Storage
         /// <param name="loadingDockPolicies"></param>
         /// <returns></returns>
         Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null);
-
-
+        
 		/// <summary>
 		/// Returns the Data for a given key and scope
 		/// </summary>

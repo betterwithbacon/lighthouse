@@ -3,7 +3,6 @@ using Lighthouse.Core;
 using Lighthouse.Core.Storage;
 using NSubstitute;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -13,7 +12,7 @@ using Xunit.Abstractions;
 
 namespace Lighthouse.Storage.Tests
 {
-	public class WarehouseTests
+    public class WarehouseTests
 	{
 		private readonly ITestOutputHelper output;
         IStorageScope scope = new ApplicationScope("TestApp");
@@ -116,5 +115,16 @@ namespace Lighthouse.Storage.Tests
 		{
 			
 		}
-	}
+
+        [Fact]
+        [Trait("Function", "StoreAndRetrieve")]        
+        public void OneWarehousePersistsDataIntoAnotherWarehouse()
+        {
+            // so lighthouse one contains a warehouse
+            
+            // another lighthouse contains a warehouse
+
+            //these lighthouses only communicate via TCP
+        }
+    }
 }

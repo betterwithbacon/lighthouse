@@ -7,35 +7,21 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Lighthouse.Core;
+using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Storage;
 using Lighthouse.Storage.Memory;
 
 namespace Lighthouse.Storage
 {
-	public class Warehouse : LighthouseServiceBase, IWarehouse
+    [ExternalLighthouseService("warehouse")]
+    public class Warehouse : LighthouseServiceBase, IWarehouse, IRequestHandler<StorageRequest,StorageResponse>
 	{
 		// TODO: this is atemp solution to this problem of discoverying available shelf types
-		// ideally, this will be discovered by reflection
-		public static ConcurrentBag<Type> AvailableShelfTypes;
+		// ideally, this will be discovered by reflection		
 		public readonly List<Receipt> SessionReceipts = new List<Receipt>();
-		readonly ConcurrentBag<IStore> Stores = new ConcurrentBag<IStore>();		
-		private readonly ConcurrentBag<Warehouse> RemoteWarehouses = new ConcurrentBag<Warehouse>();
-
+		readonly ConcurrentBag<IStore> Stores = new ConcurrentBag<IStore>();
+		
 		protected override bool IsInitialized => Stores.Count > 0;
-
-		static Warehouse()
-		{
-			AvailableShelfTypes = new ConcurrentBag<Type>();
-		}
-
-		public static void RegisterShelfType(Type shelfType)
-		{
-			if (shelfType.IsAssignableFrom(typeof(IStore)) && shelfType.IsClass)
-				throw new ArgumentException("shelf type MUST be implement IShelf and be concrete.");
-
-			if (!AvailableShelfTypes.Contains(shelfType))
-				AvailableShelfTypes.Add(shelfType);
-		}
 
 		protected override void OnInit()
 		{
@@ -291,6 +277,67 @@ namespace Lighthouse.Storage
             else
                 return default;
         }
+
+        public StorageResponse Handle(StorageRequest request)
+        {
+            switch (request.Action)
+            {
+                case StorageAction.Store:
+                    return Store(request);
+                case StorageAction.Retrieve:
+                    return Retrieve(request);
+                case StorageAction.Inspect:
+                    return Inspect(request);
+                case StorageAction.Delete:
+                    return Delete(request);
+                default:
+                    return new StorageResponse(false, "");
+            }
+        }
+
+        private StorageResponse Delete(StorageRequest request)
+        {
+            if (request.PayloadType == StoragePayloadType.Blob)
+                Store(StorageScope.Global, request.Key, null, request.LoadingDockPolicies);
+            else
+                Store(StorageScope.Global, request.Key, null, request.LoadingDockPolicies);
+
+            return new StorageResponse();
+        }
+
+        private StorageResponse Inspect(StorageRequest request)
+        {
+            var manifest = GetManifest(StorageScope.Global, request.Key);
+
+            return new StorageResponse
+            {
+                Manifest = manifest
+            };
+        }
+
+        private StorageResponse Retrieve(StorageRequest request)
+        {
+            string value = Retrieve(StorageScope.Global, request.Key);
+
+            return new StorageResponse
+            {
+                StringData = value
+            };
+        }
+
+        private StorageResponse Store(StorageRequest request)
+        {
+            Receipt receipt = null;
+            if (request.PayloadType == StoragePayloadType.Blob)
+                receipt = Store(StorageScope.Global, request.Key, request.Data, request.LoadingDockPolicies);
+            else
+                receipt = Store(StorageScope.Global, request.Key, request.StringData, request.LoadingDockPolicies);
+
+            return new StorageResponse
+            {
+                Receipt = receipt
+            };
+        }
     }
 
     public class WarehouseConfig
@@ -308,6 +355,48 @@ namespace Lighthouse.Storage
     {
         KeyValue,
         Relational,
+        Blob
+    }
+
+    public class StorageResponse
+    {
+        public static StorageResponse Stored = new StorageResponse();
+
+        public StorageResponse(bool wasSuccessful = true, string message = null)
+        {
+            WasSuccessful = wasSuccessful;
+            Message = message;
+        }
+
+        public bool WasSuccessful { get; }
+        public string Message { get; }
+        public Receipt Receipt { get; internal set; }
+        public byte[] Data { get; set; }
+        public string StringData { get; set; } // TODO: is this a necessary hack?!
+        public StorageKeyManifest Manifest { get; internal set; }
+    }
+
+    public class StorageRequest
+    {
+        public StoragePayloadType PayloadType { get; set; }
+        public StorageAction Action { get; set; }
+        public byte[] Data { get; set; }
+        public string StringData { get; set; } // TODO: is this a necessary hack?!
+        public string Key { get; set; }
+        public IEnumerable<StoragePolicy> LoadingDockPolicies { get; set; }
+    }
+
+    public enum StorageAction
+    {
+        Store,
+        Retrieve,
+        Delete,
+        Inspect
+    }
+
+    public enum StoragePayloadType
+    {
+        String,
         Blob
     }
 }
