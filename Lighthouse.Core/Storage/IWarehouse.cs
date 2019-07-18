@@ -1,6 +1,7 @@
 ﻿using Lighthouse.Core;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Core.Storage
 {
@@ -56,5 +57,7 @@ namespace Lighthouse.Core.Storage
         /// <param name="scope"></param>
         /// <returns></returns>
         StorageKeyManifest GetManifest(IStorageScope scope, string key);
-	}
+
+        Task<IEnumerable<StorageOperation>> PerformStorageMaintenance(DateTime time);
+    }
 }

@@ -38,7 +38,7 @@ namespace Lighthouse.Storage
 		protected override void OnAfterStart()
 		{
 			// schedule server maintainence to be done each hour
-			Container.AddScheduledAction(this, (time) => { PerformStorageMaintenance(time); }, 60);
+			Container.AddScheduledAction(this, async (time) => { await PerformStorageMaintenance(time); }, 60);
 
 			//// populate the remote warehouses			
 			//LoadRemoteWarehouses().RunSynchronously();
@@ -103,8 +103,22 @@ namespace Lighthouse.Storage
 		//	}
 		//}
 		
-		private void PerformStorageMaintenance(DateTime date)
+		public async Task<IEnumerable<StorageOperation>> PerformStorageMaintenance(DateTime date)
 		{
+            // for each store
+            // get all of the manifests
+            // and for each item in the manifest, look to see if the item should be moved in some way
+            foreach(var store in Stores)
+            {
+                var storeManifest = await store.GetManifest(StorageScope.Global);
+
+                foreach (var item in await storeManifest.GetItems())
+                {
+
+                }
+            }
+
+            return Enumerable.Empty<StorageOperation>();
 		}
 
         //public Receipt Store<T>(StorageKey key, T data, IEnumerable<StoragePolicy> loadingDockPolicies)
@@ -171,6 +185,8 @@ namespace Lighthouse.Storage
             };
 
             SessionReceipts.Add(receipt);
+
+            TriggerBackgroundSync();
 
             return receipt;
         }

@@ -188,10 +188,15 @@ namespace Lighthouse.Storage.Memory
             return data.ContainsKey((scope, key));
         }
 
-        public ShelfManifest GetManifest(IStorageScope scope, string key)
+        public Task<StoreManifest> GetManifest(IStorageScope scope, string key)
         {
             // TODO: actually make this do something interesting
-            return new ShelfManifest(new[] { StoragePolicy.Ephemeral }, -1);
+            return new StoreManifest(new[] { StoragePolicy.Ephemeral }, -1);
+        }
+
+        public Task<ScopeManifest> GetManifest(IStorageScope scope)
+        {
+            throw new NotImplementedException();
         }
 
         public void Initialize(ILighthouseServiceContainer container)
@@ -232,9 +237,14 @@ namespace Lighthouse.Storage.Memory
             return data.ContainsKey((scope, key));
         }
 
-        public ShelfManifest GetManifest(IStorageScope scope, string key)
+        public Task<StoreManifest> GetManifest(IStorageScope scope, string key)
         {
-            return new ShelfManifest(new[] { StoragePolicy.Ephemeral }, key.Length);
+            return new StoreManifest(new[] { StoragePolicy.Ephemeral }, key.Length);
+        }
+
+        public Task<ScopeManifest> GetManifest(IStorageScope scope)
+        {
+            throw new NotImplementedException();
         }
 
         public void Initialize(ILighthouseServiceContainer container)

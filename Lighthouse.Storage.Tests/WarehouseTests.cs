@@ -116,15 +116,6 @@ namespace Lighthouse.Storage.Tests
 			
 		}
 
-        [Fact]
-        [Trait("Function", "StoreAndRetrieve")]        
-        public void OneWarehousePersistsDataIntoAnotherWarehouse()
-        {
-            // so lighthouse one contains a warehouse
-            
-            // another lighthouse contains a warehouse
 
-            //these lighthouses only communicate via TCP
-        }
     }
 }

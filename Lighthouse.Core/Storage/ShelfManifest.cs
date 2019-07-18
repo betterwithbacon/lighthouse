@@ -5,7 +5,7 @@ namespace Lighthouse.Core.Storage
 	/// <summary>
 	/// Represents a simple manifest of a shelf. The manifest will be limited by Scope and, optionally, key
 	/// </summary>
-	public sealed class ShelfManifest
+	public sealed class StoreManifest
 	{
 		/// <summary>
 		/// The policies that are valid for either this
@@ -17,7 +17,7 @@ namespace Lighthouse.Core.Storage
 		/// </summary>
 		public long StorageSize { get; private set; }
 
-		public ShelfManifest(IList<StoragePolicy> supportedPolicies, long storageSize)
+		public StoreManifest(IList<StoragePolicy> supportedPolicies, long storageSize)
 		{
 			SupportedPolicies = supportedPolicies;
 			StorageSize = storageSize;

@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Core.Storage
 {
@@ -27,20 +28,19 @@ namespace Lighthouse.Core.Storage
     }
 
     /// <summary>
-    /// A shelf is a type of storage sink. So if it's in-memory, AWS S3, or Redis, it represents a method of persisting data.
-    /// Warehouses, will organize and decide about the movement of data between shelves
+    /// A store is a type of storage sink. So if it's in-memory, AWS S3, or Redis, it represents a method of persisting data.
+    /// Warehouses, will organize and decide about the movement of data between stores
     /// </summary>
     public interface IStore
 	{
 		void Initialize(ILighthouseServiceContainer container);
 
-		// Retrieval Operations
 		bool CanRetrieve(IStorageScope scope, string key);
 
-        // Metadata operations 
-        ShelfManifest GetManifest(IStorageScope scope, string key); // <-- hmmmmm??
+        Task<StoreManifest> GetManifest(IStorageScope scope, string key);
 
-        // Discovery Operations
+        Task<ScopeManifest> GetManifest(IStorageScope scope);
+
         bool CanEnforcePolicies(IEnumerable<StoragePolicy> loadingDockPolicies);
 	}
 }

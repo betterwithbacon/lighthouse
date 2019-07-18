@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Storage.Disk
 {
@@ -34,13 +35,13 @@ namespace Lighthouse.Storage.Disk
 			return FileSystemProvider.FileExists(file);
 		}
         
-		public ShelfManifest GetManifest(IStorageScope scope, string key)
+		public async Task<StoreManifest> GetManifest(IStorageScope scope, string key)
 		{
 			// we can't support returning this data for real yet. It'd be good to pull this data from the file system			
-			var manifest = new ShelfManifest(new[] { StoragePolicy.Persistent }, -1);
+			var manifest = new StoreManifest(new[] { StoragePolicy.Persistent }, -1);
 
 			// TODO: pull some metadata from File system
-			return manifest;
+			return await Task.FromResult(manifest);
 		}
 
 		public void Initialize(IWarehouse warehouse, IStorageScope scope)
@@ -104,6 +105,11 @@ namespace Lighthouse.Storage.Disk
         }
 
         public void Initialize(ILighthouseServiceContainer container)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ScopeManifest> GetManifest(IStorageScope scope)
         {
             throw new NotImplementedException();
         }

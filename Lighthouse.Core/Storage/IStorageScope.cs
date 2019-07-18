@@ -8,4 +8,9 @@ namespace Lighthouse.Core.Storage
 
 		string Identifier { get; }
 	}
+
+    public class StorageOperation
+    {
+
+    }
 }
