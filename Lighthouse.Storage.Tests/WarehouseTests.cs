@@ -126,5 +126,15 @@ namespace Lighthouse.Storage.Tests
             //var receipt = warehouse.Store(scope, "test", payload, new[] { StoragePolicy.Ephemeral });
             //var allData = warehouse.GetManifest(StorageScope.Global);
         }
+
+        [Fact]
+        public async Task PerformStorageMaintenance_IsPerformed()
+        {
+            var dateTime = new DateTime(2019, 1, 1);
+
+            var operationsPerformed = await warehouse.PerformStorageMaintenance(dateTime);
+
+            operationsPerformed.Count().Should().Be(1);
+        }
     }
 }

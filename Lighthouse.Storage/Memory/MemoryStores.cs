@@ -1,6 +1,7 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Storage;
 using System;
+using System.Collections.Async;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -236,9 +237,23 @@ namespace Lighthouse.Storage.Memory
             return data.ContainsKey((scope, key));
         }
 
-        public Task<IEnumerable<ItemDescriptor>> GetManifests(IStorageScope scope, string key = null)
+        public async Task<IEnumerable<ItemDescriptor>> GetManifests(IStorageScope scope, string key = null)
         {
-            throw new NotImplementedException();
+            return await Task.Run(() =>
+               {
+                   var foundDescriptors = new ConcurrentBag<ItemDescriptor>();
+                   
+                   foreach(var rec in data)
+                   {
+                       foundDescriptors.Add(new ItemDescriptor
+                       {
+                           Key = rec.Key.Item2,
+                           Scope = rec.Key.Item1
+                       });
+                   }
+
+                   return foundDescriptors;
+               });
         }
 
         public void Initialize(ILighthouseServiceContainer container)
