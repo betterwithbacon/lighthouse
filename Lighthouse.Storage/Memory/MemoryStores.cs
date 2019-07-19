@@ -244,7 +244,10 @@ namespace Lighthouse.Storage.Memory
 
         public Task<ScopeManifest> GetManifest(IStorageScope scope)
         {
-            throw new NotImplementedException();
+            var manifest = new ScopeManifest();
+
+            //
+            return new ScopeManifest(data.Where(d => d.Key.Item1 == scope));
         }
 
         public void Initialize(ILighthouseServiceContainer container)

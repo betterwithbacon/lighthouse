@@ -116,6 +116,15 @@ namespace Lighthouse.Storage.Tests
 			
 		}
 
+        [Fact]
+        [Trait("Function", "StoreAndRetrieve")]
+        [Trait("Category", "Manifests")]
+        public void GetScopeeManifest_SizeAndPoliciesMatches()
+        {
+            //var payload = "Test Test test";
 
+            //var receipt = warehouse.Store(scope, "test", payload, new[] { StoragePolicy.Ephemeral });
+            //var allData = warehouse.GetManifest(StorageScope.Global);
+        }
     }
 }

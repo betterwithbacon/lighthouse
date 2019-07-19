@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Lighthouse.Server\Lighthouse.Server.csproj" />
     <ProjectReference Include="..\Lighthouse.Storage\Lighthouse.Storage.csproj" />
   </ItemGroup>
 
