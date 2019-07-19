@@ -191,7 +191,7 @@ namespace Lighthouse.Storage.Memory
         public Task<StoreManifest> GetManifest(IStorageScope scope, string key)
         {
             // TODO: actually make this do something interesting
-            return new StoreManifest(new[] { StoragePolicy.Ephemeral }, -1);
+            return Task.FromResult(new StoreManifest(new[] { StoragePolicy.Ephemeral }, -1));
         }
 
         public Task<ScopeManifest> GetManifest(IStorageScope scope)
@@ -239,7 +239,7 @@ namespace Lighthouse.Storage.Memory
 
         public Task<StoreManifest> GetManifest(IStorageScope scope, string key)
         {
-            return new StoreManifest(new[] { StoragePolicy.Ephemeral }, key.Length);
+            return Task.FromResult(new StoreManifest(new[] { StoragePolicy.Ephemeral }, key.Length));
         }
 
         public Task<ScopeManifest> GetManifest(IStorageScope scope)

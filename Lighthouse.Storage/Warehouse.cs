@@ -186,7 +186,7 @@ namespace Lighthouse.Storage
 
             SessionReceipts.Add(receipt);
 
-            TriggerBackgroundSync();
+            //TriggerBackgroundSync();
 
             return receipt;
         }

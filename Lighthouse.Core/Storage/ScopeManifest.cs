@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Core.Storage
 {
     public class ScopeManifest
     {
-        public IEnumerable<ItemDescriptor> GetItems()
+        public Task<IEnumerable<ItemDescriptor>> GetItems()
         {
             throw new NotImplementedException();
         }
