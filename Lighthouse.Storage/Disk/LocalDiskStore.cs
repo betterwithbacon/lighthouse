@@ -35,14 +35,14 @@ namespace Lighthouse.Storage.Disk
 			return FileSystemProvider.FileExists(file);
 		}
         
-		public async Task<StoreManifest> GetManifest(IStorageScope scope, string key)
-		{
-			// we can't support returning this data for real yet. It'd be good to pull this data from the file system			
-			var manifest = new StoreManifest(new[] { StoragePolicy.Persistent }, -1);
+		//public async Task<StoreItemManifest> GetManifest(IStorageScope scope, string key)
+		//{
+		//	// we can't support returning this data for real yet. It'd be good to pull this data from the file system			
+		//	var manifest = new StoreItemManifest(new[] { StoragePolicy.Persistent }, -1);
 
-			// TODO: pull some metadata from File system
-			return await Task.FromResult(manifest);
-		}
+		//	// TODO: pull some metadata from File system
+		//	return await Task.FromResult(manifest);
+		//}
 
 		public void Initialize(IWarehouse warehouse, IStorageScope scope)
 		{
@@ -109,7 +109,17 @@ namespace Lighthouse.Storage.Disk
             throw new NotImplementedException();
         }
 
-        public Task<ScopeManifest> GetManifest(IStorageScope scope)
+        public void Store(IStorageScope scope, string key, string payload)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IEnumerable<ItemDescriptor>> GetManifests(IStorageScope scope, string key = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Store(IStorageScope scope, string key, object payload)
         {
             throw new NotImplementedException();
         }

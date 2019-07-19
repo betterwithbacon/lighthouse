@@ -71,57 +71,81 @@ namespace Lighthouse.Storage
             //}
         }
 
-		//private async Task LoadRemoteWarehouses()
-		//{
-		//	// the container is how remote lighthouse resources are found
-		//	if (Container != null)
-		//	{
-		//		Container.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, "Loading remote warehouses.");
+        //private async Task LoadRemoteWarehouses()
+        //{
+        //	// the container is how remote lighthouse resources are found
+        //	if (Container != null)
+        //	{
+        //		Container.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, "Loading remote warehouses.");
 
-		//		// the Lighthouse context should know about the other services that are running
-		//		foreach (var remoteWarehouse in Container.FindServices<Warehouse>())
-		//		{
-		//			// skip THIS service.
-		//			if (remoteWarehouse.Id == this.Id)
-		//				continue;
+        //		// the Lighthouse context should know about the other services that are running
+        //		foreach (var remoteWarehouse in Container.FindServices<Warehouse>())
+        //		{
+        //			// skip THIS service.
+        //			if (remoteWarehouse.Id == this.Id)
+        //				continue;
 
-		//			RemoteWarehouses.Add(remoteWarehouse);
-		//			Container.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Container local warehouse {remoteWarehouse} was added.");
-		//		}
+        //			RemoteWarehouses.Add(remoteWarehouse);
+        //			Container.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Container local warehouse {remoteWarehouse} was added.");
+        //		}
 
-		//		// this is where an network discovery will occur. to reach other points, not local to this lighthouse runtime.
-		//		// currently, this isn't implemented, but ideally
-		//		foreach (var remoteWarehouseProxy in await Container.FindRemoteServices<Warehouse>())
-		//		{
-		//			//// skip THIS service.
-		//			//if (remoteWarehouseProxy.Service.Id == this.Id)
-		//			//	continue;
+        //		// this is where an network discovery will occur. to reach other points, not local to this lighthouse runtime.
+        //		// currently, this isn't implemented, but ideally
+        //		foreach (var remoteWarehouseProxy in await Container.FindRemoteServices<Warehouse>())
+        //		{
+        //			//// skip THIS service.
+        //			//if (remoteWarehouseProxy.Service.Id == this.Id)
+        //			//	continue;
 
-		//			//RemoteWarehouses.Add(remoteWarehouse);
-		//			//LighthouseContainer.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Remote warehouse {remoteWarehouse} was added.");
-		//		}
-		//	}
-		//}
-		
+        //			//RemoteWarehouses.Add(remoteWarehouse);
+        //			//LighthouseContainer.Log(Lighthouse.Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, this, $"Remote warehouse {remoteWarehouse} was added.");
+        //		}
+        //	}
+        //}
+
+        public const int DefaultSyncTimeInMinutes = 60;
 		public async Task<IEnumerable<StorageOperation>> PerformStorageMaintenance(DateTime date)
 		{
             // for each store
             // get all of the manifests
-            // and for each item in the manifest, look to see if the item should be moved in some way
-            foreach(var store in Stores)
-            {
-                var storeManifest = await store.GetManifest(StorageScope.Global);
+            // and for each item in the manifest, look to see if the item should be moved in some way            
 
-                foreach (var item in await storeManifest.GetItems())
+            Dictionary<string, ItemDescriptor> records = new Dictionary<string, ItemDescriptor>();
+            var allOperations = new List<StorageOperation>();
+
+            foreach (var store in Stores.OfType<IKeyValueStore>()) 
+            {
+                var storeManifest = await store.GetManifests(StorageScope.Global);
+
+                foreach (var item in storeManifest
+                    .Where(sm =>
+                        !sm.LastSyncTime.HasValue ||
+                        sm.LastSyncTime < date.AddMinutes(-1 * DefaultSyncTimeInMinutes)))
                 {
 
+                    // check the other stores to see if they have this item by the file type
+                    
+                    //TODO: this needs to take into account storage class (ephemeral vs archival)
+                    foreach (var otherStore in Stores.OfType<IKeyValueStore>().Where(s => s != store))
+                    {
+                        var otherItem = (await otherStore.GetManifests(StorageScope.Global, item.Key)).FirstOrDefault();
+
+                        if(otherItem == null || otherItem.LastUpdated < item.LastUpdated)
+                        {
+                            // store the file
+                            var payload = store.Retrieve(StorageScope.Global, item.Key);
+
+                            otherStore.Store(StorageScope.Global, item.Key, payload);//, item.SupportedPolicies);
+                        }
+
+                        item.LastSyncTime = Container.GetNow();
+                    }
                 }
             }
 
-            return Enumerable.Empty<StorageOperation>();
-		}
+            return allOperations;
+        }
 
-        //public Receipt Store<T>(StorageKey key, T data, IEnumerable<StoragePolicy> loadingDockPolicies)
         public Receipt Store(IStorageScope scope, string key, object data, IEnumerable<StoragePolicy> loadingDockPolicies = null)
         {
             ThrowIfNotInitialized();
@@ -138,7 +162,7 @@ namespace Lighthouse.Storage
             // resolve the appropriate store, based on the policy
             Parallel.ForEach(ResolveShelves<IObjectStore>(loadingDockPolicies), (shelf) =>
             {
-                shelf.Store(scope, key, data, enforcedPolicies);
+                shelf.Store(scope, key, data); //, enforcedPolicies);
             });
 
             // the receipt is largely what was passed in when it was stored
@@ -168,7 +192,7 @@ namespace Lighthouse.Storage
             ConcurrentBag<StoragePolicy> enforcedPolicies = new ConcurrentBag<StoragePolicy>();
             Parallel.ForEach(ResolveShelves<IKeyValueStore>(loadingDockPolicies), (shelf) =>
             {
-                shelf.Store(scope, key, data, enforcedPolicies);
+                shelf.Store(scope, key, data);//, enforcedPolicies);
             });
 
             var uuid = Guid.NewGuid();
@@ -226,24 +250,24 @@ namespace Lighthouse.Storage
 			return CalculateChecksum(input).Equals(hash);
 		}
 
-		public StorageKeyManifest GetManifest(IStorageScope scope, string key)
-		{
-            //// right now, we just return the data that was sent when it was created
-            //var policies = SessionReceipts.FirstOrDefault(sr => sr.Key == key.Id)?.Policies;
+		//public StorageKeyManifest GetManifest(IStorageScope scope, string key)
+		//{
+  //          //// right now, we just return the data that was sent when it was created
+  //          //var policies = SessionReceipts.FirstOrDefault(sr => sr.Key == key.Id)?.Policies;
 
-            //// if there aren't any receipts for this, the warehouse has no idea where they're stored. 
-            //// TODO: ideally, the warehouse will eventually be able to resolve the receipts from their state
-            //if (policies == null)
-            //	return new StorageKeyManifest();
+  //          //// if there aren't any receipts for this, the warehouse has no idea where they're stored. 
+  //          //// TODO: ideally, the warehouse will eventually be able to resolve the receipts from their state
+  //          //if (policies == null)
+  //          //	return new StorageKeyManifest();
 
-            //return new StorageKeyManifest
-            //{
-            //	// TODO: where do we get the type from? is it passed in? Why should it matter here?
-            //	StorageShelvesManifests = ResolveShelves<object>(policies).Where(s => s.CanRetrieve(key)).Select( shelf => shelf.GetManifest(key)).ToList(),
-            //	StoragePolicies = policies
-            //};	
-            return null;
-		}
+  //          //return new StorageKeyManifest
+  //          //{
+  //          //	// TODO: where do we get the type from? is it passed in? Why should it matter here?
+  //          //	StorageShelvesManifests = ResolveShelves<object>(policies).Where(s => s.CanRetrieve(key)).Select( shelf => shelf.GetManifest(key)).ToList(),
+  //          //	StoragePolicies = policies
+  //          //};	
+  //          return null;
+		//}
 
         public T Retrieve<T>(IStorageScope scope, string key)
         {
@@ -323,12 +347,13 @@ namespace Lighthouse.Storage
 
         private StorageResponse Inspect(StorageRequest request)
         {
-            var manifest = GetManifest(StorageScope.Global, request.Key);
+            //var manifest = GetManifest(StorageScope.Global, request.Key);
 
-            return new StorageResponse
-            {
-                Manifest = manifest
-            };
+            //return new StorageResponse
+            //{
+            //    Manifest = manifest
+            //};
+            return null;
         }
 
         private StorageResponse Retrieve(StorageRequest request)
@@ -353,6 +378,11 @@ namespace Lighthouse.Storage
             {
                 Receipt = receipt
             };
+        }
+
+        ItemDescriptor IWarehouse.GetManifest(IStorageScope scope, string key)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -389,7 +419,7 @@ namespace Lighthouse.Storage
         public Receipt Receipt { get; internal set; }
         public byte[] Data { get; set; }
         public string StringData { get; set; } // TODO: is this a necessary hack?!
-        public StorageKeyManifest Manifest { get; internal set; }
+        //public ItemDescriptor Manifest { get; internal set; }
     }
 
     public class StorageRequest

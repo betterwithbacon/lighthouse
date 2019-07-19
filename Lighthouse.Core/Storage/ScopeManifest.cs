@@ -5,26 +5,30 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Core.Storage
 {
-    public class ScopeManifest
-    {
-        private IEnumerable<KeyValuePair<(IStorageScope, string), string>> enumerable;
+    //public class ScopeManifest
+    //{
+    //    public ScopeManifest(IEnumerable<KeyValuePair<(IStorageScope, string), string>> enumerable = null)
+    //    {
+    //        this.Items = (enumerable?.Select(v => v.Key) ?? Enumerable.Empty<(IStorageScope, string)>()).Select(i => new ItemDescriptor {
+    //            Scope = i.Item1,
+    //            Key = i.Item2
+    //        });
+    //    }
 
-        public ScopeManifest(IEnumerable<KeyValuePair<(IStorageScope, string), string>> enumerable)
-        {
-            this.Items = enumerable.Select(v => v.Key);
-        }
+    //    private IEnumerable<ItemDescriptor> Items { get; }
 
-        private IEnumerable<(IStorageScope, string)> Items { get; }
-
-        public Task<IEnumerable<ItemDescriptor>> GetItems()
-        {
-            throw new NotImplementedException();
-        }
-    }
+    //    public async Task<IEnumerable<ItemDescriptor>> GetItems()
+    //    {
+    //        return await Task.Fro//}mResult(Items);
+    //    }
+    
 
     public class ItemDescriptor
     {
         public IStorageScope Scope { get; set; }
         public string Key { get; set; }
+        public DateTime? LastSyncTime { get; set; }
+        public DateTime LastUpdated { get; set; }
+        public IList<StoragePolicy> StoragePolicies { get; set; }
     }
 }

@@ -12,7 +12,7 @@ namespace Lighthouse.Core.Storage
     public interface IObjectStore : IStore
     {
         // Storage Operations
-        void Store(IStorageScope scope, string key, object payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies);
+        void Store(IStorageScope scope, string key, object payload); //, IProducerConsumerCollection<StoragePolicy> enforcedPolicies);
         T Retrieve<T>(IStorageScope scope, string key);
     }
 
@@ -23,7 +23,7 @@ namespace Lighthouse.Core.Storage
     public interface IKeyValueStore : IStore
     {
         // Storage Operations
-        void Store(IStorageScope scope, string key, string payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies);
+        void Store(IStorageScope scope, string key, string payload); //, IProducerConsumerCollection<StoragePolicy> enforcedPolicies);
         string Retrieve(IStorageScope scope, string key);
     }
 
@@ -37,9 +37,7 @@ namespace Lighthouse.Core.Storage
 
 		bool CanRetrieve(IStorageScope scope, string key);
 
-        Task<StoreManifest> GetManifest(IStorageScope scope, string key);
-
-        Task<ScopeManifest> GetManifest(IStorageScope scope);
+        Task<IEnumerable<ItemDescriptor>> GetManifests(IStorageScope scope, string key = null);
 
         bool CanEnforcePolicies(IEnumerable<StoragePolicy> loadingDockPolicies);
 	}

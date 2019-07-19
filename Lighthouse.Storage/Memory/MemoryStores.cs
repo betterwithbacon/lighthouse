@@ -188,13 +188,7 @@ namespace Lighthouse.Storage.Memory
             return data.ContainsKey((scope, key));
         }
 
-        public Task<StoreManifest> GetManifest(IStorageScope scope, string key)
-        {
-            // TODO: actually make this do something interesting
-            return Task.FromResult(new StoreManifest(new[] { StoragePolicy.Ephemeral }, -1));
-        }
-
-        public Task<ScopeManifest> GetManifest(IStorageScope scope)
+        public Task<IEnumerable<ItemDescriptor>> GetManifests(IStorageScope scope, string key = null)
         {
             throw new NotImplementedException();
         }
@@ -219,6 +213,11 @@ namespace Lighthouse.Storage.Memory
             enforcedPolicies.TryAdd(StoragePolicy.Ephemeral);
             data.AddOrUpdate((scope, key), payload, (s, k) => payload);
         }
+
+        public void Store(IStorageScope scope, string key, object payload)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class InMemoryKeyValueStore : IKeyValueStore
@@ -237,17 +236,9 @@ namespace Lighthouse.Storage.Memory
             return data.ContainsKey((scope, key));
         }
 
-        public Task<StoreManifest> GetManifest(IStorageScope scope, string key)
+        public Task<IEnumerable<ItemDescriptor>> GetManifests(IStorageScope scope, string key = null)
         {
-            return Task.FromResult(new StoreManifest(new[] { StoragePolicy.Ephemeral }, key.Length));
-        }
-
-        public Task<ScopeManifest> GetManifest(IStorageScope scope)
-        {
-            var manifest = new ScopeManifest();
-
-            //
-            return new ScopeManifest(data.Where(d => d.Key.Item1 == scope));
+            throw new NotImplementedException();
         }
 
         public void Initialize(ILighthouseServiceContainer container)
@@ -260,9 +251,9 @@ namespace Lighthouse.Storage.Memory
             return data[(scope, key)];
         }
 
-        public void Store(IStorageScope scope, string key, string payload, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)
+        public void Store(IStorageScope scope, string key, string payload) //, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)
         {
-            enforcedPolicies.TryAdd(StoragePolicy.Ephemeral);
+            //enforcedPolicies.TryAdd(StoragePolicy.Ephemeral);
             data.AddOrUpdate((scope, key), payload, (s, k) => payload);
         }
     }

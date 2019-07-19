@@ -16,7 +16,7 @@ namespace Lighthouse.Storage.Tests.Collections
 	{
 		private readonly ITestOutputHelper output;
 		private WarehouseDictionary<string, string> dictionary;
-		private StorageKeyManifest expectedManifest;
+		private ItemDescriptor expectedItemDescriptor;
 		private readonly IWarehouse warehouse;
 		private readonly IStorageScope testScope;
 		private readonly Dictionary<string, string> actualDictionary = new Dictionary<string, string>();
@@ -86,7 +86,7 @@ namespace Lighthouse.Storage.Tests.Collections
 
 		void WithExpectedManifest()
 		{
-			expectedManifest = new StorageKeyManifest
+			expectedItemDescriptor = new ItemDescriptor
 			{
 				StoragePolicies = new[] { StoragePolicy.Ephemeral } 
 			};
@@ -104,9 +104,8 @@ namespace Lighthouse.Storage.Tests.Collections
 	public class WarehouseDictionaryIntegrationTests
 	{
 		private readonly ITestOutputHelper output;
-		private WarehouseDictionary<string, string> dictionary;
-		private StorageKeyManifest expectedManifest;
-		private readonly Warehouse warehouse;
+		private WarehouseDictionary<string, string> dictionary;        
+        private readonly Warehouse warehouse;
 		private readonly IStorageScope testScope;
 		private readonly Dictionary<string, string> actualDictionary = new Dictionary<string, string>();
 		private readonly ILighthouseServiceContainer container;

@@ -24,14 +24,13 @@ namespace Lighthouse.Storage.Tests.Memory
             var key = "test";
             var payload = "payload";
 
-            var policies = new ConcurrentBag<StoragePolicy>();
-            policies.Add(StoragePolicy.Ephemeral);
-            memoryStore.Store(StorageScope.Global, key, payload, policies);
-            var manifest = await memoryStore.GetManifest(StorageScope.Global);
-            var items = await manifest.GetItems();
+            //var policies = new ConcurrentBag<StoragePolicy>();
+            //policies.Add(StoragePolicy.Ephemeral);
+            memoryStore.Store(StorageScope.Global, key, payload);//, policies);
+            var manifests = await memoryStore.GetManifests(StorageScope.Global);
 
-            items.Count().Should().Be(1);
-            items.First().Key.Should().Be(key);
+            manifests.Count().Should().Be(1);
+            manifests.First().Key.Should().Be(key);
         }
     }
 }

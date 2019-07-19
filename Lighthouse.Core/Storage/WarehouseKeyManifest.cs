@@ -2,9 +2,9 @@
 
 namespace Lighthouse.Core.Storage
 {
-	public class StorageKeyManifest
-	{
-		public IList<StoragePolicy> StoragePolicies { get; set; }
-		public IEnumerable<StoreManifest> StorageShelvesManifests { get; set; }
-	}
+	//public class StorageKeyManifest
+	//{
+	//	public IList<StoragePolicy> StoragePolicies { get; set; }
+	//	public IEnumerable<StoreItemManifest> StorageShelvesManifests { get; set; }
+	//}
 }
