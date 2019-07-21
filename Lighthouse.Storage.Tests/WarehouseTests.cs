@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Lighthouse.Core;
 using Lighthouse.Core.Storage;
+using Lighthouse.Storage.Memory;
 using NSubstitute;
 using System;
 using System.Diagnostics;
@@ -131,6 +132,10 @@ namespace Lighthouse.Storage.Tests
         public async Task PerformStorageMaintenance_IsPerformed()
         {
             var dateTime = new DateTime(2019, 1, 1);
+            var otherStore = new InMemoryKeyValueStore();
+            
+            warehouse.Store(StorageScope.Global, "key", "payload");
+            warehouse.AddStore(otherStore);
 
             var operationsPerformed = await warehouse.PerformStorageMaintenance(dateTime);
 

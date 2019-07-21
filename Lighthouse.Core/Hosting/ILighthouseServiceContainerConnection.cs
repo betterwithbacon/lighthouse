@@ -33,20 +33,14 @@ namespace Lighthouse.Core.Hosting
 		IList<LighthouseServiceContainerConnectionStatus> ConnectionHistory { get; }
 
 		/// <summary>
-		/// This should resolve a service running/present in the remote container.
-		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <returns></returns>
-		Task<IEnumerable<LighthouseServiceProxy<T>>> FindServices<T>()
-			where T : class, ILighthouseService;
-
-		/// <summary>
 		/// An endpoint that handles remoting/transmission of management request
 		/// </summary>
 		/// <param name="serviceInstallationRequest"></param>
 		/// <returns></returns>
 		Task<ManagementInterfaceResponse> SubmitManagementRequest(ServerManagementRequestType requestType, IDictionary<string, object> requestParameters = null);
-	}
+
+        TResponse MakeRequest<TRequest,TResponse>(TRequest storageRequest);
+    }
 
 	public struct LighthouseServiceContainerConnectionStatus
 	{

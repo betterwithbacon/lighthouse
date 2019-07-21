@@ -25,19 +25,17 @@ namespace Lighthouse.Server.Tests
         public void OneWarehousePersistsDataIntoAnotherWarehouse()
         {
             // so lighthouse one contains a warehouse
-            var server1 = new LighthouseServer(localLogger: (m) => Output.WriteLine($"server1: {m}"));
+            var server1 = new LighthouseServer(serverName:"server1", localLogger: (m) => Output.WriteLine($"server1: {m}"));
             server1.BindServicePort(50_000);
             server1.Start();
 
             // another lighthouse contains a warehouse
-            var server2 = new LighthouseServer(localLogger: (m) => Output.WriteLine($"server2: {m}"));
+            var server2 = new LighthouseServer(serverName: "server2", localLogger: (m) => Output.WriteLine($"server2: {m}"));
             server2.BindServicePort(50_001);
-
-            server1.Start();
             server2.Start();
 
             var connection1to2 = new LocalLighthouseServiceContainerConnection(server1, server2);
-            var connection2to1 = new LocalLighthouseServiceContainerConnection(server1, server2);
+            var connection2to1 = new LocalLighthouseServiceContainerConnection(server2, server1);
             server1.RegisterRemotePeer(connection1to2);
             server2.RegisterRemotePeer(connection2to1);
 

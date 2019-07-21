@@ -147,14 +147,6 @@ namespace Lighthouse.Server
 			}
 		}
 
-        public void SetServerName(string serverName)
-        {
-            if (IsRunning)
-                throw new ApplicationException("Can not change server name, while running ");
-
-            ServerName = serverName;
-        }
-
 		public void AddLocalLogger(Action<string> logAction)
 		{
 			if(logAction != null)
@@ -181,9 +173,9 @@ namespace Lighthouse.Server
 
 		private void AddBaseConsumers()
 		{
-			RegisterEventConsumer<ServiceInstallationEvent>(
-				new ServiceInstallationEventConsumer()
-			);
+			//RegisterEventConsumer<ServiceInstallationEvent>(
+			//	new ServiceInstallationEventConsumer()
+			//);
 		}
 
 		//private void LaunchConfiguredServices()
@@ -403,53 +395,6 @@ namespace Lighthouse.Server
 		}
 		#endregion
 
-		#region Service Discovery		
-		public IEnumerable<T> FindServices<T>() where T : ILighthouseService
-		{
-            return null;
-			//return RunningServices.Select(st => st.Service).OfType<T>();
-		}
-
-		//public IEnumerable<ILighthouseServiceDescriptor> FindServiceDescriptor(string serviceName)
-		//{
-		//	if(ServiceRepositories == null)
-		//	{
-		//		throw new ApplicationException("Service repositorioes haven't been initialized. Ensure server is started.");
-		//	}
-
-		//	foreach(var repo in ServiceRepositories)
-		//	{
-		//		// TODO: do some sort of name spacing
-		//		foreach (var foundDescriptor in repo.GetServiceDescriptors().Where((descriptor) => descriptor.Name.Equals(serviceName, StringComparison.Ordinal)))
-		//			yield return foundDescriptor;
-		//	}
-		//}
-
-		public async Task<IEnumerable<LighthouseServiceProxy<T>>> FindRemoteServices<T>()
-			where T : class, ILighthouseService
-		{
-			// TODO: the "are these services connected needs to be done in parallel in a 
-			// background thread or something, to avoid doing this every time find remote services is called
-			await RemoteContainerConnections.ParallelForEachAsync((conn) => conn.TryConnect());
-
-			var results = new ConcurrentBag<LighthouseServiceProxy<T>>();
-
-			//TODO: copmmented out, to make debugging a bit simpler
-			//await RemoteContainerConnections.Where(conn => conn.IsConnected)
-			//	.ParallelForEachAsync(async (conn) =>
-			//	   {
-			//		   foreach (var service in await conn.FindServices<T>())
-			//			   results.Add(service);
-			//	   });
-
-			foreach(var connection in RemoteContainerConnections.Where(conn => conn.IsConnected))
-				foreach (var service in await connection.FindServices<T>())
-					results.Add(service);
-
-			return results;
-		}
-		#endregion
-
 		#region Resources
 		
 
@@ -575,7 +520,7 @@ namespace Lighthouse.Server
 		{
 			Consumers.GetOrAdd(typeof(TEvent), new List<IEventConsumer> { eventConsumer });
 
-			Log(LogLevel.Debug, LogType.ConsumerRegistered, eventConsumer);
+			Log(LogLevel.Debug, LogType.ConsumerRegistered, sender: eventConsumer, message: eventConsumer?.ToString());
 		}
 
 		public async Task Do(Action<ILighthouseServiceContainer> action, string logMessage = null)

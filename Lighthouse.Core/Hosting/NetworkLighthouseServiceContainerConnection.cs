@@ -39,56 +39,6 @@ namespace Lighthouse.Core.Hosting
 			RemoteServerPort = port;
 		}
 
-		public async Task<IEnumerable<LighthouseServiceProxy<T>>> FindServices<T>() 
-			where T : class, ILighthouseService
-		{
-			var networkProvider = GetNetworkProvider();
-
-			UriBuilder uriBuilder = new UriBuilder("http", RemoteServerAddress.ToString(), RemoteServerPort)
-			{
-				Path = LighthouseContainerCommunicationUtil.Endpoints.SERVICES
-			};
-
-			// create a message to send to the remote server
-			var findServiceResponse = await networkProvider.MakeRequest<ListServicesRequest, LighthouseServerResponse<List<LighthouseServiceRemotingWrapper>>>(
-					uriBuilder.Uri,
-					new ListServicesRequest
-					{
-						ServiceDescriptorToFind =
-							new ServiceDescriptor {
-								Name = typeof(T).Name,
-								Type = typeof(T).AssemblyQualifiedName // TODO: I'm doing this to keep compatability, but even minor changes in versions would break this, that might be an unintended "feature, but we probably want to beef this up
-							}
-					}
-				);
-
-			var proxies = new List<LighthouseServiceProxy<T>>();
-
-            // TODO: fail silently here, I guess <-- #pureLaziness
-            if (findServiceResponse == null)
-            {
-                return proxies;
-            }
-
-            // convert service descriptors into proxies
-            foreach (var serviceDescriptor in findServiceResponse.Payload)
-			{
-				// TODO: add service resolution, to this. 
-				//Technically, I'm not sure how you could request a service without it also being local, so this is more of a sanity check I think.
-
-				var serviceType = Type.GetType(serviceDescriptor.ServiceTypeName, true);
-				var proxyType = Type.GetType($"Lighthouse.Core.Hosting.LighthouseServiceProxy`1[[{serviceDescriptor.ServiceTypeName}]], Lighthouse.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", true);
-				//var make Activator.CreateInstance(proxyType);
-				//Type[] typeArgs = { serviceType };
-				//var make = Act //MakeGenericType(serviceType);
-
-				// TODO: this is SUUUUPER edgy, lets clean this up, once we know it works
-				proxies.Add(Activator.CreateInstance(proxyType, this) as LighthouseServiceProxy<T>);
-			}
-
-			return proxies;
-		}
-
 		private INetworkProvider GetNetworkProvider()
 		{
 			var networkProvider = Container

@@ -34,23 +34,10 @@ namespace Lighthouse.Core.Hosting
 
 		public override string ToString()
 		{
-			return $" Local Service Container '{RemoteContainer?.ServerName}'";
+			return $"Local Container '{Container?.ServerName}', Remote Container: '{RemoteContainer?.ServerName}'";
 		}
 
-		public Task<IEnumerable<LighthouseServiceProxy<T>>> FindServices<T>()
-			where T : class, ILighthouseService
-		{
-            // this container is local, so we're sharing the same memory pool,
-            //return Task.FromResult(
-            //	RemoteContainer
-            //		.FindRemoteServices<T>()
-            //		.OfType<T>()
-            //		.Select(s => new LighthouseServiceProxy<T>(this, s))
-            //	);
-            return null;
-		}
-
-		public Task<ManagementInterfaceResponse> SubmitManagementRequest(IManagementRequest managementRequest)
+        public Task<ManagementInterfaceResponse> SubmitManagementRequest(IManagementRequest managementRequest)
 		{
 			throw new System.NotImplementedException();
 		}
