@@ -286,14 +286,6 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Service Launching
-		public void Launch(IEnumerable<ServiceLaunchRequest> launchRequests)
-		{
-			foreach(var request in launchRequests)
-			{
-				Launch(request);
-			}
-		}
-
 		public void Launch(Type serviceType)
 		{
 			AssertIsRunning();
@@ -306,39 +298,13 @@ namespace Lighthouse.Server
 			Launch(service);
 		}
 
-		public void Launch(ServiceLaunchRequest launchRequest)
+        public void Launch(ILighthouseService service)
 		{
 			AssertIsRunning();
 
-			Log(LogLevel.Debug,LogType.Info,this, $"Attempting to start service: {launchRequest.ServiceName}.");
+            // put the service in a runnable state
+            RunningServices.Add(service);
 
-			var validationIssues = Validate(launchRequest);
-			if (validationIssues.Any())
-				throw new ApplicationException($"Can't launch service {launchRequest}. Reasons: {string.Join(',',validationIssues)}");
-			
-			// launch based on launch type			
-            Launch(launchRequest.ServiceType);
-		}
-
-		private ILighthouseService ResolveService(string serviceName)
-		{
-			// iterate over all of the repos and find the name by service
-			// TODO: how do we handle ambiguity
-			throw new NotImplementedException();
-		}
-
-		public IEnumerable<ServiceLaunchRequestValidationResult> Validate(ServiceLaunchRequest serviceLaunchRequest)
-		{
-			return Enumerable.Empty<ServiceLaunchRequestValidationResult>();
-		}
-
-		public void Launch(ILighthouseService service)
-		{
-			AssertIsRunning();
-
-			// put the service in a runnable state
-			//RegisterComponent(service);			
-			
 			// start it, in a separate thread, that will run the business logic for this
 			Task.Run(() => service.Start(), CancellationTokenSource.Token).ContinueWith(
 				(task) =>
@@ -686,8 +652,24 @@ namespace Lighthouse.Server
         public TResponse HandleRequest<TRequest, TResponse>(TRequest storageRequest)
         {
             // find request handlers
-            foreach(var service in Service
+            foreach(var service in GetRunningServices())
+            {
+                if(service is IRequestHandler)
+                {
+                    ///service.GetGenericArguments()
 
+                }
+            }
+
+            return default;
+        }
+
+        ConcurrentBag<ILighthouseService> RunningServices { get; set; } 
+            = new ConcurrentBag<ILighthouseService>();
+
+        private IEnumerable<ILighthouseService> GetRunningServices()
+        {
+            return RunningServices;
         }
     }
 }

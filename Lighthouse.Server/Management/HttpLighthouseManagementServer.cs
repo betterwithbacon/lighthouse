@@ -153,8 +153,9 @@ namespace Lighthouse.Server.Management
 			// I think the management interfaces are purely abstractions for the 
 			if(Enum.TryParse<ManagementRequestType>(routeName,true, out var requestType))
 			{
-				var managementResponse = Container.HandleManagementRequest(requestType, payload);
-				return managementResponse.Message;
+                //var managementResponse = Container.HandleManagementRequest(requestType, payload);
+                //return managementResponse.Message;
+                return null;
 			}
 			else
 			{

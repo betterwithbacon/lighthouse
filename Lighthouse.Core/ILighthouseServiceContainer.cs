@@ -104,5 +104,6 @@ namespace Lighthouse.Core
 		//void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest, bool persist = false, bool autoStart = false);
 
 		LighthouseServerStatus GetStatus();
-	}
+        void Launch(ILighthouseService service);
+    }
 }

@@ -15,32 +15,32 @@ namespace Lighthouse.Server.Management
 		{
 			var requestDetails = request.DeserializeForManagementInterface<ServerManagementRequest>();
 
-			switch (requestDetails.RequestType)
-			{
-				case ServerManagementRequestType.Install:
-					// create an event listener for an installation succeeded.
-					//requestContext.Container.RegisterEventConsumer<ServiceInstalledEvent>(
-					//	new OneTimeHandler<ServiceInstalledEvent>( (ev) => 
-					//);
+			//switch (requestDetails.RequestType)
+			//{
+			//	case ServerManagementRequestType.Install:
+			//		// create an event listener for an installation succeeded.
+			//		//requestContext.Container.RegisterEventConsumer<ServiceInstalledEvent>(
+			//		//	new OneTimeHandler<ServiceInstalledEvent>( (ev) => 
+			//		//);
 
-					//if (requestDetails.RequestParameters.ContainsKey(ServerManagementRequest.RequestTypes.Install.Arguments.ServiceName))					
-					if (requestDetails.RequestParameters.TryGetValue(ServerManagementRequest.RequestTypes.Install.Arguments.ServiceName, out var serviceNameRaw))
-					{
-						if(!(serviceNameRaw is string serviceName))
-							throw new ApplicationException($"Invalid service name was specified. {serviceNameRaw}");
+			//		//if (requestDetails.RequestParameters.ContainsKey(ServerManagementRequest.RequestTypes.Install.Arguments.ServiceName))					
+			//		if (requestDetails.RequestParameters.TryGetValue(ServerManagementRequest.RequestTypes.Install.Arguments.ServiceName, out var serviceNameRaw))
+			//		{
+			//			if(!(serviceNameRaw is string serviceName))
+			//				throw new ApplicationException($"Invalid service name was specified. {serviceNameRaw}");
 
-						// emit an event to install this service in this container
-						await requestContext.Container.EmitEvent(
-							new ServiceInstallationEvent(serviceName, requestContext.Container)
-						);						
-					}
-					else
-					{
-						if (!(serviceNameRaw is string serviceName))
-							throw new ApplicationException("No service name was specified.");
-					}
-					break;
-			}
+			//			// emit an event to install this service in this container
+			//			await requestContext.Container.EmitEvent(
+			//				new ServiceInstallationEvent(serviceName, requestContext.Container)
+			//			);						
+			//		}
+			//		else
+			//		{
+			//			if (!(serviceNameRaw is string serviceName))
+			//				throw new ApplicationException("No service name was specified.");
+			//		}
+			//		break;
+			//}
 
 			return $"success";
 		}
