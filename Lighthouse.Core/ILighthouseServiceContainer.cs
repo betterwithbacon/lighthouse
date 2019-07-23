@@ -39,13 +39,15 @@ namespace Lighthouse.Core
 		/// <returns></returns>
 		IEnumerable<IFileSystemProvider> GetFileSystemProviders();
 
-		/// <summary>
-		/// Exposes low-level server local resources, such as the disk, network, or specific hardware devices.		
-		/// This should NOT be used as a substitute for higher level abstractions such as <see cref="Warehouse.Core.IWarehouse"/>.
-		/// These resources should be wrapped by lighthouse services and exposed to other applications.
-		/// </summary>
-		/// <returns></returns>
-		IEnumerable<INetworkProvider> GetNetworkProviders();
+        TResponse HandleRequest<TRequest, TResponse>(TRequest storageRequest);
+
+        /// <summary>
+        /// Exposes low-level server local resources, such as the disk, network, or specific hardware devices.		
+        /// This should NOT be used as a substitute for higher level abstractions such as <see cref="Warehouse.Core.IWarehouse"/>.
+        /// These resources should be wrapped by lighthouse services and exposed to other applications.
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<INetworkProvider> GetNetworkProviders();
 
 		ILighthouseServiceContainerConnection Connect(Uri uri);
 
@@ -91,11 +93,6 @@ namespace Lighthouse.Core
 		/// A common warehouse, where abstracted storage interfaces are exposed. Otherwarehouses might be attached to this container, but this is a container guaranteed to exist, and expose local resources.
 		/// </summary>
 		IWarehouse Warehouse { get; }
-
-		/*
-         * This is the weird part, it seems like all of thgese pieces should only be called from "outside" the service ocntainer
-         */
-		ManagementInterfaceResponse HandleManagementRequest(ManagementRequestType routeName, string payload);
 
 		IEnumerable<ILighthouseServiceContainerConnection> FindServers();
 

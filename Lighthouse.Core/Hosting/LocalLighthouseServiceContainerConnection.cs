@@ -42,9 +42,9 @@ namespace Lighthouse.Core.Hosting
 			throw new System.NotImplementedException();
 		}
 
-		public Task<ManagementInterfaceResponse> SubmitManagementRequest(ServerManagementRequestType requestType, IDictionary<string, object> requestParameters)
-		{
-			throw new System.NotImplementedException();
-		}
-	}
+        public TResponse MakeRequest<TRequest, TResponse>(TRequest storageRequest)
+        {
+            return RemoteContainer.HandleRequest<TRequest, TResponse>(storageRequest);
+        }
+    }
 }

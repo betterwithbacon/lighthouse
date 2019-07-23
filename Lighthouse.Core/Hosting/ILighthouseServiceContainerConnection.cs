@@ -32,13 +32,6 @@ namespace Lighthouse.Core.Hosting
 		/// </summary>
 		IList<LighthouseServiceContainerConnectionStatus> ConnectionHistory { get; }
 
-		/// <summary>
-		/// An endpoint that handles remoting/transmission of management request
-		/// </summary>
-		/// <param name="serviceInstallationRequest"></param>
-		/// <returns></returns>
-		Task<ManagementInterfaceResponse> SubmitManagementRequest(ServerManagementRequestType requestType, IDictionary<string, object> requestParameters = null);
-
         TResponse MakeRequest<TRequest,TResponse>(TRequest storageRequest);
     }
 

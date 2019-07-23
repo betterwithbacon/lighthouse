@@ -13,7 +13,7 @@ namespace Lighthouse.Core.Storage
     {
         public StorageAction Action { get; set; }
         public string Key { get; set; }
-        public IStorageScope Scope { get; }
+        public IStorageScope Scope { get; set; }
     }
 
     public class StorageResponse
@@ -40,32 +40,37 @@ namespace Lighthouse.Core.Storage
         public IStorageScope Scope { get; set; }
        // public byte[] Data { get; set; }
         //public string StringData { get; set; } // TODO: is this a necessary hack?!
-        //public string Key { get; set; }
+        
         public IEnumerable<StoragePolicy> LoadingDockPolicies { get; set; }
     }
 
-    public class KeyValueStoreStorageRequest : StorageRequest
-    {
-
-    }
-
-    public class InspectStorageRequest : StorageRequest
+    public class KeyValueStoreRequest : StorageRequest
     {
         public string Key { get; set; }
     }
 
-    public class InspectStorageResponse
+    public class BaseResponse
+    {
+        public bool WasSuccessful { get; set; } = false;
+    }
+
+    public class InspectRequest : StorageRequest
+    {
+        public string Key { get; set; }
+    }
+
+    public class InspectResponse
     {
         public List<ItemDescriptor> Items { get; set; }
     }
 
-    //public enum StorageAction
-    //{
-    //    Store,
-    //    Retrieve,
-    //    Delete,
-    //    Inspect        
-    //}
+    public enum StorageAction
+    {
+        Store,
+        Retrieve,
+        Delete,
+        Inspect
+    }
 
     public enum StoragePayloadType
     {

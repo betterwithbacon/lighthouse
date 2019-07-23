@@ -15,8 +15,10 @@ using Lighthouse.Storage.Memory;
 namespace Lighthouse.Storage
 {
     [ExternalLighthouseService("warehouse")]
-    public class Warehouse : LighthouseServiceBase, IWarehouse, IRequestHandler<StorageRequest,StorageResponse>
-	{
+    public class Warehouse : LighthouseServiceBase, IWarehouse, 
+        IRequestHandler<InspectRequest, InspectResponse>,
+        IRequestHandler<KeyValueStoreRequest, BaseResponse>
+    {
 		// ideally, this will be discovered by reflection
 		public readonly List<Receipt> SessionReceipts = new List<Receipt>();
 		readonly ConcurrentBag<IStore> Stores = new ConcurrentBag<IStore>();
@@ -78,7 +80,7 @@ namespace Lighthouse.Storage
 
                                 otherStore.Store(StorageScope.Global, item.Key, payload);//, item.SupportedPolicies);
 
-                                allOperations.Add(new StorageOperation { });
+                                allOperations.Add(new StorageOperation { Action=StorageAction.Store, Key= item.Key, Scope=StorageScope.Global });
                             }
 
                             item.LastSyncTime = Container.GetNow();
@@ -173,7 +175,7 @@ namespace Lighthouse.Storage
         {
             // for all of the stores, communicate with other warehouses to see if they need the files.
             var otherContainers = Container.FindServers();
-            var getAllItemsInGlobalScope = new InspectStorageRequest
+            var getAllItemsInGlobalScope = new InspectRequest
             {                
                 Scope = StorageScope.Global
             };
@@ -183,7 +185,7 @@ namespace Lighthouse.Storage
 
             foreach (var containerConnection in otherContainers)
             {
-                var response = containerConnection.MakeRequest<InspectStorageRequest, InspectStorageResponse>(getAllItemsInGlobalScope);
+                var response = containerConnection.MakeRequest<InspectRequest, InspectResponse>(getAllItemsInGlobalScope);
                 itemsByContainer.Add(containerConnection, response.Items);
             }
         }
@@ -272,69 +274,79 @@ namespace Lighthouse.Storage
                 return default;
         }
 
-        public StorageResponse Handle(StorageRequest request)
+        //public StorageResponse Handle(StorageRequest request)
+        //{
+        //    switch (request.Action)
+        //    {
+        //        case StorageAction.Store:
+        //            return Store(request);
+        //        case StorageAction.Retrieve:
+        //            return Retrieve(request);
+        //        case StorageAction.Inspect:
+        //            return Inspect(request);
+        //        case StorageAction.Delete:
+        //            return Delete(request);
+        //        default:
+        //            return new StorageResponse(false, "");
+        //    }
+        //}
+
+        //private StorageResponse Delete(StorageRequest request)
+        //{
+        //    if (request.PayloadType == StoragePayloadType.Blob)
+        //        Store(StorageScope.Global, request.Key, null, request.LoadingDockPolicies);
+        //    else
+        //        Store(StorageScope.Global, request.Key, null, request.LoadingDockPolicies);
+
+        //    return new StorageResponse();
+        //}
+
+        //private StorageResponse Inspect(StorageRequest request)
+        //{
+        //    //var manifest = GetManifest(StorageScope.Global, request.Key);
+
+        //    //return new StorageResponse
+        //    //{
+        //    //    Manifest = manifest
+        //    //};
+        //    return null;
+        //}
+
+        //private StorageResponse Retrieve(StorageRequest request)
+        //{
+        //    string value = Retrieve(StorageScope.Global, request.Key);
+
+        //    return new StorageResponse
+        //    {
+        //        StringData = value
+        //    };
+        //}
+
+        //private StorageResponse Store(StorageRequest request)
+        //{
+        //    Receipt receipt = null;
+        //    if (request.PayloadType == StoragePayloadType.Blob)
+        //        receipt = Store(StorageScope.Global, request.Key, request.Data, request.LoadingDockPolicies);
+        //    else
+        //        receipt = Store(StorageScope.Global, request.Key, request.StringData, request.LoadingDockPolicies);
+
+        //    return new StorageResponse
+        //    {
+        //        Receipt = receipt
+        //    };
+        //}
+
+        public ItemDescriptor GetManifest(IStorageScope scope, string key)
         {
-            switch (request.Action)
-            {
-                case StorageAction.Store:
-                    return Store(request);
-                case StorageAction.Retrieve:
-                    return Retrieve(request);
-                case StorageAction.Inspect:
-                    return Inspect(request);
-                case StorageAction.Delete:
-                    return Delete(request);
-                default:
-                    return new StorageResponse(false, "");
-            }
+            throw new NotImplementedException();
         }
 
-        private StorageResponse Delete(StorageRequest request)
+        public InspectResponse Handle(InspectRequest request)
         {
-            if (request.PayloadType == StoragePayloadType.Blob)
-                Store(StorageScope.Global, request.Key, null, request.LoadingDockPolicies);
-            else
-                Store(StorageScope.Global, request.Key, null, request.LoadingDockPolicies);
-
-            return new StorageResponse();
+            throw new NotImplementedException();
         }
 
-        private StorageResponse Inspect(StorageRequest request)
-        {
-            //var manifest = GetManifest(StorageScope.Global, request.Key);
-
-            //return new StorageResponse
-            //{
-            //    Manifest = manifest
-            //};
-            return null;
-        }
-
-        private StorageResponse Retrieve(StorageRequest request)
-        {
-            string value = Retrieve(StorageScope.Global, request.Key);
-
-            return new StorageResponse
-            {
-                StringData = value
-            };
-        }
-
-        private StorageResponse Store(StorageRequest request)
-        {
-            Receipt receipt = null;
-            if (request.PayloadType == StoragePayloadType.Blob)
-                receipt = Store(StorageScope.Global, request.Key, request.Data, request.LoadingDockPolicies);
-            else
-                receipt = Store(StorageScope.Global, request.Key, request.StringData, request.LoadingDockPolicies);
-
-            return new StorageResponse
-            {
-                Receipt = receipt
-            };
-        }
-
-        ItemDescriptor IWarehouse.GetManifest(IStorageScope scope, string key)
+        public BaseResponse Handle(KeyValueStoreRequest request)
         {
             throw new NotImplementedException();
         }

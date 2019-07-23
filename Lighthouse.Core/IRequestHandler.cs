@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Lighthouse.Core
 {
-    public interface IRequestHandler<TRequest, TResponse> : IRequestHandler
+    public interface IRequestHandler<in TRequest,out TResponse> : IRequestHandler
     {
         TResponse Handle(TRequest request);
     }

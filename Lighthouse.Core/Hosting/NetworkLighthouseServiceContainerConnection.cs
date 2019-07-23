@@ -92,27 +92,11 @@ namespace Lighthouse.Core.Hosting
 			return IsConnected;
 		}
 
-		public async Task<ManagementInterfaceResponse> SubmitManagementRequest(ServerManagementRequestType requestType, IDictionary<string,object> requestParameters)
-		{
-			// serialize  the request and forward it to the remote target
-			var networkProvider = GetNetworkProvider();
-			UriBuilder uriBuilder = new UriBuilder("http", RemoteServerAddress.ToString(), RemoteServerPort)
-			{
-				Path = LighthouseContainerCommunicationUtil.Endpoints.MANAGEMENT 
-			};
-
-			var managementRequestResponse = await networkProvider.MakeRequest<ServerManagementRequest, ManagementInterfaceResponse>(
-				uriBuilder.Uri, 
-				new ServerManagementRequest
-				{
-					RequestType = requestType,					
-					RequestParameters = requestParameters
-				}
-			);
-
-			return managementRequestResponse;
-		}		
-	}
+        public TResponse MakeRequest<TRequest, TResponse>(TRequest storageRequest)
+        {
+            throw new NotImplementedException();
+        }
+    }
 
 	public class ServerManagementRequest
 	{
@@ -127,7 +111,6 @@ namespace Lighthouse.Core.Hosting
 			}
 		}
 
-		public ServerManagementRequestType RequestType { get; internal set; }
 		public IDictionary<string, object> RequestParameters { get; internal set; }
 
 		public ServerManagementRequest()

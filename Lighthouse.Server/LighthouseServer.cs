@@ -30,11 +30,6 @@ namespace Lighthouse.Server
 {
 	public class LighthouseServer : ILighthouseServiceContainer
 	{
-		public IEnumerable<ILighthouseServiceContainerConnection> FindServers()
-		{
-			return null;
-		}
-
 		#region Fields - Server Metadata
 		public string ServerName { get; private set; }
 		public const string DEFAULT_APP_NAME = "Lighthouse Server";
@@ -681,6 +676,18 @@ namespace Lighthouse.Server
                 action.Invoke(context.FireTimeUtc.LocalDateTime);                
                 return Task.CompletedTask;
             }
+        }
+
+        public IEnumerable<ILighthouseServiceContainerConnection> FindServers()
+        {
+            return RemoteContainerConnections;
+        }
+
+        public TResponse HandleRequest<TRequest, TResponse>(TRequest storageRequest)
+        {
+            // find request handlers
+            foreach(var service in Service
+
         }
     }
 }
