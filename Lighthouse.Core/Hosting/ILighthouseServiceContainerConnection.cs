@@ -32,7 +32,8 @@ namespace Lighthouse.Core.Hosting
 		/// </summary>
 		IList<LighthouseServiceContainerConnectionStatus> ConnectionHistory { get; }
 
-        TResponse MakeRequest<TRequest,TResponse>(TRequest storageRequest);
+        TResponse MakeRequest<TRequest, TResponse>(TRequest storageRequest)
+            where TRequest : class;
     }
 
 	public struct LighthouseServiceContainerConnectionStatus

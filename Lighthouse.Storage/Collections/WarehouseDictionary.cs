@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Lighthouse.Storage.Collections
@@ -67,7 +68,7 @@ namespace Lighthouse.Storage.Collections
             var metadata = Warehouse.GetManifest(storageScope, dictionaryName);
 
             // then push to warehouse
-            Warehouse.Store(storageScope, dictionaryName, internalDictionary, metadata?.StoragePolicies ?? DefaultStoragePolicies);
+            Warehouse.Store(storageScope, dictionaryName, internalDictionary, metadata.FirstOrDefault()?.StoragePolicies ?? DefaultStoragePolicies);
         }
 
 		public ICollection<TKey> Keys => internalDictionary.Keys;

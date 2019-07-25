@@ -43,6 +43,7 @@ namespace Lighthouse.Core.Hosting
 		}
 
         public TResponse MakeRequest<TRequest, TResponse>(TRequest storageRequest)
+            where TRequest : class
         {
             return RemoteContainer.HandleRequest<TRequest, TResponse>(storageRequest);
         }

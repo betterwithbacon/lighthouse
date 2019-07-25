@@ -181,7 +181,7 @@ namespace Lighthouse.Storage.Memory
 
         public bool CanEnforcePolicies(IEnumerable<StoragePolicy> loadingDockPolicies)
         {
-            return loadingDockPolicies.Contains(StoragePolicy.Ephemeral);
+            return loadingDockPolicies == null || loadingDockPolicies.Contains(StoragePolicy.Ephemeral);
         }
 
         public bool CanRetrieve(IStorageScope scope, string key)
@@ -189,9 +189,21 @@ namespace Lighthouse.Storage.Memory
             return data.ContainsKey((scope, key));
         }
 
-        public Task<IEnumerable<ItemDescriptor>> GetManifests(IStorageScope scope, string key = null)
+        public async Task<IEnumerable<ItemDescriptor>> GetManifests(IStorageScope scope, string key = null)
         {
-            throw new NotImplementedException();
+            var items = new List<ItemDescriptor>();
+
+            foreach(var obj in data.Keys)
+            {
+                items.Add(
+                    new ItemDescriptor
+                    {
+                        Key = obj.Item2,
+                        Scope = obj.Item1
+                    });
+            }
+
+            return await Task.FromResult(items);
         }
 
         public void Initialize(ILighthouseServiceContainer container)
@@ -229,7 +241,7 @@ namespace Lighthouse.Storage.Memory
 
         public bool CanEnforcePolicies(IEnumerable<StoragePolicy> loadingDockPolicies)
         {
-            return loadingDockPolicies.Contains(StoragePolicy.Ephemeral);
+            return loadingDockPolicies == null || loadingDockPolicies.Contains(StoragePolicy.Ephemeral);
         }
 
         public bool CanRetrieve(IStorageScope scope, string key)

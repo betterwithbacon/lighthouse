@@ -316,7 +316,7 @@ namespace Lighthouse.Server
 					}
 					else
 					{
-						HandleTaskCompletion(task);
+						HandleTaskCompletion(service.ToString(), task);
 					}
 				}, CancellationTokenSource.Token);
 		}
@@ -331,9 +331,9 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Auditing/Logging
-		private void HandleTaskCompletion(Task task)
+		private void HandleTaskCompletion(string serviceDescription, Task task)
 		{
-            Log(LogLevel.Debug, LogType.Info, this, $"App completed successfully. TaskId {task.Id}");  //{RunningServices.FirstOrDefault(lsr => lsr.TaskId == task.Id)?.Service}", emitEvent:false);
+            Log(LogLevel.Debug, LogType.Info, this, $"{serviceDescription} completed successfully. TaskId {task.Id}");  //{RunningServices.FirstOrDefault(lsr => lsr.TaskId == task.Id)?.Service}", emitEvent:false);
 		}
 
 		private void Service_StatusUpdated(object owner, string status)
@@ -650,14 +650,21 @@ namespace Lighthouse.Server
         }
 
         public TResponse HandleRequest<TRequest, TResponse>(TRequest storageRequest)
+            where TRequest : class
         {
             // find request handlers
             foreach(var service in GetRunningServices())
             {
-                if(service is IRequestHandler)
+                if(service is IRequestHandler requestHandler)
                 {
-                    ///service.GetGenericArguments()
-
+                    if(requestHandler.HandlesRequest<TRequest>())
+                    {
+                        var methods = ReflectionUtil.GetMethodsBySingleParameterType(requestHandler.GetType(), "Handle");
+                        if (methods.TryGetValue(typeof(TRequest), out var method))
+                        {
+                            return (TResponse)method.Invoke(requestHandler, new[] { storageRequest });
+                        }
+                    }                    
                 }
             }
 
@@ -670,6 +677,16 @@ namespace Lighthouse.Server
         private IEnumerable<ILighthouseService> GetRunningServices()
         {
             return RunningServices;
+        }
+    }
+
+    public static class IRequestHandlerExtensions
+    {
+        public static bool HandlesRequest<TRequest>(this IRequestHandler handler)
+        {
+            return ((System.Reflection.TypeInfo)handler.GetType())
+                                                        .ImplementedInterfaces
+                                                        .Any(i => i.GenericTypeArguments.Count() == 2 && i.GenericTypeArguments[0] == typeof(TRequest));
         }
     }
 }

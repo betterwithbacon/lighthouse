@@ -42,6 +42,7 @@ namespace Lighthouse.Server.Tests
             // create a warehouse
             var warehouse1 = new Warehouse();
             warehouse1.Initialize(server1);
+            warehouse1.Start();
 
             var warehouse2 = new Warehouse();
             warehouse2.Initialize(server2);
@@ -51,7 +52,7 @@ namespace Lighthouse.Server.Tests
 
             //these lighthouses only communicate via container connections
             // store something in warehouse1, and it should be replicated in the second warehouse pretty soon
-            warehouse1.Store(StorageScope.Global, key, payload, new[] { StoragePolicy.Archival });
+            warehouse1.Store(StorageScope.Global, key, payload, new[] { StoragePolicy.Ephemeral, StoragePolicy.Archival });
 
             Thread.Sleep(500);
 

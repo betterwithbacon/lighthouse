@@ -56,7 +56,7 @@ namespace Lighthouse.Core.Storage
         /// <param name="key"></param>
         /// <param name="scope"></param>
         /// <returns></returns>
-        ItemDescriptor GetManifest(IStorageScope scope, string key);
+        IEnumerable<ItemDescriptor> GetManifest(IStorageScope scope, string key = null);
 
         Task<IEnumerable<StorageOperation>> PerformStorageMaintenance(DateTime time);
     }

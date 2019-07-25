@@ -39,7 +39,8 @@ namespace Lighthouse.Core
 		/// <returns></returns>
 		IEnumerable<IFileSystemProvider> GetFileSystemProviders();
 
-        TResponse HandleRequest<TRequest, TResponse>(TRequest storageRequest);
+        TResponse HandleRequest<TRequest, TResponse>(TRequest storageRequest)
+            where TRequest : class;
 
         /// <summary>
         /// Exposes low-level server local resources, such as the disk, network, or specific hardware devices.		

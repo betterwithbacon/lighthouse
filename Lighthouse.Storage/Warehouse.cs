@@ -138,7 +138,7 @@ namespace Lighthouse.Storage
             store.Initialize(this.Container);
         }
 
-        public Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null)
+        public Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null) //, bool isFromRemoteContainer = false)
         {
             if (loadingDockPolicies == null)
             {
@@ -148,7 +148,7 @@ namespace Lighthouse.Storage
             ConcurrentBag<StoragePolicy> enforcedPolicies = new ConcurrentBag<StoragePolicy>();
             Parallel.ForEach(ResolveStores<IKeyValueStore>(loadingDockPolicies), (shelf) =>
             {
-                shelf.Store(scope, key, data);//, enforcedPolicies);
+                shelf.Store(scope, key, data);
             });
 
             var uuid = Guid.NewGuid();
@@ -166,7 +166,10 @@ namespace Lighthouse.Storage
 
             SessionReceipts.Add(receipt);
 
-            TriggerBackgroundSync();
+            //if (!isFromRemoteContainer)
+            //{
+                TriggerBackgroundSync();
+            //}
 
             return receipt;
         }
@@ -242,7 +245,7 @@ namespace Lighthouse.Storage
 
             if (objectStore == null)
             {
-                throw new ApplicationException($"Data can't be found: {key} ({typeof(T)}).");
+                return default;
             }
 
             var val = objectStore.Retrieve<T>(scope, key);
@@ -263,7 +266,7 @@ namespace Lighthouse.Storage
 
             if (keyValStore == null)
             {
-                throw new ApplicationException($"Can't find any KeyValue stores that have the data.");
+                return default;
             }
 
             var val = keyValStore.Retrieve(scope, key);
@@ -336,20 +339,36 @@ namespace Lighthouse.Storage
         //    };
         //}
 
-        public ItemDescriptor GetManifest(IStorageScope scope, string key)
+        public IEnumerable<ItemDescriptor> GetManifest(IStorageScope scope, string key = null)
         {
-            throw new NotImplementedException();
+            HashSet<ItemDescriptor> items = new HashSet<ItemDescriptor>();
+            foreach(var store in Stores)
+            {
+                foreach(var item in store.GetManifests(scope, key).GetAwaiter().GetResult())
+                {
+                    items.Add(item);
+                }
+            }
+
+            return items;
         }
 
         public InspectResponse Handle(InspectRequest request)
         {
-            throw new NotImplementedException();
+            var items = GetManifest(request.Scope);
+            
+            return new InspectResponse
+            {
+                Items = items.ToList()
+            };
         }
 
         public BaseResponse Handle(KeyValueStoreRequest request)
         {
             throw new NotImplementedException();
         }
+
+        
     }
 
     public class WarehouseConfig
