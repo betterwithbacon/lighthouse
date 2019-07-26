@@ -302,6 +302,8 @@ namespace Lighthouse.Server
 		{
 			AssertIsRunning();
 
+            service.Initialize(this);
+
             // put the service in a runnable state
             RunningServices.Add(service);
 

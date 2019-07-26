@@ -41,11 +41,10 @@ namespace Lighthouse.Server.Tests
 
             // create a warehouse
             var warehouse1 = new Warehouse();
-            warehouse1.Initialize(server1);
-            warehouse1.Start();
+            server1.Launch(warehouse1);
 
             var warehouse2 = new Warehouse();
-            warehouse2.Initialize(server2);
+            server2.Launch(warehouse2);
 
             var key = "testKey";
             var payload = "payload";
@@ -53,12 +52,11 @@ namespace Lighthouse.Server.Tests
             //these lighthouses only communicate via container connections
             // store something in warehouse1, and it should be replicated in the second warehouse pretty soon
             warehouse1.Store(StorageScope.Global, key, payload, new[] { StoragePolicy.Ephemeral, StoragePolicy.Archival });
-
-            Thread.Sleep(500);
+            warehouse1.PerformStorageMaintenance(DateTime.Now).GetAwaiter().GetResult();
+            //Thread.Sleep(500);
 
             var retrievedPayload = warehouse2.Retrieve(StorageScope.Global, key);
             payload.Should().Be(retrievedPayload);
-
         }
     }
 }

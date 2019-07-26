@@ -47,11 +47,13 @@ namespace Lighthouse.Core.Storage
     public class KeyValueStoreRequest : StorageRequest
     {
         public string Key { get; set; }
+        public string Value { get; set; }
     }
 
     public class BaseResponse
     {
         public bool WasSuccessful { get; set; } = false;
+        public Receipt Receipt { get; set; }
     }
 
     public class InspectRequest : StorageRequest

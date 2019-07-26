@@ -275,7 +275,15 @@ namespace Lighthouse.Storage.Memory
 
         public string Retrieve(IStorageScope scope, string key)
         {
-            return data[(scope, key)];
+            //return data[(scope, key)];
+            if(data.TryGetValue((scope,key), out var val))
+            {
+                return val;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public void Store(IStorageScope scope, string key, string payload) //, IProducerConsumerCollection<StoragePolicy> enforcedPolicies)

@@ -26,7 +26,7 @@ namespace Lighthouse.Core.Storage
 		}
 	}
 
-	public sealed class StorageScope : IStorageScope
+	public sealed class StorageScope : IStorageScope, IEqualityComparer<StorageScope>
 	{
 		public static IStorageScope Global = new StorageScope("global");
 		
@@ -48,7 +48,11 @@ namespace Lighthouse.Core.Storage
 		{
 			return obj.Identifier.GetHashCode();
 		}
-	}
+
+        public bool Equals(StorageScope x, StorageScope y) => x.ScopeName == y.ScopeName;
+
+        public int GetHashCode(StorageScope obj) => obj.GetHashCode();
+    }
 
 	public sealed class LocalScope : IStorageScope
 	{	

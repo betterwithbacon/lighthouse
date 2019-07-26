@@ -96,7 +96,7 @@ namespace Lighthouse.Storage
             return allOperations;
         }
 
-        public Receipt Store(IStorageScope scope, string key, object data, IEnumerable<StoragePolicy> loadingDockPolicies = null)
+        public Receipt Store(IStorageScope scope, string key, object data, IEnumerable<StoragePolicy> loadingDockPolicies = null, bool syncChangesToOtherWarehouses = true)
         {
             ThrowIfNotInitialized();
 
@@ -138,7 +138,7 @@ namespace Lighthouse.Storage
             store.Initialize(this.Container);
         }
 
-        public Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null) //, bool isFromRemoteContainer = false)
+        public Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null, bool syncChangesToOtherWarehouses = true)
         {
             if (loadingDockPolicies == null)
             {
@@ -166,10 +166,10 @@ namespace Lighthouse.Storage
 
             SessionReceipts.Add(receipt);
 
-            //if (!isFromRemoteContainer)
-            //{
+            if (syncChangesToOtherWarehouses)
+            {
                 TriggerBackgroundSync();
-            //}
+            }
 
             return receipt;
         }
@@ -183,13 +183,34 @@ namespace Lighthouse.Storage
                 Scope = StorageScope.Global
             };
 
-            Dictionary<ILighthouseServiceContainerConnection, IEnumerable<ItemDescriptor>> itemsByContainer = 
-                new Dictionary<ILighthouseServiceContainerConnection, IEnumerable<ItemDescriptor>>();
+            Dictionary<ILighthouseServiceContainerConnection, HashSet<ItemDescriptor>> itemsByContainer = 
+                new Dictionary<ILighthouseServiceContainerConnection, HashSet<ItemDescriptor>>();
+
+            Dictionary<ILighthouseServiceContainerConnection, HashSet<ItemDescriptor>> itemsToAddContainer =
+                new Dictionary<ILighthouseServiceContainerConnection, HashSet<ItemDescriptor>>();
 
             foreach (var containerConnection in otherContainers)
             {
                 var response = containerConnection.MakeRequest<InspectRequest, InspectResponse>(getAllItemsInGlobalScope);
-                itemsByContainer.Add(containerConnection, response.Items);
+                itemsByContainer.Add(containerConnection, response.Items.ToHashSet());
+            }
+
+            // get all items in current warehouse
+            foreach(var item in GetManifest(StorageScope.Global).Distinct())
+            {
+                foreach(var containerAndItems in itemsByContainer)
+                {
+                    // the remote container does not have the item, so give it to them
+                    if(!containerAndItems.Value.Contains(item))
+                    {
+                        containerAndItems.Key.MakeRequest<KeyValueStoreRequest, BaseResponse>(
+                            new KeyValueStoreRequest
+                            {
+                                Scope = StorageScope.Global,
+                                Key = item.Key
+                            });
+                    }
+                }
             }
         }
 
@@ -207,6 +228,11 @@ namespace Lighthouse.Storage
 
 		public static string CalculateChecksum(object input)
 		{
+            if(input == null)
+            {
+                input = string.Empty;
+            }
+
 			// can't calculate checksums for non strings right now
 			// TODO: add support for non-strings
 			if (input.GetType() != typeof(string))
@@ -365,10 +391,11 @@ namespace Lighthouse.Storage
 
         public BaseResponse Handle(KeyValueStoreRequest request)
         {
-            throw new NotImplementedException();
-        }
-
-        
+            return new BaseResponse
+            {
+                Receipt = Store(request.Scope, request.Key, request.Value, syncChangesToOtherWarehouses: false)
+            };
+        }        
     }
 
     public class WarehouseConfig

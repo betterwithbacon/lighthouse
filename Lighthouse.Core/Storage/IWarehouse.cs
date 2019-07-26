@@ -20,7 +20,7 @@ namespace Lighthouse.Core.Storage
 		/// <param name="data"></param>
 		/// <param name="loadingDockPolicies"></param>
 		/// <returns></returns>
-		Receipt Store(IStorageScope scope, string key, object data, IEnumerable<StoragePolicy> loadingDockPolicies = null);
+		Receipt Store(IStorageScope scope, string key, object data, IEnumerable<StoragePolicy> loadingDockPolicies = null, bool syncChangesToOtherWarehouses = true);
 
         /// <summary>
         /// 
@@ -30,7 +30,7 @@ namespace Lighthouse.Core.Storage
         /// <param name="data"></param>
         /// <param name="loadingDockPolicies"></param>
         /// <returns></returns>
-        Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null);
+        Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null, bool syncChangesToOtherWarehouses = true);
         
 		/// <summary>
 		/// Returns the Data for a given key and scope
