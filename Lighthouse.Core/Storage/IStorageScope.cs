@@ -16,32 +16,26 @@ namespace Lighthouse.Core.Storage
         public IStorageScope Scope { get; set; }
     }
 
-    public class StorageResponse
-    {
-        public static StorageResponse Stored = new StorageResponse();
+    //public class StorageResponse
+    //{
+    //    public static StorageResponse Stored = new StorageResponse();
 
-        public StorageResponse(bool wasSuccessful = true, string message = null)
-        {
-            WasSuccessful = wasSuccessful;
-            Message = message;
-        }
+    //    public StorageResponse(bool wasSuccessful = true, string message = null)
+    //    {
+    //        WasSuccessful = wasSuccessful;
+    //        Message = message;
+    //    }
 
-        public bool WasSuccessful { get; }
-        public string Message { get; }
-        public Receipt Receipt { get; set; }
-        public byte[] Data { get; set; }
-        public string StringData { get; set; } // TODO: is this a necessary hack?!        
-    }
+    //    public bool WasSuccessful { get; }
+    //    public string Message { get; }
+    //    public Receipt Receipt { get; set; }
+    //    public byte[] Data { get; set; }
+    //    public string StringData { get; set; } // TODO: is this a necessary hack?!        
+    //}
 
     public abstract class StorageRequest
     {
-        //public StoragePayloadType PayloadType { get; set; }
-        //public StorageAction Action { get; set; }
-        public IStorageScope Scope { get; set; }
-       // public byte[] Data { get; set; }
-        //public string StringData { get; set; } // TODO: is this a necessary hack?!
-        
-        public IEnumerable<StoragePolicy> LoadingDockPolicies { get; set; }
+        public IStorageScope Scope { get; set; }        
     }
 
     public class KeyValueStoreRequest : StorageRequest
@@ -50,7 +44,7 @@ namespace Lighthouse.Core.Storage
         public string Value { get; set; }
     }
 
-    public class BaseResponse
+    public class AckResponse
     {
         public bool WasSuccessful { get; set; } = false;
         public Receipt Receipt { get; set; }

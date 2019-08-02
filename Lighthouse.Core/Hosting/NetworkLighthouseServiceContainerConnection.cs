@@ -1,15 +1,9 @@
-﻿using Lighthouse.Core.Configuration.Formats.Memory;
-using Lighthouse.Core.Configuration.ServiceDiscovery;
-using Lighthouse.Core.IO;
+﻿using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
-using Lighthouse.Core.Management;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Lighthouse.Core.Hosting

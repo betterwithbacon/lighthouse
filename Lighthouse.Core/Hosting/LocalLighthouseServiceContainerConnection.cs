@@ -2,7 +2,6 @@
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Lighthouse.Core.Management;
 
 namespace Lighthouse.Core.Hosting
 {
@@ -35,11 +34,6 @@ namespace Lighthouse.Core.Hosting
 		public override string ToString()
 		{
 			return $"Local Container '{Container?.ServerName}', Remote Container: '{RemoteContainer?.ServerName}'";
-		}
-
-        public Task<ManagementInterfaceResponse> SubmitManagementRequest(IManagementRequest managementRequest)
-		{
-			throw new System.NotImplementedException();
 		}
 
         public TResponse MakeRequest<TRequest, TResponse>(TRequest storageRequest)

@@ -1,8 +1,4 @@
-﻿using Lighthouse.Core.Management;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Newtonsoft.Json;
 
 namespace Lighthouse.Core.Hosting
 {
@@ -38,9 +34,9 @@ namespace Lighthouse.Core.Hosting
 			return JsonConvert.DeserializeObject<T>(serializedText);
 		}
 
-		public static ManagementInterfaceResponse ToMIResponse(this string serializedMI)
-		{
-			return new ManagementInterfaceResponse(true, serializedMI);
-		}
+		//public static ManagementInterfaceResponse ToMIResponse(this string serializedMI)
+		//{
+		//	return new ManagementInterfaceResponse(true, serializedMI);
+		//}
 	}
 }

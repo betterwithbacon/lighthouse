@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
-using Lighthouse.Core.Management;
 
 namespace Lighthouse.Core.Hosting
 {

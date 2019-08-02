@@ -1,16 +1,12 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Configuration.Providers;
-using Lighthouse.Core.Configuration.ServiceDiscovery;
-using Lighthouse.Core.Configuration.ServiceDiscovery.Local;
 using Lighthouse.Core.Events;
 using Lighthouse.Core.Events.Queueing;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
-using Lighthouse.Core.Management;
 using Lighthouse.Core.Storage;
 using Lighthouse.Core.Utils;
-using Lighthouse.Server.Management;
 using Lighthouse.Server.Utils;
 using Lighthouse.Storage;
 using System;
@@ -71,15 +67,13 @@ namespace Lighthouse.Server
 		readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
 		readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
 		readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
-		Timer InternalWorkQueueProcessorTimer;		
+		Timer InternalWorkQueueProcessorTimer;
 		readonly List<ILighthouseServiceContainerConnection> RemoteContainerConnections = new List<ILighthouseServiceContainerConnection>();
 		#endregion
 
 		#region Fields - Resources
 		private readonly ConcurrentBag<IResourceProvider> Resources = new ConcurrentBag<IResourceProvider>();		
-		public IWarehouse Warehouse { get; } = new Warehouse();
-		private readonly ConcurrentBag<ILighthouseManagementInterface> ManagementInterfaces = new ConcurrentBag<ILighthouseManagementInterface>();
-		private readonly Dictionary<ManagementRequestType, Type> RequestHandlerMappings = new Dictionary<ManagementRequestType, Type>();
+		public IWarehouse Warehouse { get; } = new Warehouse();		
 		#endregion
 
 		#region Constructors
@@ -112,35 +106,35 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Server Lifecycle
-		public void AddHttpManagementInterface(int port = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT)
-		{
-			// look for a conflicting interface
-			if(!ManagementInterfaces.OfType<IHttpManagementInterface>().Any(mi => mi.Port == port))
-			{
-				var httpLighthouseManagementServer = new HttpLighthouseManagementServer(port);
-				AddManagementInterface(httpLighthouseManagementServer);
-			}
-			else
-			{
-				throw new ApplicationException($"Management interface already bound to port {port}");
-			}
-		}
+		//public void AddHttpManagementInterface(int port = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT)
+		//{
+		//	// look for a conflicting interface
+		//	if(!ManagementInterfaces.OfType<IHttpManagementInterface>().Any(mi => mi.Port == port))
+		//	{
+		//		var httpLighthouseManagementServer = new HttpLighthouseManagementServer(port);
+		//		AddManagementInterface(httpLighthouseManagementServer);
+		//	}
+		//	else
+		//	{
+		//		throw new ApplicationException($"Management interface already bound to port {port}");
+		//	}
+		//}
 
-		public void AddManagementInterface(ILighthouseManagementInterface managementInterface)
-		{
-			if (managementInterface == null)
-			{
-				throw new ArgumentNullException(nameof(managementInterface));
-			}
+		//public void AddManagementInterface(ILighthouseManagementInterface managementInterface)
+		//{
+		//	if (managementInterface == null)
+		//	{
+		//		throw new ArgumentNullException(nameof(managementInterface));
+		//	}
 
-			ManagementInterfaces.Add(managementInterface);
+		//	ManagementInterfaces.Add(managementInterface);
 
-			// if the service is running already, go aheand and start running it
-			if (IsRunning)
-			{
-				Launch(managementInterface);
-			}
-		}
+		//	// if the service is running already, go aheand and start running it
+		//	if (IsRunning)
+		//	{
+		//		Launch(managementInterface);
+		//	}
+		//}
 
 		public void AddLocalLogger(Action<string> logAction)
 		{
@@ -520,44 +514,6 @@ namespace Lighthouse.Server
 			Log(LogLevel.Info, LogType.Info, this, $"Adding remote lighthouse container: {connection}");
 		}
 
-		public class LighthouseServerManagementRequestHandlerContext : IManagementRequestContext
-		{
-			public ILighthouseServiceContainer Container { get; internal set; }
-		}
-
-		public ManagementInterfaceResponse HandleManagementRequest(ManagementRequestType requestType, string payload)
-		{
-			// can't handle this reuqest
-			if (!RequestHandlerMappings.ContainsKey(requestType))
-			{
-				Log(LogLevel.Error, LogType.Error, this, $"Unexpected management request received: {requestType}");
-				return null;
-			}
-
-			var handlerType = RequestHandlerMappings[requestType];
-
-			if (!(Activator.CreateInstance(handlerType) is IManagementRequestHandler handler))
-			{
-				Log(LogLevel.Error, LogType.Error, this, $"Management request handler (found:[{handlerType}]) isn't of type IManagementRequestHandler.");
-				return null;
-			}
-
-			try
-			{
-				handler.Handle(payload,
-					new LighthouseServerManagementRequestHandlerContext
-					{
-						Container = this
-					});
-			}
-			catch(Exception e)
-			{
-				return new ManagementInterfaceResponse(false, e.Message);
-			}
-
-			return ManagementInterfaceResponse.Success;					
-		}
-
 		public ILighthouseServiceContainerConnection Connect(Uri uri)
 		{
 			return new NetworkLighthouseServiceContainerConnection(
@@ -666,7 +622,7 @@ namespace Lighthouse.Server
                         {
                             return (TResponse)method.Invoke(requestHandler, new[] { storageRequest });
                         }
-                    }                    
+                    }
                 }
             }
 

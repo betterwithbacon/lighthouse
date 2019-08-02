@@ -17,7 +17,8 @@ namespace Lighthouse.Storage
     [ExternalLighthouseService("warehouse")]
     public class Warehouse : LighthouseServiceBase, IWarehouse, 
         IRequestHandler<InspectRequest, InspectResponse>,
-        IRequestHandler<KeyValueStoreRequest, BaseResponse>
+        IRequestHandler<KeyValueStoreRequest, AckResponse>,
+        IRequestHandler<RetrieveRequest, RetrieveResponse>
     {
 		// ideally, this will be discovered by reflection
 		public readonly List<Receipt> SessionReceipts = new List<Receipt>();
@@ -49,14 +50,10 @@ namespace Lighthouse.Storage
 
             isPerformingMaintenance = true;
 
+            
             try
             {
-                // for each store
-                // get all of the manifests
-                // and for each item in the manifest, look to see if the item should be moved in some way            
-
-                Dictionary<string, ItemDescriptor> records = new Dictionary<string, ItemDescriptor>();
-
+                // perform local sync to stores first                
                 foreach (var store in Stores.OfType<IKeyValueStore>())
                 {
                     var storeManifest = await store.GetManifests(StorageScope.Global);
@@ -78,7 +75,7 @@ namespace Lighthouse.Storage
                                 // store the file
                                 var payload = store.Retrieve(StorageScope.Global, item.Key);
 
-                                otherStore.Store(StorageScope.Global, item.Key, payload);//, item.SupportedPolicies);
+                                otherStore.Store(StorageScope.Global, item.Key, payload);
 
                                 allOperations.Add(new StorageOperation { Action=StorageAction.Store, Key= item.Key, Scope=StorageScope.Global });
                             }
@@ -87,6 +84,8 @@ namespace Lighthouse.Storage
                         }
                     }
                 }
+
+                TriggerBackgroundSync();
             }
             finally
             {
@@ -96,7 +95,7 @@ namespace Lighthouse.Storage
             return allOperations;
         }
 
-        public Receipt Store(IStorageScope scope, string key, object data, IEnumerable<StoragePolicy> loadingDockPolicies = null, bool syncChangesToOtherWarehouses = true)
+        public Receipt Store(IStorageScope scope, string key, object data, IEnumerable<StoragePolicy> loadingDockPolicies = null)
         {
             ThrowIfNotInitialized();
 
@@ -138,7 +137,7 @@ namespace Lighthouse.Storage
             store.Initialize(this.Container);
         }
 
-        public Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null, bool syncChangesToOtherWarehouses = true)
+        public Receipt Store(IStorageScope scope, string key, string data, IEnumerable<StoragePolicy> loadingDockPolicies = null)
         {
             if (loadingDockPolicies == null)
             {
@@ -166,10 +165,10 @@ namespace Lighthouse.Storage
 
             SessionReceipts.Add(receipt);
 
-            if (syncChangesToOtherWarehouses)
-            {
-                TriggerBackgroundSync();
-            }
+            //if (syncChangesToOtherWarehouses)
+            //{
+            //    TriggerBackgroundSync(key, data);
+            //}
 
             return receipt;
         }
@@ -203,11 +202,14 @@ namespace Lighthouse.Storage
                     // the remote container does not have the item, so give it to them
                     if(!containerAndItems.Value.Contains(item))
                     {
-                        containerAndItems.Key.MakeRequest<KeyValueStoreRequest, BaseResponse>(
+                        var value = Retrieve(StorageScope.Global, item.Key);
+
+                        containerAndItems.Key.MakeRequest<KeyValueStoreRequest, AckResponse>(
                             new KeyValueStoreRequest
                             {
                                 Scope = StorageScope.Global,
-                                Key = item.Key
+                                Key = item.Key,      
+                                Value = value
                             });
                     }
                 }
@@ -303,68 +305,6 @@ namespace Lighthouse.Storage
                 return default;
         }
 
-        //public StorageResponse Handle(StorageRequest request)
-        //{
-        //    switch (request.Action)
-        //    {
-        //        case StorageAction.Store:
-        //            return Store(request);
-        //        case StorageAction.Retrieve:
-        //            return Retrieve(request);
-        //        case StorageAction.Inspect:
-        //            return Inspect(request);
-        //        case StorageAction.Delete:
-        //            return Delete(request);
-        //        default:
-        //            return new StorageResponse(false, "");
-        //    }
-        //}
-
-        //private StorageResponse Delete(StorageRequest request)
-        //{
-        //    if (request.PayloadType == StoragePayloadType.Blob)
-        //        Store(StorageScope.Global, request.Key, null, request.LoadingDockPolicies);
-        //    else
-        //        Store(StorageScope.Global, request.Key, null, request.LoadingDockPolicies);
-
-        //    return new StorageResponse();
-        //}
-
-        //private StorageResponse Inspect(StorageRequest request)
-        //{
-        //    //var manifest = GetManifest(StorageScope.Global, request.Key);
-
-        //    //return new StorageResponse
-        //    //{
-        //    //    Manifest = manifest
-        //    //};
-        //    return null;
-        //}
-
-        //private StorageResponse Retrieve(StorageRequest request)
-        //{
-        //    string value = Retrieve(StorageScope.Global, request.Key);
-
-        //    return new StorageResponse
-        //    {
-        //        StringData = value
-        //    };
-        //}
-
-        //private StorageResponse Store(StorageRequest request)
-        //{
-        //    Receipt receipt = null;
-        //    if (request.PayloadType == StoragePayloadType.Blob)
-        //        receipt = Store(StorageScope.Global, request.Key, request.Data, request.LoadingDockPolicies);
-        //    else
-        //        receipt = Store(StorageScope.Global, request.Key, request.StringData, request.LoadingDockPolicies);
-
-        //    return new StorageResponse
-        //    {
-        //        Receipt = receipt
-        //    };
-        //}
-
         public IEnumerable<ItemDescriptor> GetManifest(IStorageScope scope, string key = null)
         {
             HashSet<ItemDescriptor> items = new HashSet<ItemDescriptor>();
@@ -389,13 +329,23 @@ namespace Lighthouse.Storage
             };
         }
 
-        public BaseResponse Handle(KeyValueStoreRequest request)
+        public AckResponse Handle(KeyValueStoreRequest request)
         {
-            return new BaseResponse
+            return new AckResponse
             {
-                Receipt = Store(request.Scope, request.Key, request.Value, syncChangesToOtherWarehouses: false)
+                Receipt = Store(request.Scope, request.Key, request.Value)
             };
-        }        
+        }
+
+        public RetrieveResponse Handle(RetrieveRequest request)
+        {
+            var payload = Retrieve(request.Scope, request.Key);
+
+            return new RetrieveResponse
+            {
+                Data = payload
+            };
+        }
     }
 
     public class WarehouseConfig

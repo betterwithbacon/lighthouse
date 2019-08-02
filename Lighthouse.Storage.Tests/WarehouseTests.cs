@@ -141,5 +141,16 @@ namespace Lighthouse.Storage.Tests
 
             operationsPerformed.Count().Should().Be(1);
         }
+
+        //[Fact]
+        //public async Task Handle_RetrieveRequest_RecordRetrieved()
+        //{
+        //    var dateTime = new DateTime(2019, 1, 1);
+        //    var otherStore = new InMemoryKeyValueStore();
+
+        //    warehouse.Store(StorageScope.Global, "key", "payload");
+        //    warehouse.AddStore(otherStore);
+         
+        //}
     }
 }

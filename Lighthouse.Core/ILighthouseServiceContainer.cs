@@ -1,10 +1,8 @@
 ﻿using Lighthouse.Core.Configuration.Providers;
-using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Events;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
-using Lighthouse.Core.Management;
 using Lighthouse.Core.Storage;
 using System;
 using System.Collections.Generic;

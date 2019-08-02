@@ -1,6 +1,5 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Hosting;
-using Lighthouse.Core.Management;
 using Lighthouse.Core.Utils;
 using System;
 using System.Collections.Concurrent;
@@ -9,12 +8,11 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace Lighthouse.Server.Management
 {
 	
-	public class HttpLighthouseManagementServer :  LighthouseServiceBase, IHttpManagementInterface
+	public class HttpLighthouseManagementServer :  LighthouseServiceBase //, IHttpManagementInterface
 	{
 		private HttpListener Listener { get; }
 		private Thread ListeningThread; // TODO: I want ALL threads managed within the lighthouse, so instead of this thread being spawned here, I want the container to "own" it.
@@ -147,20 +145,21 @@ namespace Lighthouse.Server.Management
 
 		public string Route(string routeName, string payload)
 		{
-			// delegate each question to the container itself
-			// IDK, I don't want to rebuild ASP MVC controllers, i just want very terse mapping
-			// my concern is, lets say we add 5 endpopints, and there's 3 management interfaces, I don't want them to have to do the mappinb, as well, just to sort of proxy it. 
-			// I think the management interfaces are purely abstractions for the 
-			if(Enum.TryParse<ManagementRequestType>(routeName,true, out var requestType))
-			{
-                //var managementResponse = Container.HandleManagementRequest(requestType, payload);
-                //return managementResponse.Message;
-                return null;
-			}
-			else
-			{
-				return null;
-			}
+            // delegate each question to the container itself
+            // IDK, I don't want to rebuild ASP MVC controllers, i just want very terse mapping
+            // my concern is, lets say we add 5 endpopints, and there's 3 management interfaces, I don't want them to have to do the mappinb, as well, just to sort of proxy it. 
+            // I think the management interfaces are purely abstractions for the 
+            //if(Enum.TryParse<ManagementRequestType>(routeName,true, out var requestType))
+            //{
+            //             //var managementResponse = Container.HandleManagementRequest(requestType, payload);
+            //             //return managementResponse.Message;
+            //             return null;
+            //}
+            //else
+            //{
+            //	return null;
+            //}
+            return null;
 		}
 
 		public static string CleanRoute(string input)
