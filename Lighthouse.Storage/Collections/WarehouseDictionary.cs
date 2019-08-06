@@ -108,7 +108,6 @@ namespace Lighthouse.Storage.Collections
 
             // overwrite what was there
             UpdateDictionaryToWarehouse();
-
         }
 
         public bool Contains(KeyValuePair<TKey, TValue> item)

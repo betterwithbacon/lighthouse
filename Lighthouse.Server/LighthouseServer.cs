@@ -571,21 +571,6 @@ namespace Lighthouse.Server
 
         #endregion
 
-        public LighthouseServerStatus GetStatus()
-		{
-			return new LighthouseServerStatus(
-				new Version("0.0.0.0"),//new Version(AppConfiguration?.Version ?? "0.0.0.0"),
-
-                ServerName, 
-				GetNow()
-			);
-		}
-
-        public IConfigurationProvider GetConfigurationProvider()
-        {
-            throw new NotImplementedException();
-        }
-
         private class ScheduledActionJob : IJob
         {
             public Task Execute(IJobExecutionContext context)

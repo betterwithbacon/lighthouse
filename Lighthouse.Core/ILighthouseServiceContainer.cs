@@ -64,8 +64,6 @@ namespace Lighthouse.Core
         /// <param name="actions"></param>
         Task Do(Action<ILighthouseServiceContainer> action, string logMessage = "");
         
-        IConfigurationProvider GetConfigurationProvider();
-
         /// <summary>
         /// Add a scheduled action attached to the object that created them
         /// </summary>
@@ -98,11 +96,6 @@ namespace Lighthouse.Core
 		void Start();
 		Task Stop();
 
-		//void AddServiceRepository(IServiceRepository serviceRepository);
-
-		//void AddServiceLaunchRequest(ServiceLaunchRequest launchRequest, bool persist = false, bool autoStart = false);
-
-		LighthouseServerStatus GetStatus();
         void Launch(ILighthouseService service);
     }
 }
