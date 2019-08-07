@@ -61,11 +61,7 @@ namespace Lighthouse.Server.Tests
 			this.Output = output;
 		}
 
-		protected void GivenAContainer(
-			IWorkQueue<IEvent> workQueue = null,			
-			//IAppConfigurationProvider launchConfiguration = null, 
-			string workingDirectory = null,
-			IWorkQueue<IEvent> eventQueue = null)
+		protected void GivenAContainer(string workingDirectory = null)
 		{
 			container = new LighthouseServer(
 				localLogger: (m) =>
@@ -75,9 +71,6 @@ namespace Lighthouse.Server.Tests
 				},				
 				workingDirectory: workingDirectory
 			);
-
-			if(eventQueue != null)
-				container.AddEventQueue(eventQueue);
 		}
 
 		#region Logging
@@ -209,21 +202,4 @@ namespace Lighthouse.Server.Tests
 
 		public DateTime EventTime { get; private set; }
 	}
-
-	//public static class LighthouseServerConfigurationExtensions
-	//{
-	//	public static LighthouseServer AssertLaunchConfigurationExists(this LighthouseServer Container)
-	//	{
-	//		//Assert.NotNull(Container.LaunchConfiguration);
-	//		return Container;
-	//	}
-
-	//	public static LighthouseServer AssertLaunchRequestsExists(this LighthouseServer Container, Func<ServiceLaunchRequest, bool> filter = null )
-	//	{
-	//		Container.AssertLaunchConfigurationExists();
-	//		//Container.ServiceLaunchRequests.Where(slr => filter?.Invoke(slr) ?? true).Should().NotBeEmpty();
-			
-	//		return Container;
-	//	}
-	//}
 }

@@ -62,7 +62,7 @@ namespace Lighthouse.Core.Hosting
 					Path = LighthouseContainerCommunicationUtil.Endpoints.PING
 				};
 
-				var serverStatus = await networkProvider.GetObjectAsync<LighthouseServerStatus>(uriBuilder.Uri);
+				var serverStatus = await networkProvider.GetObjectAsync<object>(uriBuilder.Uri);
 
 				if (serverStatus != null)
 				{

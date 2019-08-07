@@ -28,12 +28,10 @@ namespace Lighthouse.Server
 	{
 		#region Fields - Server Metadata
 		public string ServerName { get; private set; }
-		public const string DEFAULT_APP_NAME = "Lighthouse Server";
-		public string Identifier => ServerName;
+		public const string DEFAULT_APP_NAME = "Lighthouse Server";		
 		public string WorkingDirectory { get; private set; } = @"C:\";
 		public readonly OSPlatform OS;
-        private static string GetDefaultScheduleName(ILighthouseService owner, string scheduleName = null) => scheduleName ?? owner.Id + "_timer";
-        private const string SchedulerSerializedObjectKeyName = "actionToPerform";
+        public int ServicePort { get; private set; }
         #endregion
 
         #region Fields - Log
@@ -41,34 +39,15 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Fields - Task Management
-		public void AddEventQueue(IWorkQueue<IEvent> eventQueue, int pollFrequencyInMilliseconds = QueueEventProducer.DEFAULT_POLLING_INTERVAL)
-		{
-			// wrap the queue in a queue event producer that will read of of this
-			if (eventQueue != null)			
-				RegisterEventProducer(new QueueEventProducer(eventQueue, pollFrequencyInMilliseconds));
-		}
-
-		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
-		
+		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();		
 		public bool IsRunning { get; private set; }
         #endregion
 
-        #region Fields - Configuration
-        //private IAppConfigurationProvider AppConfiguration { get; set; }
-		// Local cache of ALL repositories. this will likely include more than the initial config
-		//private IList<IServiceRepository> ServiceRepositories { get; set; } = new List<IServiceRepository>();
-		//public IList<ServiceLaunchRequest> ServiceLaunchRequests { get; private set; } = new List<ServiceLaunchRequest>();		
-		public int ServicePort { get; private set; }
-		#endregion
-
-		#region Fields - Events
-		public IWorkQueue<IEvent> EventQueue { get; }
-		private IWorkQueue<IEvent> InternalWorkQueue { get; set; }
-		readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
+		#region Fields - Events		
+        readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
 		readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
 		readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
-		Timer InternalWorkQueueProcessorTimer;
-		readonly List<ILighthouseServiceContainerConnection> RemoteContainerConnections = new List<ILighthouseServiceContainerConnection>();
+        readonly List<ILighthouseServiceContainerConnection> RemoteContainerConnections = new List<ILighthouseServiceContainerConnection>();
 		#endregion
 
 		#region Fields - Resources
@@ -81,9 +60,7 @@ namespace Lighthouse.Server
 			string serverName = "Lighthouse Server",
 			Action<string> localLogger = null,
 			string workingDirectory = null,
-			Action<LighthouseServer> preLoadOperations = null,
-            string[] configFileData = null,
-			bool enableManagementService = false)
+			Action<LighthouseServer> preLoadOperations = null)
 		{
 			ServerName = serverName;
 			OS = RuntimeServices.GetOS();
@@ -98,44 +75,11 @@ namespace Lighthouse.Server
 			// perform some operations before the server loads it's configuration, the most likely operations are actually adding support for loading the configuration.			
 			preLoadOperations?.Invoke(this);
 
-			// laod up app specific details
-			LoadAppConfiguration();
-
             InitScheduler().GetAwaiter().GetResult();
         }
 		#endregion
 
 		#region Server Lifecycle
-		//public void AddHttpManagementInterface(int port = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT)
-		//{
-		//	// look for a conflicting interface
-		//	if(!ManagementInterfaces.OfType<IHttpManagementInterface>().Any(mi => mi.Port == port))
-		//	{
-		//		var httpLighthouseManagementServer = new HttpLighthouseManagementServer(port);
-		//		AddManagementInterface(httpLighthouseManagementServer);
-		//	}
-		//	else
-		//	{
-		//		throw new ApplicationException($"Management interface already bound to port {port}");
-		//	}
-		//}
-
-		//public void AddManagementInterface(ILighthouseManagementInterface managementInterface)
-		//{
-		//	if (managementInterface == null)
-		//	{
-		//		throw new ArgumentNullException(nameof(managementInterface));
-		//	}
-
-		//	ManagementInterfaces.Add(managementInterface);
-
-		//	// if the service is running already, go aheand and start running it
-		//	if (IsRunning)
-		//	{
-		//		Launch(managementInterface);
-		//	}
-		//}
-
 		public void AddLocalLogger(Action<string> logAction)
 		{
 			if(logAction != null)
@@ -150,79 +94,13 @@ namespace Lighthouse.Server
 			IsRunning = true;
 
             StartScheduler().GetAwaiter().GetResult();
-
-            // configure a producer, that will periodically read from an event stream, and emit those events within the context.			
-            if (EventQueue != null)
-				RegisterEventProducer(new QueueEventProducer(EventQueue, 1000));
-
-			AddBaseConsumers();
-
-			//LaunchConfiguredServices();
         }
-
-		private void AddBaseConsumers()
-		{
-			//RegisterEventConsumer<ServiceInstallationEvent>(
-			//	new ServiceInstallationEventConsumer()
-			//);
-		}
-
-		//private void LaunchConfiguredServices()
-		//{
-		//	// TODO: right now, it's one, but it COULD be more, what's that like?!
-
-		//	//// reigster all of the service requests, from the config providers.
-		//	foreach (var request in ServiceLaunchRequests)
-		//	{
-		//		Log(LogLevel.Debug, LogType.Info, this, $"Preparing to start {request}");
-				
-		//		// launch the service
-		//		Launch(request);
-		//	}
-		//}
-
-		private void LoadAppConfiguration()
-		{
-			//var allConfigs = GetResourceProviders<IAppConfigurationProvider>();
-
-   //         ServicePort = LighthouseContainerCommunicationUtil.DEFAULT_SERVER_PORT;
-
-   //         if (!allConfigs.Any())
-			//{
-			//	// if no config, just leave, and use the "base" config
-			//	// throw new InvalidOperationException("No  app config provider found.");
-			//	return;
-			//}
-
-			//if (allConfigs.Count() > 1)
-			//	throw new InvalidOperationException("Too many app configuration providers found. There should only be one.");
-
-			//RequestHandlerMappings.Add(ManagementRequestType.Ping, typeof(PingManagementRequestHandler));
-			//RequestHandlerMappings.Add(ManagementRequestType.Services, typeof(ServicesManagementRequestHandler));
-			//RequestHandlerMappings.Add(ManagementRequestType.ServerManagement, typeof(ServerManagementRequestHandler));
-
-			//AppConfiguration = allConfigs.Single();
-
-			//Log(LogLevel.Debug, LogType.Info, this, $"Loading config file data {AppConfiguration}");
-			//AppConfiguration.Load();
-
-			//foreach (var slr in AppConfiguration.GetServiceRepositories())			
-			//	AddServiceRepository(slr);
-
-			// manually add "local repo" 
-			// this will be everything native to the service, such as install, uninstall, etc.
-			//AddServiceRepository(new LocalServiceRepository(this));
-
-			//foreach (var slr in AppConfiguration.GetServiceLaunchRequests().Where(s => s != null))
-			//	AddServiceLaunchRequest(slr);
-		}
 
 		public void BindServicePort(int servicePort)
 		{
 			ServicePort = servicePort;
 			
 			// TODO: Need to restart the listening I assume?
-
 		}
 
 		public async Task Stop()
@@ -399,33 +277,10 @@ namespace Lighthouse.Server
 		{
 			return ServerName;
 		}
-		#endregion
 
-		#region Events
-		void PollForEvents()
-		{
-			// kick off the timer
-			// TODO: the creation of the handler should be somewhere else probably
-			InternalWorkQueueProcessorTimer = 
-				new Timer((context) => {					
-					try
-					{
-						var ev = InternalWorkQueue.Dequeue(1).FirstOrDefault();
-						if (ev != null)
-						{
-							HandleEvent(ev);
-						}
-					}
-					catch (Exception e)
-					{
-						Log(LogLevel.Error,LogType.Error,this, exception: e);
-						throw;
-					}
-				}, this, 100, 1000
-			);
-		}
-
-		public async Task EmitEvent(IEvent ev, object logSource = null)
+        #endregion
+        #region Events
+        public async Task EmitEvent(IEvent ev, object logSource = null)
 		{	
 			// log the event was raised within the context
 			// but don't log events emitted by the source itself
@@ -525,6 +380,9 @@ namespace Lighthouse.Server
         #endregion
 
         #region Scheduling
+        private static string GetDefaultScheduleName(ILighthouseService owner, string scheduleName = null) => scheduleName ?? owner.Id + "_timer";
+        private const string SchedulerSerializedObjectKeyName = "actionToPerform";
+
         private async Task InitScheduler()
         {
             NameValueCollection props = new NameValueCollection
