@@ -6,6 +6,7 @@ using Xunit.Abstractions;
 
 namespace Lighthouse.Core.Tests
 {
+    
     public class LighthouseServiceTests : LighthouseTestsBase
 	{
 		public List<string> RecordedValues = new List<string>();

@@ -16,8 +16,7 @@ namespace Lighthouse.Core.IO
 		/// The storage might also not be truly persistent, if the container is hosted on an ephemeral file system.
 		/// </summary>
 		/// <param name="fileName"></param>
-		/// <param name="data"></param>
-		//Task WriteToFileSystem(string fileName, byte[] data);
+		/// <param name="data"></param>		
 		void WriteToFileSystem(string fileName, byte[] data);
 
 		/// <summary>

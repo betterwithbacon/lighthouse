@@ -81,6 +81,7 @@ namespace Lighthouse.Server.Tests
 		{
 			var testGuid = Guid.NewGuid().ToString();
 			Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Info, Container, testGuid);
+            Thread.Sleep(25);
 			ContainerMessages.Should().Contain((rec) => rec.Contains(testGuid));
 		}
 		#endregion
@@ -110,7 +111,8 @@ namespace Lighthouse.Server.Tests
 		[Trait("Category", "Unit")]
 		public void GetNetworkProviders_ShouldFindProvider()
 		{
-			Container.GetNetworkProviders().Should().NotBeEmpty();
+            Container.AddAvailableNetworkProviders();
+            Container.GetNetworkProviders().Should().NotBeEmpty();
 		}
 
 		[Fact]

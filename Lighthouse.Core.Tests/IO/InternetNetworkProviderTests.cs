@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 
 namespace Lighthouse.Core.Tests.IO
 {
-    [Collection("network tests")]
+    //[Collection("network tests")]
 	public class InternetNetworkProviderTests : LighthouseTestsBase
 	{
 		public InternetNetworkProviderTests(ITestOutputHelper output) : base(output)

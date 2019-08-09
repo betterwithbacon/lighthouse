@@ -279,6 +279,7 @@ namespace Lighthouse.Server
 		}
 
         #endregion
+
         #region Events
         public async Task EmitEvent(IEvent ev, object logSource = null)
 		{	
@@ -385,12 +386,15 @@ namespace Lighthouse.Server
 
         private async Task InitScheduler()
         {
-            NameValueCollection props = new NameValueCollection
-                {
-                    { "quartz.serializer.type", "binary" }
-                };
-            StdSchedulerFactory factory = new StdSchedulerFactory(props);
-            Scheduler = await factory.GetScheduler();
+            //NameValueCollection props = new NameValueCollection
+            //    {
+            //        { "quartz.serializer.type", "binary" }
+            //    };
+            //StdSchedulerFactory factory = new StdSchedulerFactory(props);
+            //factory.Initialize();
+            Scheduler = await StdSchedulerFactory.GetDefaultScheduler();
+
+            //Scheduler = await factory.GetScheduler(Guid.NewGuid().ToString());
         }
 
         private IScheduler Scheduler { get; set; }

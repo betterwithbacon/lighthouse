@@ -2,10 +2,12 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Xunit;
 using Xunit.Abstractions;
 
 namespace Lighthouse.Core.Tests
 {
+    [Collection("LighthouseServiceTests")]
     public abstract class LighthouseTestsBase
     {
 		protected readonly List<string> Messages = new List<string>();
