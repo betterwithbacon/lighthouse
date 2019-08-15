@@ -1,5 +1,7 @@
+using FluentAssertions;
 using Lighthouse.Core.IO;
 using Lighthouse.Server;
+using NSubstitute;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -26,21 +28,34 @@ namespace Lighthouse.Apps.Database.Tests
         [Fact]
         public async Task Store_WhenStored_FileIsThere()
         {
-            var db = new KVD();
-
             var mockFileSystem = NSubstitute.Substitute.For<IFileSystemProvider>();
             Container.RegisterResourceProvider(mockFileSystem);
+            Container.Start();
 
+            var db = new KVD();
+            Container.Launch(db);
+            
             // write file
             await db.Store("global", "key", "value");
-            
-            mockFileSystem.
+
+            mockFileSystem.ReceivedWithAnyArgs().WriteToFileSystem(Arg.Any<string>(), Arg.Any<byte[]>());
         }
 
         [Fact]
-        public void Retrieve_WhenStored_DataIsReturned()
+        public async Task Retrieve_WhenStored_DataIsReturned()
         {
+            var mockFileSystem = NSubstitute.Substitute.For<IFileSystemProvider>();
+            Container.RegisterResourceProvider(mockFileSystem);
+            Container.Start();
 
+            var db = new KVD();
+            Container.Launch(db);
+            var payload = "value";
+            var partition = "partition";
+            var key = "key";
+            await db.Store(partition, key, payload);
+            var retrievedPayload = await db.Retrieve(partition, key);
+            retrievedPayload.Should().Be(payload);
         }
     }
 }

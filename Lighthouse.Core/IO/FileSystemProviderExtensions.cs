@@ -11,7 +11,7 @@ namespace Lighthouse.Core.IO
 			if (string.IsNullOrEmpty(fileName))
 				throw new ArgumentNullException(nameof(fileName));
 
-			var content = provider?.ReadFromFileSystem(fileName).Result;
+			var content = provider?.ReadFromFileSystem(fileName).GetAwaiter().GetResult();
 			if (content != null)
 			{
 				return Encoding.UTF8.GetString(content);

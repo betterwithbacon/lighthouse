@@ -1,4 +1,5 @@
 ﻿using Lighthouse.Core;
+using Lighthouse.Core.IO;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -16,13 +17,14 @@ namespace Lighthouse.Apps.Database
         public async Task Store(string partition, string key, string value)
         {
             await Task.Run(() => {
-                Entries.Add(new KvdEntry { PartitionKey = partition, Key = key, Value = value });
+                Entries.AddOrUpdate(new KvdEntry { PartitionKey = partition, Key = key}, value, (kvd, curVal) => value);
+                //SyncWithFileSystem();
             });
         }
 
         public async Task<string> Retrieve(string partition, string key)
-        {   
-            return await Task.Run<string>( () => Entries.FirstOrDefault(kvd => kvd.PartitionKey == partition && kvd.Key.Equals(key, StringComparison.OrdinalIgnoreCase))?.Value);            
+        {
+            return await Task.Run<string>(() => Entries.TryGetValue(new KvdEntry { PartitionKey = partition, Key = key }, out var value) ? value : null);
         }
 
         public KVD()
@@ -30,37 +32,89 @@ namespace Lighthouse.Apps.Database
 
         }
 
-        public ConcurrentBag<KvdEntry> Entries
+        public ConcurrentDictionary<KvdKey, string> Entries
         {
             get; private set;
-        }
+        } = new ConcurrentDictionary<KvdKey, string>();
+
+        private IFileSystemProvider FileSystem { get; set; }
 
         protected override void OnStart()
         {
             // load the values from the file system
-            var fileSystem = Container.GetFileSystemProviders()?.FirstOrDefault();
-
-            if(fileSystem == null)
-            {
-                throw new ApplicationException("no file system is present");
-            }
+            FileSystem = Container.GetFileSystemProviders()?.FirstOrDefault();
 
             // TODO: load file storage location from some sort of config
+            Entries = ReadFromFileSystem();
+        }
 
-            var dbFile = fileSystem.ReadFromFileSystem(PrimaryDBFileName).GetAwaiter().GetResult();
+        protected override void OnStop()
+        {
+            base.OnStop();
 
-            if(dbFile != null)
+            // push the file to the file system
+            WriteToFileSystem();
+        }
+
+        public void WriteToFileSystem()
+        {
+            if(FileSystem == null)
             {
-                var dictionaryString = Encoding.UTF8.GetString(dbFile, 0, dbFile.Length);
-                Entries = new ConcurrentBag<KvdEntry>(JsonConvert.DeserializeObject<List<KvdEntry>>(dictionaryString));
+                throw new ApplicationException("No file system is present.");
             }
+
+            var fileData = JsonConvert.SerializeObject(Entries.Select(e => new KvdEntry(e.Key,e.Value)));
+            FileSystem.WriteStringToFileSystem(PrimaryDBFileName, fileData);
+        }
+
+        public ConcurrentDictionary<KvdKey, string> ReadFromFileSystem()
+        {
+            if (FileSystem == null)
+            {
+                throw new ApplicationException("No file system is present.");
+            }
+
+            var serializedDbFile = FileSystem.ReadStringFromFileSystem(PrimaryDBFileName);
+
+            if (serializedDbFile != null)
+            {
+                var listOfAllEntries = JsonConvert.DeserializeObject<IList<KvdEntry>>(serializedDbFile);
+                return new ConcurrentDictionary<KvdKey, string>(listOfAllEntries.ToDictionary(kvd => (KvdKey)kvd, kve => kve.Value));
+            }
+
+            return null;
         }
     }
 
-    public class KvdEntry
+    public class KvdEntry : KvdKey
+    {
+        public string Value { get; set; }
+
+        public KvdEntry() { }
+
+        public KvdEntry(KvdKey key, string value)
+            :base(key)
+        {
+            Value = value;
+        }
+    }
+
+    public class KvdKey : IEqualityComparer<KvdKey>
     {
         public string PartitionKey { get; set; }
         public string Key { get; set; }
-        public string Value { get; set; }
+
+        public KvdKey() { }
+
+        public KvdKey(KvdKey other)
+        {
+            this.PartitionKey = other.PartitionKey;
+            this.Key = other.Key;
+        }
+
+        public bool Equals(KvdKey x, KvdKey y) => (x.PartitionKey?.Equals(y.PartitionKey, StringComparison.OrdinalIgnoreCase) ?? false) &&
+            (x.Key?.Equals(y.Key, StringComparison.OrdinalIgnoreCase) ?? false);
+
+        public int GetHashCode(KvdKey obj) => HashCode.Combine(obj.PartitionKey, obj.Key);
     }
 }
