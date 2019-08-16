@@ -176,7 +176,7 @@ namespace Lighthouse.Storage
         public void TriggerBackgroundSync()
         {
             // for all of the stores, communicate with other warehouses to see if they need the files.
-            var otherContainers = Container.FindServers();
+            var otherContainers = Container.GetServerConnections();
             var getAllItemsInGlobalScope = new InspectRequest
             {                
                 Scope = StorageScope.Global

@@ -94,10 +94,19 @@ namespace Lighthouse.Server.Tests
 		{
 			Container.GetNow().Date.Should().Be(DateTime.Today);
 		}
-		#endregion
 
-		#region Resource Providers
-		[Fact]
+        [Fact]
+        [Trait("Tag", "Util")]
+        [Trait("Category", "Unit")]
+        public void ResolveType_ShouldFindType()
+        {
+            var testEvent = Container.ResolveType<LighthouseServer>();
+            testEvent.Should().NotBeNull();
+        }
+        #endregion
+
+        #region Resource Providers
+        [Fact]
 		[Trait("Tag", "Resource Providers")]
 		[Trait("Category", "Unit")]
 		public void GetFileSystemProviders_ShouldFindProvider()

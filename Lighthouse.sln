@@ -31,7 +31,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Apps.WarehouseSe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Apps.Database", "Lighthouse.Apps.Database\Lighthouse.Apps.Database.csproj", "{F01A8764-D219-40CB-9948-D6F9260CB34C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lighthouse.Apps.Database.Tests", "Lighthouse.Apps.Database.Tests\Lighthouse.Apps.Database.Tests.csproj", "{326658BC-41E8-4B6F-B349-14A17DB4F7C8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Lighthouse.Apps.Database.Tests", "Lighthouse.Apps.Database.Tests\Lighthouse.Apps.Database.Tests.csproj", "{326658BC-41E8-4B6F-B349-14A17DB4F7C8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lighthouse.Apps.Functions", "Lighthouse.Apps.Functions\Lighthouse.Apps.Functions.csproj", "{C5D4C11F-0317-49C0-BE76-E73AA2840C86}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lighthouse.Apps.Functions.Tests", "Lighthouse.Apps.Functions.Tests\Lighthouse.Apps.Functions.Tests.csproj", "{407FED28-2581-484A-A34C-B97CCA9209EB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -87,6 +91,14 @@ Global
 		{326658BC-41E8-4B6F-B349-14A17DB4F7C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{326658BC-41E8-4B6F-B349-14A17DB4F7C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{326658BC-41E8-4B6F-B349-14A17DB4F7C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5D4C11F-0317-49C0-BE76-E73AA2840C86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5D4C11F-0317-49C0-BE76-E73AA2840C86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5D4C11F-0317-49C0-BE76-E73AA2840C86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5D4C11F-0317-49C0-BE76-E73AA2840C86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{407FED28-2581-484A-A34C-B97CCA9209EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{407FED28-2581-484A-A34C-B97CCA9209EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{407FED28-2581-484A-A34C-B97CCA9209EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{407FED28-2581-484A-A34C-B97CCA9209EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -104,6 +116,8 @@ Global
 		{4D042920-F00D-4ABD-9AAF-3F3A7289E28C} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
 		{F01A8764-D219-40CB-9948-D6F9260CB34C} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
 		{326658BC-41E8-4B6F-B349-14A17DB4F7C8} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
+		{C5D4C11F-0317-49C0-BE76-E73AA2840C86} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
+		{407FED28-2581-484A-A34C-B97CCA9209EB} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5FBA757F-7196-4268-9D53-512991999DA1}

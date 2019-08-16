@@ -21,6 +21,7 @@ using System.Net;
 using System.Collections.Specialized;
 using Quartz.Impl;
 using Quartz;
+using System.Reflection;
 
 namespace Lighthouse.Server
 {
@@ -449,7 +450,7 @@ namespace Lighthouse.Server
             }
         }
 
-        public IEnumerable<ILighthouseServiceContainerConnection> FindServers()
+        public IEnumerable<ILighthouseServiceContainerConnection> GetServerConnections()
         {
             return RemoteContainerConnections;
         }
@@ -478,10 +479,39 @@ namespace Lighthouse.Server
 
         ConcurrentBag<ILighthouseService> RunningServices { get; set; } 
             = new ConcurrentBag<ILighthouseService>();
+        public List<Type> KnownTypes { get; private set; }
 
         private IEnumerable<ILighthouseService> GetRunningServices()
         {
             return RunningServices;
+        }
+
+        public T ResolveType<T>()
+            where T : class
+        {
+            if(KnownTypes == null)
+            {
+                LoadKnownTypes();
+            }
+
+            var type = KnownTypes
+                .Where(t => typeof(T).IsAssignableFrom(t))
+                .FirstOrDefault();
+
+            if(type != null)
+            {
+                return (T)Activator.CreateInstance(type);
+            }
+            else
+            {
+                return default;
+            }
+        }
+
+        private void LoadKnownTypes()
+        {
+            KnownTypes = new List<Type>();            
+            KnownTypes.AddRange(Assembly.GetExecutingAssembly().GetExportedTypes());            
         }
     }
 

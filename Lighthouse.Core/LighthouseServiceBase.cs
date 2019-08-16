@@ -29,7 +29,12 @@ namespace Lighthouse.Core
 			PerformStartupTasks();
 		}
 
-		private void PerformStartupTasks()
+        public void Stop()
+        {
+            OnStop();
+        }
+
+        private void PerformStartupTasks()
 		{
 			// the context, will do the work for us
 			// this is useful, because if some of the things you want to do will be emitting Events, then they'll be picked up
@@ -45,16 +50,10 @@ namespace Lighthouse.Core
 		{
 		}
 
-		public virtual void Stop()
-		{
-			OnStop();			
-		}
-
 		protected virtual void OnStop()
 		{
 		}
 		#endregion
-
 
 		public void Initialize(ILighthouseServiceContainer context)
 		{
