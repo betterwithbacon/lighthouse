@@ -12,4 +12,9 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Lighthouse.Apps.Functions\Lighthouse.Apps.Functions.csproj" />
+    <ProjectReference Include="..\Lighthouse.Server\Lighthouse.Server.csproj" />
+  </ItemGroup>
+
 </Project>
