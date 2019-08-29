@@ -52,5 +52,6 @@ namespace Lighthouse.Apps.Functions
 
     public interface IFunctionFinder
     {
+        IEnumerable<Function> GetFunctions(ILighthouseServiceContainer container, string functionNamespace);
     }
 }
