@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Server.Management
 {
@@ -58,18 +59,18 @@ namespace Lighthouse.Server.Management
 			yield return $"http://{rawIp}:{port}/";
 		}
 
-		protected override void OnStart()
+		protected override async Task OnStart()
 		{
-			base.OnStart();
+			await base.OnStart();
 
 			Listener.Start();
 			ListeningThread = new Thread(new ParameterizedThreadStart(WaitForRequests));
 			ListeningThread.Start();
 		}
 
-		protected override void OnStop()
+		protected override async Task OnStop()
 		{
-			base.OnStop();
+			await base.OnStop();
 			ListeningThread.Abort();
 		}
 

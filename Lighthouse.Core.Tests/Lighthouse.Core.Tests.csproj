@@ -31,4 +31,7 @@
     <ProjectReference Include="..\Lighthouse.Server\Lighthouse.Server.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Functions\" />
+  </ItemGroup>
 </Project>

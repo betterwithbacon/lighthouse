@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Core
 {
@@ -12,9 +13,9 @@ namespace Lighthouse.Core
         void Initialize(ILighthouseServiceContainer container);
 
 		// Begins execution of the service
-		void Start();
+		Task Start();
 
-		// Terminates the service. This is called for "graceful exits". The service might be terminated at any time if the runtime is required to.
-		void Stop();
+        // Terminates the service. This is called for "graceful exits". The service might be terminated at any time if the runtime is required to.
+        Task Stop();
 	}
 }

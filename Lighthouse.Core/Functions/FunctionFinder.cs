@@ -4,20 +4,20 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Lighthouse.Apps.Functions
+namespace Lighthouse.Core.Functions
 {
     public class FunctionFinder : IFunctionFinder
     {
         public  IEnumerable<Function> GetFunctions(ILighthouseServiceContainer container, string functionNamespace)
         {
-            var functions = new List<Function>();
             var functionParser = container.ResolveType<IFunctionParser>();
             if (functionParser == null)
             {
                 container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Error, this, message: "IFunctionParser can't be loaded.");
-                return functions;
+                throw new ApplicationException("No function parser found.");
             }
 
+            var functions = new List<Function>();
             var functionStrings = container
                 .Warehouse
                 .Retrieve<IList<string>>(StorageScope.Global, functionNamespace);

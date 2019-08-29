@@ -22,6 +22,7 @@ using System.Collections.Specialized;
 using Quartz.Impl;
 using Quartz;
 using System.Reflection;
+using Lighthouse.Core.Functions;
 
 namespace Lighthouse.Server
 {
@@ -159,7 +160,7 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Service Launching
-		public void Launch(Type serviceType)
+		public async Task Launch(Type serviceType)
 		{
 			AssertIsRunning();
 
@@ -168,10 +169,10 @@ namespace Lighthouse.Server
 			if (!(Activator.CreateInstance(serviceType) is ILighthouseService service))
 				throw new ApplicationException($"App launch config doesn't represent Lighthouse app. {serviceType.AssemblyQualifiedName}");
 
-			Launch(service);
+			await Launch(service);
 		}
 
-        public void Launch(ILighthouseService service)
+        public async Task Launch(ILighthouseService service)
 		{
 			AssertIsRunning();
 
@@ -181,19 +182,19 @@ namespace Lighthouse.Server
             RunningServices.Add(service);
 
 			// start it, in a separate thread, that will run the business logic for this
-			Task.Run(() => service.Start(), CancellationTokenSource.Token).ContinueWith(
+			await Task.Run(async () => await service.Start(), CancellationTokenSource.Token).ContinueWith(
 				(task) =>
 				{
-					// handle errors
-					if (task.IsFaulted)
-					{ 						
-						HandleTaskError(task.Exception.InnerException);
-					}
-					else
-					{
-						HandleTaskCompletion(service.ToString(), task);
-					}
-				}, CancellationTokenSource.Token);
+                    // handle errors
+                    if (task.IsFaulted)
+                    {
+                        HandleTaskError(task.Exception.InnerException);
+                        throw task.Exception;
+                    }
+
+                    HandleTaskCompletion(service.ToString(), task);
+
+                }, CancellationTokenSource.Token);
 		}
 
 		public void RegisterResourceProvider(IResourceProvider resourceProvider)
@@ -427,9 +428,9 @@ namespace Lighthouse.Server
             await Scheduler.ScheduleJob(job, trigger);
         }
 
-        public void RemoveScheduledActions(ILighthouseService owner, string scheduleName)
+        public async Task RemoveScheduledActions(ILighthouseService owner, string scheduleName)
         {
-            Scheduler.UnscheduleJob(new TriggerKey(GetDefaultScheduleName(owner, scheduleName), owner.Id));
+            await Scheduler.UnscheduleJob(new TriggerKey(GetDefaultScheduleName(owner, scheduleName), owner.Id));
         }
 
         #endregion
@@ -495,7 +496,8 @@ namespace Lighthouse.Server
             }
 
             var type = KnownTypes
-                .Where(t => typeof(T).IsAssignableFrom(t))
+                .Where(t => t.IsClass)
+                .Where(t => typeof(T).IsAssignableFrom(t))                
                 .FirstOrDefault();
 
             if(type != null)
@@ -510,7 +512,8 @@ namespace Lighthouse.Server
 
         private void LoadKnownTypes()
         {
-            KnownTypes = new List<Type>();            
+            KnownTypes = KnownTypes ?? new List<Type>();
+            KnownTypes.AddRange(Assembly.GetAssembly(typeof(Function)).GetExportedTypes());
             KnownTypes.AddRange(Assembly.GetExecutingAssembly().GetExportedTypes());            
         }
     }

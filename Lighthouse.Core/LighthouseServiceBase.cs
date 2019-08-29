@@ -19,40 +19,45 @@ namespace Lighthouse.Core
 			StartupActions.Add(task);
 		}
 
-		public void Start()
+		public async Task Start()
 		{
 			if (Container == null)
 				throw new InvalidOperationException("Service not initialized. (No container set)");
 
-			OnStart();			
-			OnAfterStart();
-			PerformStartupTasks();
+			await OnStart();			
+			await OnAfterStart();
+			await PerformStartupTasks();
+            await Task.CompletedTask;
 		}
 
-        public void Stop()
+        public async Task Stop()
         {
-            OnStop();
+            await OnStop();
         }
 
-        private void PerformStartupTasks()
+        private Task PerformStartupTasks()
 		{
 			// the context, will do the work for us
 			// this is useful, because if some of the things you want to do will be emitting Events, then they'll be picked up
 			StartupActions.ForEach((a) => Container.Do(a, "Perform startup task."));
-		}
+            return Task.CompletedTask;
+        }
 
 		#region Service Lifecycle Events
-		protected virtual void OnStart()
+		protected virtual Task OnStart()
 		{
+            return Task.CompletedTask;
 		}
 
-		protected virtual void OnAfterStart()
+		protected virtual Task OnAfterStart()
 		{
-		}
+            return Task.CompletedTask;
+        }
 
-		protected virtual void OnStop()
+		protected virtual Task OnStop()
 		{
-		}
+            return Task.CompletedTask;
+        }
 		#endregion
 
 		public void Initialize(ILighthouseServiceContainer context)

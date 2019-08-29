@@ -2,6 +2,7 @@
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Logging;
 using System;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Apps.Core
 {
@@ -17,15 +18,15 @@ namespace Lighthouse.Apps.Core
             Container = container;
         }
 
-        public void Start()
+        public async Task Start()
         {
-            Container.AddScheduledAction(this, (time) => Container.Log(LogLevel.Info, LogType.Info, this, $"ping: time: {time}. Container Time: {Container.GetNow()}"),
-                minuteFrequency: 1).GetAwaiter().GetResult();
+            await Container.AddScheduledAction(this, (time) => Container.Log(LogLevel.Info, LogType.Info, this, $"ping: time: {time}. Container Time: {Container.GetNow()}"),
+                minuteFrequency: 1);
         }
 
-        public void Stop()
+        public async Task Stop()
         {
-            Container.RemoveScheduledActions(this);
+            await Container.RemoveScheduledActions(this);
         }
     }
 }

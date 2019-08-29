@@ -3,6 +3,9 @@ using System;
 using System.Collections.Generic;
 using Xunit;
 using Xunit.Abstractions;
+using FluentAssertions;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Lighthouse.Apps.Functions.Tests
 {
@@ -22,12 +25,14 @@ namespace Lighthouse.Apps.Functions.Tests
         }
 
         [Fact]
-        public void Start_DiscoversFunctions()
+        public async Task Start_DiscoversFunctions()
         {
             var functionRunner = new FunctionRunner();
-            Container.Launch(functionRunner);
-
+            Container.Start();
+            await Container.Launch(functionRunner);
+            
             var functions = functionRunner.Functions;
+            functions.Count().Should().Be(1);
         }
     }
 }

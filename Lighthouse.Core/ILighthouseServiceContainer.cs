@@ -23,7 +23,7 @@ namespace Lighthouse.Core
 
         void Log(LogLevel level, LogType logType, object sender, string message = null, Exception exception = null, bool emitEvent = true);
 
-        void Launch(ILighthouseService service);
+        Task Launch(ILighthouseService service);
 
         IWarehouse Warehouse { get; }
 
@@ -39,7 +39,7 @@ namespace Lighthouse.Core
 
         Task AddScheduledAction(ILighthouseService owner, Action<DateTime> taskToPerform, int minuteFrequency = 1, string scheduleName = null);
 
-        void RemoveScheduledActions(ILighthouseService owner, string scheduleName = null);
+        Task RemoveScheduledActions(ILighthouseService owner, string scheduleName = null);
 
         void RegisterEventProducer(IEventProducer eventSource);
 

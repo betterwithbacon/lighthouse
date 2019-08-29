@@ -39,18 +39,21 @@ namespace Lighthouse.Apps.Database
 
         private IFileSystemProvider FileSystem { get; set; }
 
-        protected override void OnStart()
+        protected override async Task OnStart()
         {
-            // load the values from the file system
-            FileSystem = Container.GetFileSystemProviders()?.FirstOrDefault();
+           await Task.Run(() =>
+           {
+                // load the values from the file system
+                FileSystem = Container.GetFileSystemProviders()?.FirstOrDefault();
 
-            // TODO: load file storage location from some sort of config
-            Entries = ReadFromFileSystem();
+                // TODO: load file storage location from some sort of config
+                Entries = ReadFromFileSystem();
+           });
         }
 
-        protected override void OnStop()
+        protected override async Task OnStop()
         {
-            base.OnStop();
+            await base.OnStop();
 
             // push the file to the file system
             WriteToFileSystem();

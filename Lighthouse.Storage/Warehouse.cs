@@ -35,10 +35,10 @@ namespace Lighthouse.Storage
             AddStore(new InMemoryKeyValueStore());
         }
 
-		protected override void OnAfterStart()
+		protected override async Task OnAfterStart()
 		{
 			// schedule server maintainence to be done each hour
-			Container.AddScheduledAction(this, async (time) => { await PerformStorageMaintenance(time); }, DefaultSyncTimeInMinutes);
+			await Container.AddScheduledAction(this, async (time) => await PerformStorageMaintenance(time), DefaultSyncTimeInMinutes);
 		}
 
 		public async Task<IEnumerable<StorageOperation>> PerformStorageMaintenance(DateTime date)
