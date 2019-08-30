@@ -45,7 +45,11 @@ namespace Lighthouse.Core.Functions
 
             try
             {
-                function = new Function<TInput, TOutput>(CSharpScript.Create<TOutput>(functionString));
+                function = new Function<TInput, TOutput>(
+                    CSharpScript.Create<TOutput>(
+                        functionString,
+                        globalsType: typeof(TInput))
+                    );
             }
             catch (Exception)
             {

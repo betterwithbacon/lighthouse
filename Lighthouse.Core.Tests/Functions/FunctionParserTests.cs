@@ -42,13 +42,12 @@ namespace Lighthouse.Core.Tests.Functions
         {
             var parser = new FunctionParser();
 
-            parser.TryParse<ClosuredObject, int>("2 + 2", out var function).Should().BeFalse();
+            parser.TryParse<ClosuredObject, bool>("HasBeenMutated = true", out var function).Should().BeFalse();
 
             var input = new ClosuredObject();
 
             var val = await function.Execute(input);
-
-            val.Should().Be(4);
+            input.HasBeenMutated.Should().BeTrue();
         }
 
         public class ClosuredObject

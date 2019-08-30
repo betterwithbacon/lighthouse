@@ -53,7 +53,7 @@ namespace Lighthouse.Core.Functions
                 return default;
             else
             {
-                var val = await script.RunAsync();
+                var val = await script.RunAsync(input);
                 return val.ReturnValue;
             }
         }
