@@ -22,7 +22,7 @@ namespace Lighthouse.Core.Tests.Functions
         {
             var parser = new FunctionParser();
 
-            parser.TryParse("test", out var function).Should().BeFalse();
+            parser.TryParse("", out var function).Should().BeFalse();
             function.Should().BeNull();
         }
 
@@ -40,13 +40,15 @@ namespace Lighthouse.Core.Tests.Functions
         [Fact]
         public async Task TryParse_SingleArgument_ReturnsCorrectValue()
         {
+            var input = new ClosuredObject
+            {
+                HasBeenMutated = false
+            };
+
             var parser = new FunctionParser();
 
             parser.TryParse<ClosuredObject, bool>("HasBeenMutated = true", out var function).Should().BeFalse();
-
-            var input = new ClosuredObject();
-
-            var val = await function.Execute(input);
+            _ = await function.Execute(input);
             input.HasBeenMutated.Should().BeTrue();
         }
 
