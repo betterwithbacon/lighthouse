@@ -37,6 +37,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lighthouse.Apps.Functions",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lighthouse.Apps.Functions.Tests", "Lighthouse.Apps.Functions.Tests\Lighthouse.Apps.Functions.Tests.csproj", "{407FED28-2581-484A-A34C-B97CCA9209EB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lighthouse.Apps.ArtifactRepo", "Lighthouse.Apps.ArtifactRepo\Lighthouse.Apps.ArtifactRepo.csproj", "{E20DED88-02DF-4AC3-A062-D6A77D46D604}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,6 +101,10 @@ Global
 		{407FED28-2581-484A-A34C-B97CCA9209EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{407FED28-2581-484A-A34C-B97CCA9209EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{407FED28-2581-484A-A34C-B97CCA9209EB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E20DED88-02DF-4AC3-A062-D6A77D46D604}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E20DED88-02DF-4AC3-A062-D6A77D46D604}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E20DED88-02DF-4AC3-A062-D6A77D46D604}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E20DED88-02DF-4AC3-A062-D6A77D46D604}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -118,6 +124,7 @@ Global
 		{326658BC-41E8-4B6F-B349-14A17DB4F7C8} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
 		{C5D4C11F-0317-49C0-BE76-E73AA2840C86} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
 		{407FED28-2581-484A-A34C-B97CCA9209EB} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
+		{E20DED88-02DF-4AC3-A062-D6A77D46D604} = {CE5821D8-D3A7-445D-8382-8B1D33BEF917}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5FBA757F-7196-4268-9D53-512991999DA1}
