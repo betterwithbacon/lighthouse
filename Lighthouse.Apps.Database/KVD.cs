@@ -27,11 +27,6 @@ namespace Lighthouse.Apps.Database
             return await Task.Run<string>(() => Entries.TryGetValue(new KvdEntry { PartitionKey = partition, Key = key }, out var value) ? value : null);
         }
 
-        public KVD()
-        {
-
-        }
-
         public ConcurrentDictionary<KvdKey, string> Entries
         {
             get; private set;

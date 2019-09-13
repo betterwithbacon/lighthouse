@@ -33,7 +33,7 @@ namespace Lighthouse.Apps.Database.Tests
             Container.Start();
 
             var db = new KVD();
-            Container.Launch(db);
+            await Container.Launch(db);
             
             // write file
             await db.Store("global", "key", "value");
@@ -49,7 +49,7 @@ namespace Lighthouse.Apps.Database.Tests
             Container.Start();
 
             var db = new KVD();
-            Container.Launch(db);
+            await Container.Launch(db);
             var payload = "value";
             var partition = "partition";
             var key = "key";
