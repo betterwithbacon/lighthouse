@@ -66,7 +66,7 @@ namespace Lighthouse.Core
 				return;
 
 			Container = context;
-            //Container.Launch(this);
+
 			OnInit();			
 		}
 
