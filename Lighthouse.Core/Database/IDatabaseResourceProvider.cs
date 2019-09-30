@@ -31,7 +31,7 @@ namespace Lighthouse.Core.Database
 
         public async Task<IEnumerable<TResult>> Query<TResult>(string queryObject)
         {
-            using(var connection = new SqlConnection(ConnectionString))
+            using (var connection = new SqlConnection(ConnectionString))
             {
                 await connection.OpenAsync();
 

@@ -1,0 +1,14 @@
+appname: Lighthouse Hub
+resources:
+    ms-sql-server:
+      type: database
+      subtype: mssqlserver    
+      connection-string: localhost:1433
+    redis:
+      type: database
+      subtype: redis
+      name: redis    
+applications:
+  ping:
+    type_name: Lighthouse.Apps.PingService
+

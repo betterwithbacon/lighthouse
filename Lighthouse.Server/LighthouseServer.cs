@@ -1,7 +1,5 @@
 ﻿using Lighthouse.Core;
-using Lighthouse.Core.Configuration.Providers;
 using Lighthouse.Core.Events;
-using Lighthouse.Core.Events.Queueing;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
@@ -16,9 +14,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Collections.Async;
 using System.Net;
-using System.Collections.Specialized;
 using Quartz.Impl;
 using Quartz;
 using System.Reflection;
@@ -26,7 +22,7 @@ using Lighthouse.Core.Functions;
 
 namespace Lighthouse.Server
 {
-	public class LighthouseServer : ILighthouseServiceContainer
+    public class LighthouseServer : ILighthouseServiceContainer
 	{
 		#region Fields - Server Metadata
 		public string ServerName { get; private set; }
