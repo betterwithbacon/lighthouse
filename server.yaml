@@ -11,4 +11,6 @@ resources:
 applications:
   ping:
     type_name: Lighthouse.Apps.PingService
+    configuration:
+      
 

@@ -19,6 +19,7 @@ using Quartz.Impl;
 using Quartz;
 using System.Reflection;
 using Lighthouse.Core.Functions;
+using Dasync.Collections;
 
 namespace Lighthouse.Server
 {
