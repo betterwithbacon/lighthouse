@@ -1,5 +1,9 @@
 ﻿using CommandLine;
+using Lighthouse.Core;
+using Lighthouse.Server.Utils;
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -10,8 +14,13 @@ namespace Lighthouse.Server
         [Verb("run")]
         public class RunOptions
         {
-            [Option('a', "app", Required = true, HelpText = "Application name to run")]
+            [Option('a', "app", Required = false, HelpText = "Application name to run")]
             public string Application { get; set; }
+
+            [Option('f', "file", Required = false, HelpText = "Application configuration file to load")]
+            public string File { get; set; }
+
+            public bool IsAppMode => !string.IsNullOrEmpty(Application);
         }
 
         [Verb("view")]
@@ -35,13 +44,44 @@ namespace Lighthouse.Server
                 .MapResult(
                     (RunOptions runOptions) =>
                     {
-                        Type appType = LighthouseFetcher.Fetch(runOptions.Application);
-                        if (appType == null)
+                        if(string.IsNullOrEmpty(runOptions.Application) && string.IsNullOrEmpty(runOptions.File))
                         {
                             throw new ApplicationException("Can't find app name");
                         }
 
-                        server.Launch(appType);
+                        if (!runOptions.IsAppMode)
+                        {
+                            var fileContents = File.ReadAllText(runOptions.File);
+
+                            (IEnumerable<ResourceProviderConfig> Resources, IEnumerable<Type> Types) = YamlV1Decomposer.Deserialize(fileContents);
+
+                            var failedResourceCreations = new List<string>();
+
+                            foreach (var resourceConfig in Resources)
+                            {
+                                (bool wasSuccessful, string errorReason) = ResourceFactory.TryCreate(resourceConfig, out var resource);
+
+                                if (wasSuccessful)
+                                {
+                                    server.RegisterResourceProvider(resource);
+                                }
+                                else
+                                {
+                                    failedResourceCreations.Add(errorReason);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Type appType = LighthouseFetcher.Fetch(runOptions.Application);
+                            if (appType == null)
+                            {
+                                throw new ApplicationException("Can't find app name");
+                            }
+
+                            server.Launch(appType);
+                        }
+
                         return 0;
                     },
                     (ViewOptions viewOptions) =>

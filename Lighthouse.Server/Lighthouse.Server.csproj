@@ -26,4 +26,7 @@
     <ProjectReference Include="..\Lighthouse.Storage\Lighthouse.Storage.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Configuration\ServerConfigLoadingTests.yaml" />
+  </ItemGroup>
 </Project>

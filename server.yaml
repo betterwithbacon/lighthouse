@@ -3,14 +3,14 @@ resources:
     ms-sql-server:
       type: database
       subtype: mssqlserver    
-      connection-string: localhost:1433
+      connection_string: localhost:1433
     redis:
       type: database
       subtype: redis
-      name: redis    
+      connection_string: localhost:1433
 applications:
   ping:
     type_name: Lighthouse.Apps.PingService
     configuration:
-      
+
 
