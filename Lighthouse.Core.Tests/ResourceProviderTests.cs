@@ -11,31 +11,27 @@ namespace Lighthouse.Core.Tests
         [Fact]
         public void LoadDatabaseProvider_Loads()
         {
-            var yaml = @"
-appname: Lighthouse Hub
-resources:
-    ms-sql-server:
-        type: database
-        subtype: mssqlserver    
-        connection_string: localhost:1433
-    redis:
-        type: database
-        subtype: redis
-        connection_string: localhost:1433
-applications:
-  ping:
-    type_name: Lighthouse.Apps.PingService
-    configuration:";
+            var config = new ResourceProviderConfig();
+            config.Type = "Database";
 
-            var deserializer = new DeserializerBuilder()                
-                                    .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                                    .Build();
-
-            var configFile = deserializer.Deserialize<ResourceProviderConfig>(yaml);
-
-            (bool worked, string error) = ResourceFactory.TryCreate(configFile, out var resource);
+            (bool worked, string error) = ResourceFactory.TryCreate(config, out var resource);
             resource.Should().NotBeNull();
             worked.Should().BeTrue();
+            error.Should().BeNull();
+        }
+
+        [Fact]
+        public void DatabaseResourceFactory_ReturnsDatabaseResourceProvider()
+        {
+            var config = new ResourceProviderConfig
+            {
+                SubType = DatabaseResourceProviderConfigSubtype.SqlServer.ToString()
+            };
+
+            (bool worked, string error) = DatabaseResourceFactory.TryCreate(config, out var resource);
+
+            worked.Should().BeTrue();
+            resource.Should().NotBeNull();
             error.Should().BeNull();
         }
     }

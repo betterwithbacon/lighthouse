@@ -7,9 +7,22 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Core.Database
 {
-    public interface IDatabaseResourceProvider<TQueryObject> : IResourceProvider
+    public interface IDatabaseResourceProvider : IResourceProvider
+    {
+
+    }
+
+    public interface IDatabaseResourceProvider<TQueryObject> : IDatabaseResourceProvider
     {
         Task<IEnumerable<TResult>> Query<TResult>(TQueryObject queryObject);
+    }
+
+    public class RedisDbResourceProvider : LighthouseServiceBase, IDatabaseResourceProvider<string>
+    {
+        public Task<IEnumerable<TResult>> Query<TResult>(string queryObject)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class MsSqlDbResourceProvider : LighthouseServiceBase, IDatabaseResourceProvider<string>

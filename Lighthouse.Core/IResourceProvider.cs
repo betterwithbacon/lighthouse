@@ -1,4 +1,5 @@
-﻿using Lighthouse.Core.Logging;
+﻿using Lighthouse.Core.Database;
+using Lighthouse.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -28,7 +29,7 @@ namespace Lighthouse.Core
                 switch (configType)
                 {
                     case ResourceProviderConfigType.Database:
-                        var (worked, errorReason) = DatabaseResourceFactory.TryParse(config, out var databaseResourceProvider);
+                        var (worked, errorReason) = DatabaseResourceFactory.TryCreate(config, out var databaseResourceProvider);
 
                         if (worked)
                         {
@@ -51,15 +52,34 @@ namespace Lighthouse.Core
     public enum ResourceProviderConfigType
     {
         Database,
+    }
 
+    public enum DatabaseResourceProviderConfigSubtype
+    {
+        SqlServer,
+        Redis
     }
 
     public static class DatabaseResourceFactory
     {
-        public static (bool wasSuccessful, string errorReason) TryParse(ResourceProviderConfig config, out DatabaseResourceProvider provider)
+        public static (bool wasSuccessful, string errorReason) TryCreate(ResourceProviderConfig config, out IDatabaseResourceProvider<string> provider)
         {
             provider = null;
 
+            if (string.IsNullOrEmpty(config.SubType))
+                return (false, "no subtype provided");
+
+            switch(config.SubType.ToLower())
+            {
+                case "sqlserver":
+                    provider = new MsSqlDbResourceProvider();
+                    break;
+                case "redis":
+                    provider = new RedisDbResourceProvider();
+                    break;
+                default:
+                    return (false, $"subtype {config.SubType} is invalid.");
+            }
 
             return (true, null);
         }
