@@ -1,8 +1,7 @@
 ﻿using System;
 using FluentAssertions;
 using Xunit;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
+
 
 namespace Lighthouse.Core.Tests.Configuration.Formats.YAML
 {
@@ -20,7 +19,7 @@ namespace Lighthouse.Core.Tests.Configuration.Formats.YAML
             var name = "name";
 
             var yaml = $@"
-appname: {name}
+name: {name}
 resources:
     ms-sql-server:
         type: database
@@ -35,13 +34,8 @@ applications:
     type_name: Lighthouse.Apps.PingService
     configuration:";
 
-            var deserializer = new DeserializerBuilder()
-                                    .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                                    .Build();
+            var config = YamlUtil.ParseYaml<LighthouseRunConfig>(yaml);
 
-            ResourceProviderConfig config = new ResourceProviderConfig();
-
-            config.Load(yaml);
             config.Name.Should().Be("");
         }
     }

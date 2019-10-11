@@ -7,7 +7,24 @@ using System.Text;
 namespace Lighthouse.Core
 {
     public interface IResourceProvider
-	{
+    {
+    }
+
+    public abstract class ConfigBase
+    {
+        public string Name { get; set; }
+    }
+
+    public class LighthouseRunConfig : ConfigBase
+    {
+        public Dictionary<string, ResourceProviderConfig> Resources { get; set; }
+        public Dictionary<string, ApplicationConfig> Applications { get; set; }
+    }
+
+    public class ApplicationConfig : ConfigBase
+    {
+        public string TypeName { get; set; }
+        public string Configuration { get; set; }
     }
 
     public class ResourceProviderConfig
