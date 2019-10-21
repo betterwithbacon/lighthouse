@@ -1,7 +1,6 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Logging;
-using Lighthouse.Storage.Collections;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,7 +17,7 @@ namespace Lighthouse.Apps.FileSync
     {
         private static int _lockFlag = 0; // 0 - free
         private static readonly ConcurrentDictionary<string, bool> activeFileSyncs = new ConcurrentDictionary<string, bool>();
-        protected readonly WarehouseDictionary<string, FileSyncFolderStatus> FolderStatus;
+        protected readonly ConcurrentDictionary<string, FileSyncFolderStatus> FolderStatus;
 
         public FileSyncApp()
         {
@@ -33,7 +32,7 @@ namespace Lighthouse.Apps.FileSync
             //		file1 --> 1/1/2019
             //		file2 --> 1/2/2019
             // c:\folder2 --> FileSyncFolderStatus
-            FolderStatus = new WarehouseDictionary<string, FileSyncFolderStatus>(Container.Warehouse, this, $"{nameof(FileSyncApp)}.{nameof(FolderStatus)}");
+            //FolderStatus = new WarehouseDictionary<string, FileSyncFolderStatus>(Container.Warehouse, this, $"{nameof(FileSyncApp)}.{nameof(FolderStatus)}");
         }
 
         public void Sync(DateTime time)
