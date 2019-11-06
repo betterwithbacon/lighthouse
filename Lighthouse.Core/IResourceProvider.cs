@@ -107,6 +107,5 @@ namespace Lighthouse.Core
 
     public class DatabaseResourceProvider : IResourceProvider
     {
-
     }
 }
