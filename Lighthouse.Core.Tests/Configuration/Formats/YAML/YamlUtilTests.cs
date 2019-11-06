@@ -37,6 +37,8 @@ applications:
             var config = YamlUtil.ParseYaml<LighthouseRunConfig>(yaml);
 
             config.Name.Should().Be(name);
+            config.Resources.Count.Should().Be(2);
+            config.Applications.Count.Should().Be(1)
         }
     }
 }
