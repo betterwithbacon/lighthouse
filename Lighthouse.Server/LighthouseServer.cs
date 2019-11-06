@@ -50,8 +50,21 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Fields - Resources
-		private readonly ConcurrentBag<IResourceProvider> Resources = new ConcurrentBag<IResourceProvider>();		
-		public IWarehouse Warehouse { get; } = new Warehouse();		
+		private readonly ConcurrentBag<IResourceProvider> Resources = new ConcurrentBag<IResourceProvider>();
+        IWarehouse warehouse;
+        public IWarehouse Warehouse
+        {
+            get
+            {
+                if(warehouse == null)
+                {
+                    warehouse = new Warehouse();
+                    // TODO: this seems like it needs to be more complex
+                    Launch((ILighthouseService)warehouse).GetAwaiter().GetResult();
+                }
+                return warehouse;
+            }
+        }
 		#endregion
 
 		#region Constructors
@@ -244,7 +257,7 @@ namespace Lighthouse.Server
 			// File System providers
 			if (OS == OSPlatform.Windows)
 				RegisterResourceProvider(new WindowsFileSystemProvider(WorkingDirectory, this));
-			else if (OS == OSPlatform.Linux)
+			else if (OS == OSPlatform.Linux || OS == OSPlatform.OSX)
 				RegisterResourceProvider(new UnixFileSystemProvider());
 		}
 
@@ -383,6 +396,7 @@ namespace Lighthouse.Server
         private static string GetDefaultScheduleName(ILighthouseService owner, string scheduleName = null) => scheduleName ?? owner.Id + "_timer";
         private const string SchedulerSerializedObjectKeyName = "actionToPerform";
 
+        private static readonly object SchedulerCreationMutex = new object();
         private async Task InitScheduler()
         {
             //NameValueCollection props = new NameValueCollection
@@ -391,7 +405,13 @@ namespace Lighthouse.Server
             //    };
             //StdSchedulerFactory factory = new StdSchedulerFactory(props);
             //factory.Initialize();
-            Scheduler = await StdSchedulerFactory.GetDefaultScheduler();
+            lock (SchedulerCreationMutex)
+            {
+                if (Scheduler == null)
+                { 
+                    Scheduler = StdSchedulerFactory.GetDefaultScheduler().GetAwaiter().GetResult();
+                }
+            }
 
             //Scheduler = await factory.GetScheduler(Guid.NewGuid().ToString());
         }
@@ -511,7 +531,7 @@ namespace Lighthouse.Server
         {
             KnownTypes = KnownTypes ?? new List<Type>();
             KnownTypes.AddRange(Assembly.GetAssembly(typeof(Function)).GetExportedTypes());
-            KnownTypes.AddRange(Assembly.GetExecutingAssembly().GetExportedTypes());            
+            KnownTypes.AddRange(Assembly.GetExecutingAssembly().GetExportedTypes());
         }
     }
 

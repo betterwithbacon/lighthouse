@@ -1,17 +1,15 @@
-﻿using Lighthouse.Core.Configuration.Providers;
-using Lighthouse.Core.Events;
+﻿using Lighthouse.Core.Events;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using Lighthouse.Core.Storage;
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Threading.Tasks;
 
 namespace Lighthouse.Core
 {
-	public interface ILighthouseServiceContainer
+    public interface ILighthouseServiceContainer
 	{
         void Start();
 

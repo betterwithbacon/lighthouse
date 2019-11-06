@@ -4,14 +4,15 @@ using Xunit;
 
 namespace Lighthouse.Core.Tests
 {
-    public class ResourceProviderTests
+    public class ResourceProviderConfigTests
     {
         [Fact]
         public void LoadDatabaseProvider_Loads()
         {
             var config = new ResourceProviderConfig();
             config.Type = "Database";
-
+            config.SubType = DatabaseResourceProviderConfigSubtype.SqlServer;
+            
             (bool worked, string error) = ResourceFactory.TryCreate(config, out var resource);
             resource.Should().NotBeNull();
             worked.Should().BeTrue();

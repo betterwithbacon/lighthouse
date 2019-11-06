@@ -4,7 +4,7 @@ using Lighthouse.Core.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace Lighthouse.Apps.Core
+namespace Lighthouse.Core.Apps
 {
     [ExternalLighthouseService("ping")]
     public class PingService : ILighthouseService

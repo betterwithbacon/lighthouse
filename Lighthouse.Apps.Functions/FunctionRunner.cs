@@ -29,7 +29,6 @@ namespace Lighthouse.Apps.Functions
             if(functions == null || !functions.Any())
             {
                 Container.Log(Core.Logging.LogLevel.Debug, Core.Logging.LogType.Error, this, message: "No functions found.");
-                throw new Exception("No functions found.");
             }
 
             Functions = functions.ToImmutableList();

@@ -11,15 +11,21 @@ namespace Lighthouse.Core.Functions
         {
             function = null;
 
-            try
+            if (!string.IsNullOrEmpty(functionString))
             {
-                function = new Function(CSharpScript.Create(functionString));                
-            }
-            catch (Exception)
-            {
-                // swallow all errors, and just return null
-            }
+                try
+                {
+                    function = new Function(CSharpScript.Create(functionString));
+                }
+#pragma warning disable RECS0022 // A catch clause that catches System.Exception and has an empty body
+                catch (Exception)
+#pragma warning restore RECS0022 // A catch clause that catches System.Exception and has an empty body
+                {
+                    // swallow all errors, and just return null
+                }
 
+                return false;
+            }
             return false;
         }
 
@@ -27,15 +33,19 @@ namespace Lighthouse.Core.Functions
         {
             function = null;
 
-            try
+            if (!string.IsNullOrEmpty(functionString))
             {
-                function = new Function<T>(CSharpScript.Create<T>(functionString));
+                try
+                {
+                    function = new Function<T>(CSharpScript.Create<T>(functionString));
+                }
+#pragma warning disable RECS0022 // A catch clause that catches System.Exception and has an empty body
+                catch
+#pragma warning restore RECS0022 // A catch clause that catches System.Exception and has an empty body
+                {
+                    // swallow all errors, and just return null
+                }
             }
-            catch (Exception)
-            {
-                // swallow all errors, and just return null
-            }
-
             return false;
         }
 

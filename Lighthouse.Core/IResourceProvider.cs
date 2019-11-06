@@ -48,10 +48,11 @@ namespace Lighthouse.Core
                     case ResourceProviderConfigType.Database:
                         var (worked, errorReason) = DatabaseResourceFactory.TryCreate(config, out var databaseResourceProvider);
 
-                        if (worked)
+                        if (!worked)
                         {
-                            resourceProvider = databaseResourceProvider;
+                            return (worked, errorReason);
                         }
+                        resourceProvider = databaseResourceProvider;
 
                         return (worked, errorReason);
                 }
@@ -71,12 +72,14 @@ namespace Lighthouse.Core
         Database,
     }
 
-    public enum DatabaseResourceProviderConfigSubtype
+    public static class DatabaseResourceProviderConfigSubtype
     {
-        SqlServer,
-        Redis
+        public const string SqlServer = "sqlserver";
+        public const string Redis = "redis";
+        
     }
 
+    
     public static class DatabaseResourceFactory
     {
         public static (bool wasSuccessful, string errorReason) TryCreate(ResourceProviderConfig config, out IDatabaseResourceProvider<string> provider)
@@ -88,10 +91,10 @@ namespace Lighthouse.Core
 
             switch(config.SubType.ToLower())
             {
-                case "sqlserver":
+                case DatabaseResourceProviderConfigSubtype.SqlServer:
                     provider = new MsSqlDbResourceProvider();
                     break;
-                case "redis":
+                case DatabaseResourceProviderConfigSubtype.Redis:
                     provider = new RedisDbResourceProvider();
                     break;
                 default:

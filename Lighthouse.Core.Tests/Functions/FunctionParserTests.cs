@@ -13,7 +13,7 @@ namespace Lighthouse.Core.Tests.Functions
         {
             var parser = new FunctionParser();
 
-            parser.TryParse("test", out var function).Should().BeFalse();
+            parser.TryParse<string>("test", out var function).Should().BeFalse();
             function.Should().NotBeNull();
         }
 
@@ -22,7 +22,7 @@ namespace Lighthouse.Core.Tests.Functions
         {
             var parser = new FunctionParser();
 
-            parser.TryParse("", out var function).Should().BeFalse();
+            parser.TryParse<string>("", out var function).Should().BeFalse();
             function.Should().BeNull();
         }
 

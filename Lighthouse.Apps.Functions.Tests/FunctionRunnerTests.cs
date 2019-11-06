@@ -30,9 +30,10 @@ namespace Lighthouse.Apps.Functions.Tests
             var functionRunner = new FunctionRunner();
             Container.Start();
             await Container.Launch(functionRunner);
-            
+
             var functions = functionRunner.Functions;
-            functions.Count().Should().Be(1);
+            // TODO: this is a bit of a red herring, it should nominally return 0 because no functions are added, but this asserts it doesnt' fail hard
+            functions.Count().Should().Be(0);
         }
     }
 }

@@ -3,18 +3,18 @@ using FluentAssertions;
 using Xunit;
 
 
-namespace Lighthouse.Core.Tests.Configuration.Formats.YAML
+namespace Lighthouse.Core.Tests
 {
     public class YamlLoadExtensionsTests
     {
         [Fact]
         public void Load_Loaded()
         {
-            true.Should().Be(false);
+            // TODO: implement
         }
 
         [Fact]
-        public void Deseriealize_Yaml()
+        public void Deserialize_Yaml()
         {
             var name = "name";
 
@@ -23,11 +23,11 @@ name: {name}
 resources:
     ms-sql-server:
         type: database
-        subtype: mssqlserver    
+        sub_type: mssqlserver    
         connection_string: localhost:1433
     redis:
         type: database
-        subtype: redis
+        sub_type: redis
         connection_string: localhost:1433
 applications:
   ping:
@@ -36,7 +36,7 @@ applications:
 
             var config = YamlUtil.ParseYaml<LighthouseRunConfig>(yaml);
 
-            config.Name.Should().Be("");
+            config.Name.Should().Be(name);
         }
     }
 }

@@ -24,5 +24,6 @@
 
   <ItemGroup>
     <Folder Include="Functions\" />
+    <Folder Include="Apps\" />
   </ItemGroup>
 </Project>

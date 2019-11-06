@@ -1,24 +1,16 @@
 ﻿using FluentAssertions;
 using Lighthouse.Core;
-using Lighthouse.Core.Configuration.Providers;
-using Lighthouse.Core.Configuration.ServiceDiscovery;
+using Lighthouse.Core.Apps;
 using Lighthouse.Core.Events;
-using Lighthouse.Core.Events.Queueing;
-using Lighthouse.Core.Hosting;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
-using static Lighthouse.Core.Tests.LighthouseServiceTests;
 
 namespace Lighthouse.Server.Tests
 {
-	public class TestApp : LighthouseServiceBase
+    public class TestApp : LighthouseServiceBase
 	{
 		Action actionToPerform;
 		public void SetAction(Action action)
@@ -95,12 +87,12 @@ namespace Lighthouse.Server.Tests
 			Container.GetNow().Date.Should().Be(DateTime.Today);
 		}
 
-        [Fact]
+        [Fact] //Skip ="this test is a bit flakey when run with other tests")]
         [Trait("Tag", "Util")]
         [Trait("Category", "Unit")]
         public void ResolveType_ShouldFindType()
         {
-            var testEvent = Container.ResolveType<LighthouseServer>();
+            var testEvent = Container.ResolveType<PingService>();
             testEvent.Should().NotBeNull();
         }
         #endregion
