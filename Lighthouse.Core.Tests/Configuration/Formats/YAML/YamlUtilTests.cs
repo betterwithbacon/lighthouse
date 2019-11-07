@@ -21,11 +21,12 @@ namespace Lighthouse.Core.Tests
             var yaml = $@"
 name: {name}
 resources:
-    ms-sql-server:
+    ms-sql-server:        
         type: database
         sub_type: mssqlserver    
         connection_string: localhost:1433
     redis:
+        name: key_val_cache
         type: database
         sub_type: redis
         connection_string: localhost:1433
@@ -38,7 +39,7 @@ applications:
 
             config.Name.Should().Be(name);
             config.Resources.Count.Should().Be(2);
-            config.Applications.Count.Should().Be(1)
+            config.Applications.Count.Should().Be(1);
         }
     }
 }

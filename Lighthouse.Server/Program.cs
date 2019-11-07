@@ -53,23 +53,38 @@ namespace Lighthouse.Server
                         {
                             var fileContents = File.ReadAllText(runOptions.File);
 
-                            (IEnumerable<ResourceProviderConfig> Resources, IEnumerable<Type> Types) = YamlV1Decomposer.Deserialize(fileContents);
+                            var config = YamlUtil.ParseYaml<LighthouseRunConfig>(fileContents);
 
-                            var failedResourceCreations = new List<string>();
+                            //(IEnumerable<ResourceProviderConfig> Resources, IEnumerable<Type> Types) = YamlV1Decomposer.Deserialize(fileContents);
 
-                            foreach (var resourceConfig in Resources)
+                            //var failedResourceCreations = new List<string>();
+
+                            //foreach (var resourceConfig in Resources)
+                            //{
+                            //    (bool wasSuccessful, string errorReason) = ResourceFactory.TryCreate(resourceConfig, out var resource);
+
+                            //    if (wasSuccessful)
+                            //    {
+                            //        server.RegisterResourceProvider(resource);
+                            //    }
+                            //    else
+                            //    {
+                            //        failedResourceCreations.Add(errorReason);
+                            //    }
+                            //}
+                            
+                            // load resources first
+                            foreach(var resource in config.Resources)
                             {
-                                (bool wasSuccessful, string errorReason) = ResourceFactory.TryCreate(resourceConfig, out var resource);
 
-                                if (wasSuccessful)
-                                {
-                                    server.RegisterResourceProvider(resource);
-                                }
-                                else
-                                {
-                                    failedResourceCreations.Add(errorReason);
-                                }
                             }
+
+                            // then launch apps
+                            foreach(var app in config.Applications)
+                            {
+
+                            }
+
                         }
                         else
                         {
