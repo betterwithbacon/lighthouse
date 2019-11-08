@@ -57,19 +57,19 @@ namespace Lighthouse.Server
 
                             var failedResourceCreations = new List<string>();
 
-                            foreach (var resourceConfig in Resources)
-                            {
-                                (bool wasSuccessful, string errorReason) = ResourceFactory.TryCreate(resourceConfig, out var resource);
+                            //foreach (var resourceConfig in Resources)
+                            //{
+                            //    (bool wasSuccessful, string errorReason) = ResourceFactory.TryCreate(resourceConfig, out var resource);
 
-                                if (wasSuccessful)
-                                {
-                                    server.RegisterResourceProvider(resource);
-                                }
-                                else
-                                {
-                                    failedResourceCreations.Add(errorReason);
-                                }
-                            }
+                            //    if (wasSuccessful)
+                            //    {
+                            //        server.RegisterResourceProvider(resource);
+                            //    }
+                            //    else
+                            //    {
+                            //        failedResourceCreations.Add(errorReason);
+                            //    }
+                            //}
                         }
                         else
                         {
