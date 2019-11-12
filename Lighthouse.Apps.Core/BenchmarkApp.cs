@@ -60,9 +60,9 @@ namespace Lighthouse.Apps.Core
 
         public NodeLatencyBenchmark(ILighthouseServiceContainer container, string targetIp)
         {
-            this.Container = container;
+            Container = container;
 
-            if(!Uri.TryCreate(targetIp, UriKind.Absolute, out var parsedUri))
+            if(Uri.TryCreate(targetIp, UriKind.Absolute, out var parsedUri))
             {
                 TargetUri = parsedUri;
             }
@@ -74,7 +74,7 @@ namespace Lighthouse.Apps.Core
 
         public void Run()
         {
-            // test latency, by sendign a request o the remote target, and validating the response
+            // test latency, by sending a request o the remote target, and validating the response
 
             // connect based on just name and not IP
             var connection = Container.Connect(TargetUri);

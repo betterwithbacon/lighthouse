@@ -13,7 +13,7 @@ namespace Lighthouse.Apps.Core.Tests
         {
 
             var testContainer = Substitute.For<ILighthouseServiceContainer>();
-            var benchmark = new NodeLatencyBenchmark(testContainer, "127.0.0.1" );
+            var benchmark = new NodeLatencyBenchmark(testContainer, "http://127.0.0.1" );
             var result = benchmark.RunBenchmark();
 
             result.Should().Be(0);
