@@ -58,5 +58,6 @@ namespace Lighthouse.Core
 
         TResponse HandleRequest<TRequest, TResponse>(TRequest storageRequest)
             where TRequest : class;
+        void DiscoverOtherContainers();
     }
 }
