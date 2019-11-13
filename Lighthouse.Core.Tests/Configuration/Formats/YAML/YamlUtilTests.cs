@@ -14,7 +14,7 @@ namespace Lighthouse.Core.Tests
         }
 
         [Fact]
-        public void Deserialize_Yaml()
+        public void Deserialize_2Resource_1App_Tree()
         {
             var name = "name";
 
@@ -25,8 +25,7 @@ resources:
         type: database
         sub_type: mssqlserver    
         connection_string: localhost:1433
-    redis:
-        name: key_val_cache
+    redis:        
         type: database
         sub_type: redis
         connection_string: localhost:1433
