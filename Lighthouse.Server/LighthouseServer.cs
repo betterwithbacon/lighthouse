@@ -533,6 +533,11 @@ namespace Lighthouse.Server
             KnownTypes.AddRange(Assembly.GetAssembly(typeof(Function)).GetExportedTypes());
             KnownTypes.AddRange(Assembly.GetExecutingAssembly().GetExportedTypes());
         }
+
+        public void DiscoverOtherContainers()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public static class IRequestHandlerExtensions

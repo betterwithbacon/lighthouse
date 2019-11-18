@@ -39,8 +39,7 @@ namespace Lighthouse.Core.Hosting
 					.GetNetworkProviders()
 					.FirstOrDefault((np) =>
 						// find a network provider that can see the internal network AND communicate over HTTP
-						np.SupportedScopes.Contains(NetworkScope.Local) &&
-						np.SupportedProtocols.Contains(NetworkProtocol.HTTP)
+						np.SupportedScopes.Contains(NetworkScope.Local)						
 					);
 
 			if (networkProvider == null)

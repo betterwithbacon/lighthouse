@@ -11,19 +11,7 @@ namespace Lighthouse.Core.Hosting
 
         public IList<NetworkScope> SupportedScopes => new[] { NetworkScope.Local };
 
-        public IList<NetworkProtocol> SupportedProtocols => new[] { NetworkProtocol.TCP };
-
-        public Task<byte[]> GetByteArrayAsync(Uri uri)
-        {
-            throw new NotImplementedException();
-        }
-
         public Task<T> GetObjectAsync<T>(Uri uri, bool throwErrors = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<string> GetStringAsync(Uri uri)
         {
             throw new NotImplementedException();
         }

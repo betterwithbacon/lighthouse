@@ -13,5 +13,12 @@ namespace Lighthouse.Core.Utils
 			else
 				return input;
 		}
-	}
+
+        public static Uri ToUri(this string input)
+        {
+            if (Uri.TryCreate(input, UriKind.Absolute, out var val))
+                return val;
+            return null;
+        }
+    }
 }
