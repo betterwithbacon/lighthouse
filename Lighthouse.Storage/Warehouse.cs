@@ -175,46 +175,47 @@ namespace Lighthouse.Storage
 
         public void TriggerBackgroundSync()
         {
-            // for all of the stores, communicate with other warehouses to see if they need the files.
-            var otherContainers = Container.GetServerConnections();
-            var getAllItemsInGlobalScope = new InspectRequest
-            {                
-                Scope = StorageScope.Global
-            };
-
-            Dictionary<ILighthouseServiceContainerConnection, HashSet<ItemDescriptor>> itemsByContainer = 
-                new Dictionary<ILighthouseServiceContainerConnection, HashSet<ItemDescriptor>>();
-
-            Dictionary<ILighthouseServiceContainerConnection, HashSet<ItemDescriptor>> itemsToAddContainer =
-                new Dictionary<ILighthouseServiceContainerConnection, HashSet<ItemDescriptor>>();
-
-            foreach (var containerConnection in otherContainers)
-            {
-                var response = containerConnection.MakeRequest<InspectRequest, InspectResponse>(getAllItemsInGlobalScope);
-                itemsByContainer.Add(containerConnection, response.Items.ToHashSet());
-            }
-
-            // get all items in current warehouse
-            foreach(var item in GetManifest(StorageScope.Global).Distinct())
-            {
-                foreach(var containerAndItems in itemsByContainer)
-                {
-                    // the remote container does not have the item, so give it to them
-                    if(!containerAndItems.Value.Contains(item))
-                    {
-                        var value = Retrieve(StorageScope.Global, item.Key);
-
-                        containerAndItems.Key.MakeRequest<KeyValueStoreRequest, AckResponse>(
-                            new KeyValueStoreRequest
-                            {
-                                Scope = StorageScope.Global,
-                                Key = item.Key,      
-                                Value = value
-                            });
-                    }
-                }
-            }
         }
+            // for all of the stores, communicate with other warehouses to see if they need the files.
+            //          var otherContainers = Container.GetServerConnections();
+            //          var getAllItemsInGlobalScope = new InspectRequest
+            //          {                
+            //              Scope = StorageScope.Global
+            //          };
+
+            //          Dictionary<ILighthouseServiceContainerConnection, HashSet<ItemDescriptor>> itemsByContainer = 
+            //              new Dictionary<ILighthouseServiceContainerConnection, HashSet<ItemDescriptor>>();
+
+            //          Dictionary<ILighthouseServiceContainerConnection, HashSet<ItemDescriptor>> itemsToAddContainer =
+            //              new Dictionary<ILighthouseServiceContainerConnection, HashSet<ItemDescriptor>>();
+
+            //          foreach (var containerConnection in otherContainers)
+            //          {
+            //              var response = containerConnection.MakeRequest<InspectRequest, InspectResponse>(getAllItemsInGlobalScope);
+            //              itemsByContainer.Add(containerConnection, response.Items.ToHashSet());
+            //          }
+
+            //          // get all items in current warehouse
+            //          foreach(var item in GetManifest(StorageScope.Global).Distinct())
+            //          {
+            //              foreach(var containerAndItems in itemsByContainer)
+            //              {
+            //                  // the remote container does not have the item, so give it to them
+            //                  if(!containerAndItems.Value.Contains(item))
+            //                  {
+            //                      var value = Retrieve(StorageScope.Global, item.Key);
+
+            //                      containerAndItems.Key.MakeRequest<KeyValueStoreRequest, AckResponse>(
+            //                          new KeyValueStoreRequest
+            //                          {
+            //                              Scope = StorageScope.Global,
+            //                              Key = item.Key,      
+            //                              Value = value
+            //                          });
+            //                  }
+            //              }
+            //          }
+            //      }
 
         public IEnumerable<T> ResolveStores<T>(IEnumerable<StoragePolicy> loadingDockPolicies)
             where T : IStore
@@ -223,33 +224,33 @@ namespace Lighthouse.Storage
         }
 
         void ThrowIfNotInitialized()
-		{
-			if (!IsInitialized)
-				throw new InvalidOperationException("Warehouse not initialized.");
-		}
+        {
+            if (!IsInitialized)
+                throw new InvalidOperationException("Warehouse not initialized.");
+        }
 
-		public static string CalculateChecksum(object input)
-		{
-            if(input == null)
+        public static string CalculateChecksum(object input)
+        {
+            if (input == null)
             {
                 input = string.Empty;
             }
 
-			// can't calculate checksums for non strings right now
-			// TODO: add support for non-strings
-			if (input.GetType() != typeof(string))
-				return String.Empty;
-            
+            // can't calculate checksums for non strings right now
+            // TODO: add support for non-strings
+            if (input.GetType() != typeof(string))
+                return String.Empty;
+
             using (var sha256 = SHA256.Create())
-			{
-				byte[] data = sha256.ComputeHash(Encoding.UTF8.GetBytes(input as string));
-				var sBuilder = new StringBuilder();
-				for (int i = 0; i < data.Length; i++)			
-					sBuilder.Append(data[i].ToString("x2"));
-				
-				return sBuilder.ToString();
-			}
-		}
+            {
+                byte[] data = sha256.ComputeHash(Encoding.UTF8.GetBytes(input as string));
+                var sBuilder = new StringBuilder();
+                for (int i = 0; i < data.Length; i++)
+                    sBuilder.Append(data[i].ToString("x2"));
+
+                return sBuilder.ToString();
+            }
+        }
 
 		public static bool VerifyChecksum(string input, string hash)
 		{

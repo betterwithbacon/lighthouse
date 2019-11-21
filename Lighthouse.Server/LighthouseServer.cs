@@ -46,7 +46,7 @@ namespace Lighthouse.Server
         readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
 		readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
 		readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
-        readonly List<ILighthouseServiceContainerConnection> RemoteContainerConnections = new List<ILighthouseServiceContainerConnection>();
+        //readonly List<ILighthouseServiceContainerConnection> RemoteContainerConnections = new List<ILighthouseServiceContainerConnection>();
 		#endregion
 
 		#region Fields - Resources
@@ -373,24 +373,24 @@ namespace Lighthouse.Server
 		}
 		#endregion
 
-		#region  Hosting		
-		public void RegisterRemotePeer(ILighthouseServiceContainerConnection connection)
-		{
-			// add it to the list
-			RemoteContainerConnections.Add(connection);
+		//#region  Hosting		
+		//public void RegisterRemotePeer(ILighthouseServiceContainerConnection connection)
+		//{
+		//	// add it to the list
+		//	RemoteContainerConnections.Add(connection);
 
-			Log(LogLevel.Info, LogType.Info, this, $"Adding remote lighthouse container: {connection}");
-		}
+		//	Log(LogLevel.Info, LogType.Info, this, $"Adding remote lighthouse container: {connection}");
+		//}
 
-		public ILighthouseServiceContainerConnection Connect(Uri uri)
-		{
-			return new NetworkLighthouseServiceContainerConnection(
-				this,
-				IPAddress.Parse(uri.Host),
-				uri.Port
-			);
-		}
-        #endregion
+		//public ILighthouseServiceContainerConnection Connect(Uri uri)
+		//{
+		//	return new NetworkLighthouseServiceContainerConnection(
+		//		this,
+		//		IPAddress.Parse(uri.Host),
+		//		uri.Port
+		//	);
+		//}
+  //      #endregion
 
         #region Scheduling
         private static string GetDefaultScheduleName(ILighthouseService owner, string scheduleName = null) => scheduleName ?? owner.Id + "_timer";
@@ -468,12 +468,12 @@ namespace Lighthouse.Server
             }
         }
 
-        public IEnumerable<ILighthouseServiceContainerConnection> GetServerConnections()
-        {
-            return RemoteContainerConnections;
-        }
+        //public IEnumerable<ILighthouseServiceContainerConnection> GetServerConnections()
+        //{
+        //    return RemoteContainerConnections;
+        //}
 
-        public TResponse HandleRequest<TRequest, TResponse>(TRequest storageRequest)
+        public async Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest storageRequest)
             where TRequest : class
         {
             // find request handlers
@@ -486,7 +486,7 @@ namespace Lighthouse.Server
                         var methods = ReflectionUtil.GetMethodsBySingleParameterType(requestHandler.GetType(), "Handle");
                         if (methods.TryGetValue(typeof(TRequest), out var method))
                         {
-                            return (TResponse)method.Invoke(requestHandler, new[] { storageRequest });
+                            return await Task.Run(() => (TResponse)method.Invoke(requestHandler, new[] { storageRequest }));
                         }
                     }
                 }

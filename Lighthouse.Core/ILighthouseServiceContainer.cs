@@ -48,15 +48,15 @@ namespace Lighthouse.Core
 
 		IEnumerable<IEvent> GetAllReceivedEvents(PointInTime since = null);
 		
-        void RegisterRemotePeer(ILighthouseServiceContainerConnection connection);
+        //void RegisterRemotePeer(ILighthouseServiceContainerConnection connection);
 
-        IEnumerable<ILighthouseServiceContainerConnection> GetServerConnections();
+        //IEnumerable<ILighthouseServiceContainerConnection> GetServerConnections();
 
-        ILighthouseServiceContainerConnection Connect(Uri uri);
+        //ILighthouseServiceContainerConnection Connect(Uri uri);
 
         T ResolveType<T>() where T : class;
 
-        TResponse HandleRequest<TRequest, TResponse>(TRequest storageRequest)
+        Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest request)
             where TRequest : class;
         void DiscoverOtherContainers();
     }

@@ -26,10 +26,10 @@ namespace Lighthouse.Apps.Core
 
         public BenchmarkTarget Target { get; set; }
 
-        public IDictionary<string, string> Args {get;set;}
+        public IDictionary<string, string> Args { get; set; } = new Dictionary<string, string>();
 
         private IBenchmark Benchmark { get; set; }
-
+        
 
         protected override async Task OnStart()
         {
@@ -77,12 +77,12 @@ namespace Lighthouse.Apps.Core
             // test latency, by sending a request o the remote target, and validating the response
 
             // connect based on just name and not IP
-            var connection = Container.Connect(TargetUri);
+            //var connection = Container.Connect(TargetUri);
 
-            if (!connection.TryConnect().GetAwaiter().GetResult())
-            {
-                throw new Exception("Connection failed to be created.");
-            }
+            //if (!connection.TryConnect().GetAwaiter().GetResult())
+            //{
+            //    throw new Exception("Connection failed to be created.");
+            //}
         }
     }
 

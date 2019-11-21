@@ -103,7 +103,7 @@ namespace Lighthouse.Server
                     {
                         if(Uri.TryCreate(viewOptions.Server, UriKind.Absolute, out var uri))
                         {
-                            var connection = server.Connect(uri);
+                            //var connection = server.Connect(uri);
 
                             // do more things here
                             return 0;

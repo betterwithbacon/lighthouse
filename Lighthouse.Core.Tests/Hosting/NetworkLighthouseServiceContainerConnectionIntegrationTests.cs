@@ -12,33 +12,33 @@ using Xunit;
 using Xunit.Abstractions;
 
 
-namespace Lighthouse.Core.Tests.Hosting
-{
-	public class NetworkLighthouseServiceContainerConnectionIntegrationTests : LighthouseTestsBase
-	{
-		public NetworkLighthouseServiceContainerConnectionIntegrationTests(ITestOutputHelper output) : base(output)
-		{
+//namespace Lighthouse.Core.Tests.Hosting
+//{
+	//public class NetworkLighthouseServiceContainerConnectionIntegrationTests : LighthouseTestsBase
+	//{
+	//	public NetworkLighthouseServiceContainerConnectionIntegrationTests(ITestOutputHelper output) : base(output)
+	//	{
 
-		}
+	//	}
 
-		[Fact(Skip ="not sure what this test was created for. Probably redundant")]
-		public async Task TryConnect_UseLoopbackServer()
-		{
-			var ip = "127.0.0.1";
-			var networkProvider = new InternetNetworkProvider(Container);
+		//[Fact(Skip ="not sure what this test was created for. Probably redundant")]
+		//public async Task TryConnect_UseLoopbackServer()
+		//{
+		//	var ip = "127.0.0.1";
+		//	var networkProvider = new InternetNetworkProvider(Container);
 
-			// inform the container of this provider
-			Container.RegisterResourceProvider(networkProvider);
+		//	// inform the container of this provider
+		//	Container.RegisterResourceProvider(networkProvider);
 
-			var connection = new NetworkLighthouseServiceContainerConnection(Container, System.Net.IPAddress.Parse(ip));
-			var found = await connection.TryConnect();
-			found.Should().BeFalse();
-			connection.ConnectionHistory.Count.Should().Be(1);
-			var connectionHistory = connection.ConnectionHistory.Single();
+		//	var connection = new NetworkLighthouseServiceContainerConnection(Container, System.Net.IPAddress.Parse(ip));
+		//	var found = await connection.TryConnect();
+		//	found.Should().BeFalse();
+		//	connection.ConnectionHistory.Count.Should().Be(1);
+		//	var connectionHistory = connection.ConnectionHistory.Single();
 
-			(connectionHistory.EffectiveDate.Date - DateTime.Now).Seconds.Should().BeLessOrEqualTo(30); // the status time should be in the last 30 seconds, probably much less
-			connectionHistory.WasConnected.Should().BeFalse();
-			connectionHistory.Exception.Message.Should().Contain("nope");
-		}
-	}
-}
+		//	(connectionHistory.EffectiveDate.Date - DateTime.Now).Seconds.Should().BeLessOrEqualTo(30); // the status time should be in the last 30 seconds, probably much less
+		//	connectionHistory.WasConnected.Should().BeFalse();
+		//	connectionHistory.Exception.Message.Should().Contain("nope");
+		//}
+//	}
+//}
