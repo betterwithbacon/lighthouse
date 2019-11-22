@@ -23,7 +23,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Lighthouse.Core\Lighthouse.Core.csproj" />
-    <ProjectReference Include="..\Lighthouse.Storage\Lighthouse.Storage.csproj" />
   </ItemGroup>
 
   <ItemGroup>

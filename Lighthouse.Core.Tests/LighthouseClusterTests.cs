@@ -4,14 +4,13 @@ using System;
 using Lighthouse.Server;
 using Lighthouse.Core.Utils;
 using Lighthouse.Core.Hosting;
-using Lighthouse.Apps.Core;
 using System.Threading.Tasks;
 
 namespace Lighthouse.Core.Tests
 {
     public class LighthouseClusterTests
     {
-        public async Task Lighthouse_ClusterForms()
+        public void Lighthouse_ClusterForms()
         {
             var vLan = new VirtualNetwork();
 
@@ -33,19 +32,6 @@ namespace Lighthouse.Core.Tests
             vLan.Register(slave2, slave2Uri);
             slave2.RegisterResourceProvider(vLan);
 
-            var benchmark = new BenchmarkApp
-            {
-                Target = BenchmarkTarget.Node,
-                Type = BenchmarkType.Latency
-            };
-            benchmark.Args["isTargetName"] = "slave1";
-
-            
-            // have the master "discover" the other 2 servers on the network and ping them both
-            await master.Launch(benchmark);
-
-            
-                                 
         }
     }
 }

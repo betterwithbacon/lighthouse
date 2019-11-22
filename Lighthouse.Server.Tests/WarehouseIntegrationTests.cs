@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.Storage;
-using Lighthouse.Storage;
+using Lighthouse.CORE.Storage;
 using System;
 using System.Collections.Generic;
 using System.Text;

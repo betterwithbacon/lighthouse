@@ -11,7 +11,7 @@ namespace Lighthouse.Server
         {
             return new StatusResponse (
                 new Version("0.0.0.0"),// TODO: get version
-                Container.ServerName,
+                "", //Container.ServerName,
                 Container.GetNow()
             );
         }

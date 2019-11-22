@@ -29,10 +29,14 @@
   <ItemGroup>
     <ProjectReference Include="..\Lighthouse.Core\Lighthouse.Core.csproj" />
     <ProjectReference Include="..\Lighthouse.Server\Lighthouse.Server.csproj" />
-    <ProjectReference Include="..\Lighthouse.Apps.Core\Lighthouse.Apps.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Functions\" />
+    <Folder Include="Apps\" />
+    <Folder Include="Apps\Functions\" />
+    <Folder Include="Apps\Storage\" />
+    <Folder Include="Storage\" />
+    <Folder Include="Storage\Memory\" />
   </ItemGroup>
 </Project>

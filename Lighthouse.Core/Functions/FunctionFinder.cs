@@ -1,5 +1,6 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Storage;
+using Lighthouse.Core.Storage.Scopes;
 using System;
 using System.Collections.Generic;
 using System.Text;

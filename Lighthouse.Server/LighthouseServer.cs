@@ -6,7 +6,7 @@ using Lighthouse.Core.Logging;
 using Lighthouse.Core.Storage;
 using Lighthouse.Core.Utils;
 using Lighthouse.Server.Utils;
-using Lighthouse.Storage;
+using Lighthouse.CORE.Storage;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

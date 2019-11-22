@@ -9,15 +9,18 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Core
 {
+    /// <summary>
+    /// Provides: scheduling, event bus, request/response infrastructure
+    /// </summary>
     public interface ILighthouseServiceContainer
 	{
-        void Start();
+        //void Start();
 
-        Task Stop();
+        //Task Stop();
 
-        string ServerName { get; }
+        //string ServerName { get; }
 
-        string WorkingDirectory { get; }
+        //string WorkingDirectory { get; }
 
         void Log(LogLevel level, LogType logType, object sender, string message = null, Exception exception = null, bool emitEvent = true);
 

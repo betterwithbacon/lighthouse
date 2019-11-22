@@ -4,7 +4,7 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/core/sdk:2.1-stretch AS build
 WORKDIR /src
 COPY ["Lighthouse.Server/Lighthouse.Server.csproj", "Lighthouse.Server/"]
-COPY ["Lighthouse.Storage/Lighthouse.Storage.csproj", "Lighthouse.Storage/"]
+COPY ["Lighthouse.CORE.Storage/Lighthouse.CORE.Storage.csproj", "Lighthouse.CORE.Storage/"]
 COPY ["Lighthouse.Core/Lighthouse.Core.csproj", "Lighthouse.Core/"]
 RUN dotnet restore "Lighthouse.Server/Lighthouse.Server.csproj"
 COPY . .
