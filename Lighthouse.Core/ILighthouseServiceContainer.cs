@@ -15,7 +15,6 @@ namespace Lighthouse.Core
     /// </summary>
     public interface ILighthousePeer
     {
-
         Task<TResponse> MakeRequest<TRequest, TResponse>(TRequest request)
             where TRequest : class;
     }
@@ -31,7 +30,7 @@ namespace Lighthouse.Core
     /// <summary>
     /// Provides: scheduling, event bus, request/response infrastructure
     /// </summary>
-    public interface ILighthouseServiceContainer : ILighthousePeer
+    public interface ILighthouseServiceContainer : ILighthousePeer, ILighthouseEnvironment
     {
         Task Launch(ILighthouseService service);
         
@@ -57,6 +56,8 @@ namespace Lighthouse.Core
 
         Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest request)
             where TRequest : class;
+
+        T ResolveType<T>() where T : class;
     }
 
     public static class ContainerExtensions
