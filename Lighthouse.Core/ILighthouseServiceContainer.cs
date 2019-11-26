@@ -5,36 +5,42 @@ using Lighthouse.Core.Logging;
 using Lighthouse.Core.Storage;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Lighthouse.Core
 {
     /// <summary>
-    /// Provides: scheduling, event bus, request/response infrastructure
+    /// An object capable of speaking with a container viable the Request API
     /// </summary>
-    public interface ILighthouseServiceContainer
-	{
-        //void Start();
+    public interface ILighthousePeer
+    {
 
-        //Task Stop();
+        Task<TResponse> MakeRequest<TRequest, TResponse>(TRequest request)
+            where TRequest : class;
+    }
 
-        //string ServerName { get; }
-
-        //string WorkingDirectory { get; }
+    public interface ILighthouseEnvironment
+    {
+        void AddLogger(Action<string> logger);
 
         void Log(LogLevel level, LogType logType, object sender, string message = null, Exception exception = null, bool emitEvent = true);
+        DateTime GetNow();
+    }
 
+    /// <summary>
+    /// Provides: scheduling, event bus, request/response infrastructure
+    /// </summary>
+    public interface ILighthouseServiceContainer : ILighthousePeer
+    {
         Task Launch(ILighthouseService service);
-
+        
+        // ? should this be manually added? or apart of the deal
         IWarehouse Warehouse { get; }
 
-        DateTime GetNow();
+        IEnumerable<IResourceProvider> GetResourceProviders();
 
-        IEnumerable<INetworkProvider> GetNetworkProviders();
-
-        IEnumerable<IFileSystemProvider> GetFileSystemProviders();
-        
-		void RegisterResourceProvider(IResourceProvider resourceProvider);
+        void RegisterResourceProvider(IResourceProvider resourceProvider);
 
         Task Do(Action<ILighthouseServiceContainer> action, string logMessage = "");
 
@@ -49,18 +55,23 @@ namespace Lighthouse.Core
 
 		Task EmitEvent(IEvent ev, object source = null);
 
-		IEnumerable<IEvent> GetAllReceivedEvents(PointInTime since = null);
-		
-        //void RegisterRemotePeer(ILighthouseServiceContainerConnection connection);
-
-        //IEnumerable<ILighthouseServiceContainerConnection> GetServerConnections();
-
-        //ILighthouseServiceContainerConnection Connect(Uri uri);
-
-        T ResolveType<T>() where T : class;
-
         Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest request)
             where TRequest : class;
-        void DiscoverOtherContainers();
+    }
+
+    public static class ContainerExtensions
+    {
+        public static IEnumerable<T> GetResourceProviders<T>(this ILighthouseServiceContainer container)
+            where T : IResourceProvider => container.GetResourceProviders().OfType<T>();
+
+        public static IEnumerable<INetworkProvider> GetNetworkProviders(this ILighthouseServiceContainer container)
+        {
+            yield return null;
+        }
+
+        public static IEnumerable<IFileSystemProvider> GetFileSystemProviders(this ILighthouseServiceContainer container)
+        {
+            yield return null;
+        }
     }
 }

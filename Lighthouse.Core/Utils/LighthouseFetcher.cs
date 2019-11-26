@@ -4,7 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Linq;
 
-namespace Lighthouse.Server
+namespace Lighthouse.Core.Utils
 {
     public static class LighthouseFetcher
     {

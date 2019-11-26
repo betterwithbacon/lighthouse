@@ -538,6 +538,21 @@ namespace Lighthouse.Server
         {
             throw new NotImplementedException();
         }
+
+        public void AddLogger(Action<string> logger)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<IResourceProvider> GetResourceProviders()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<TResponse> MakeRequest<TRequest, TResponse>(TRequest request) where TRequest : class
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public static class IRequestHandlerExtensions
