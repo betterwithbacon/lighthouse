@@ -21,7 +21,7 @@ namespace Lighthouse.Core.Tests
 
             var otherContainer = NSubstitute.Substitute.For<ILighthouseServiceContainer>();
             otherContainer.Bind(otherContainerPort);
-            _ = otherContainer.MakeRequest<TestRequest, TestResponse>(Arg.Any<TestRequest>()).ReturnsForAnyArgs((v) => v.ArgAt<object>(1));
+            _ = otherContainer.HandleRequest<TestRequest, TestResponse>(Arg.Any<TestRequest>()).ReturnsForAnyArgs((v) => v.ArgAt<object>(0));
 
             var virtualNetwork = new VirtualNetwork();
             virtualNetwork.Register(otherContainer, uri);

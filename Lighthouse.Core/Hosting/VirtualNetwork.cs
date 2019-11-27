@@ -15,7 +15,7 @@ namespace Lighthouse.Core.Hosting
 
         public void Register(ILighthouseServiceContainer container, Uri uri)
         {
-            if (Containers.ContainsKey(uri))
+             if (Containers.ContainsKey(uri))
             {
                 throw new InvalidOperationException("URI is alreay in use");
             }
