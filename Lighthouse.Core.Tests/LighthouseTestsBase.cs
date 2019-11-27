@@ -18,9 +18,11 @@ namespace Lighthouse.Core.Tests
 		{
 			Output = output;
 
-			Container = new LighthouseServer(localLogger:(message) => {
-				Messages.Add(message); Output.WriteLine(message);
-			});
+			Container = new LighthouseServer();
+            Container.AddLogger((message) =>
+            {
+                Messages.Add(message); Output.WriteLine(message);
+            });
 		}
 	}
 }

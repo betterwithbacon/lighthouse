@@ -2,7 +2,6 @@
 using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Events;
 using Lighthouse.Core.Storage;
-using Lighthouse.CORE.Storage;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

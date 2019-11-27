@@ -58,6 +58,8 @@ namespace Lighthouse.Core
             where TRequest : class;
 
         T ResolveType<T>() where T : class;
+
+        void Bind(int port);
     }
 
     public static class ContainerExtensions

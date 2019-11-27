@@ -55,14 +55,12 @@ namespace Lighthouse.Server.Tests
 
 		protected void GivenAContainer(string workingDirectory = null)
 		{
-			container = new LighthouseServer(
-				localLogger: (m) =>
-				{
-					ContainerMessages.Add(m);
-					Output.WriteLine(m);
-				},				
-				workingDirectory: workingDirectory
-			);
+            container = new LighthouseServer();
+            container.AddLogger((m) => {
+                ContainerMessages.Add(m);
+                Output.WriteLine(m);
+            });
+            container.AddAvailableFileSystemProviders(workingDirectory);
 		}
 
 		#region Logging
@@ -105,15 +103,6 @@ namespace Lighthouse.Server.Tests
 		{
             Container.AddAvailableFileSystemProviders();
 			Container.GetFileSystemProviders().Should().NotBeEmpty();
-		}
-
-		[Fact]
-		[Trait("Tag", "Resource Providers")]
-		[Trait("Category", "Unit")]
-		public void GetNetworkProviders_ShouldFindProvider()
-		{
-            Container.AddAvailableNetworkProviders();
-            Container.GetNetworkProviders().Should().NotBeEmpty();
 		}
 
 		[Fact]

@@ -19,7 +19,9 @@ namespace Lighthouse.Apps.Functions.Tests
         {
             Output = output;
 
-            Container = new LighthouseServer(localLogger: (message) => {
+            Container = new LighthouseServer();
+            Container.AddLogger((message) =>
+            {
                 Messages.Add(message); Output.WriteLine(message);
             });
         }

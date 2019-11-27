@@ -1,5 +1,6 @@
 ﻿using CommandLine;
 using Lighthouse.Core;
+using Lighthouse.Core.Utils;
 using Lighthouse.Server.Utils;
 using System;
 using System.Collections.Generic;
@@ -37,7 +38,8 @@ namespace Lighthouse.Server
         {
             Console.WriteLine("Starting lighthouse server");
 
-            var server = new LighthouseServer(localLogger: Console.WriteLine);
+            var server = new LighthouseServer();
+            server.AddLogger(Console.WriteLine);
             server.Start();
 
             Parser.Default.ParseArguments<RunOptions, ViewOptions>(args)

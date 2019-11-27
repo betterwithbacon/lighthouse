@@ -19,5 +19,12 @@ namespace Lighthouse.Core.Utils
 		{
 			return IpRegex.IsMatch(input);
 		}
-	}
+
+        public static Uri ToUri(this string input)
+        {
+            if (Uri.TryCreate(input, UriKind.Absolute, out var val))
+                return val;
+            throw new Exception($"Can't parse URI: {input}");
+        }
+    }
 }

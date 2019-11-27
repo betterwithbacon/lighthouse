@@ -1,6 +1,9 @@
 ﻿using CommandLine;
 using Lighthouse.Client;
 using Lighthouse.Core;
+using Lighthouse.Core.Hosting;
+using Lighthouse.Core.Utils;
+using Lighthouse.Server;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -24,10 +27,12 @@ namespace Lighthouse.CLI
         {
             [Option('f', "file", Required = false, HelpText = "Application configuration file to load")]
             public string File { get; set; }
+
+            public bool IsFileMode => !string.IsNullOrEmpty(File);
         }
 
         [Verb("inspect")]
-        public class ViewOptions : BaseLighthouseOptions
+        public class InspectOptions : BaseLighthouseOptions
         {
         }
 
@@ -40,46 +45,21 @@ namespace Lighthouse.CLI
         [Verb("benchmark")]
         public class BenchmarkOptions : BaseLighthouseOptions
         {
-
         }
 
         static async Task Main(string[] args)
-        {
-            var client = new LighthouseClient();
-            client.AddLogger((message) => console.WriteLine(message));
-
-            Parser.Default.ParseArguments<RunOptions, ViewOptions>(args)
+        {            
+            var result  = Parser.Default.ParseArguments<RunOptions, InspectOptions>(args)
                 .MapResult(
-                    (RunOptions runOptions) =>
+                    (RunOptions run) =>
                     {
-                        if (string.IsNullOrEmpty(runOptions.Application) && string.IsNullOrEmpty(runOptions.File))
+                        if (run.IsFileMode)
                         {
-                            throw new ApplicationException("Can't find app name");
-                        }
-
-                        if (!runOptions.IsAppMode)
-                        {
-                            var fileContents = File.ReadAllText(runOptions.File);
+                            var fileContents = File.ReadAllText(run.File);
 
                             var config = YamlUtil.ParseYaml<LighthouseRunConfig>(fileContents);
 
-                            //(IEnumerable<ResourceProviderConfig> Resources, IEnumerable<Type> Types) = YamlV1Decomposer.Deserialize(fileContents);
-
-                            //var failedResourceCreations = new List<string>();
-
-                            //foreach (var resourceConfig in Resources)
-                            //{
-                            //    (bool wasSuccessful, string errorReason) = ResourceFactory.TryCreate(resourceConfig, out var resource);
-
-                            //    if (wasSuccessful)
-                            //    {
-                            //        server.RegisterResourceProvider(resource);
-                            //    }
-                            //    else
-                            //    {
-                            //        failedResourceCreations.Add(errorReason);
-                            //    }
-                            //}
+                            
 
                             // load resources first
                             foreach (var resource in config.Resources)
@@ -92,40 +72,51 @@ namespace Lighthouse.CLI
                             {
 
                             }
-
                         }
                         else
                         {
-                            Type appType = LighthouseFetcher.Fetch(runOptions.Application);
-                            if (appType == null)
+                            if(run.Where != null)
                             {
-                                throw new ApplicationException("Can't find app name");
+                                var client = new LighthouseClient(run.Where.ToUri());
+                                client.AddLogger(Console.WriteLine);
+                                // make a connection to the other serer
+                                var response = client.MakeRequest<RemoteAppRunRequest, RemoteAppRunHandle>(new RemoteAppRunRequest(run.What)).GetAwaiter().GetResult();
+                                Console.WriteLine($"Task was {response.Status} (ID: {response.Id})");
                             }
+                            else
+                            {
+                                Type appType = LighthouseFetcher.Fetch(run.What);
+                                if (appType == null)
+                                {
+                                    throw new ApplicationException($"Can't find app with name: {run.What}");
+                                }
 
-                            server.Launch(appType);
+                                // start a lighthouse server locally, and have it run the task
+                                var server = new LighthouseServer();
+                                server.AddLogger(Console.WriteLine);
+                                server.Launch(appType).GetAwaiter().GetResult();
+                            }
                         }
 
                         return 0;
                     },
-                    (ViewOptions viewOptions) =>
+                    (InspectOptions inspect) =>
                     {
-                        if (Uri.TryCreate(viewOptions.Server, UriKind.Absolute, out var uri))
-                        {
-                            //var connection = server.Connect(uri);
+                        var client = new LighthouseClient(inspect.Where.ToUri());
+                        client.AddLogger(Console.WriteLine);
 
-                            // do more things here
-                            return 0;
-                        }
-                        else
-                        {
-                            throw new ApplicationException($"URI: {viewOptions.Server} could not be converted to a valid URI");
-                        }
+                        // this REQUIRES a local
+                        if (inspect.Where == null)
+                            throw new Exception("Must include Where to inspect.");
+
+                        var response = client.MakeRequest<StatusRequest, StatusResponse>(new StatusRequest()).GetAwaiter().GetResult();
+                        Console.WriteLine("");
+                        return 0;
                     },
                     errs => 1
                 );
 
             _ = Console.ReadLine();
-            await server.Stop();
         }
     }
 }

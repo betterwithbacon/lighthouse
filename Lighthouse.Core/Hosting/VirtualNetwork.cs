@@ -25,30 +25,15 @@ namespace Lighthouse.Core.Hosting
 
         public bool Deregister(Uri uri) => Containers.Remove(uri);
 
-        public Task<T> GetObjectAsync<T>(Uri uri, bool throwErrors = false)
+        public Task<TResponse> GetObjectAsync<TRequest, TResponse>(Uri uri, TRequest requestObject, bool throwErrors = false)
+            where TRequest : class
         {
-            if (Containers.TryGetValue(uri, out var container))
+            if (!Containers.TryGetValue(uri, out var container))
             {
-                return container.HandleRequest<WebRequestWrapper, T>(new WebRequestWrapper(uri));
+                // TODO: returning a default value might be bit misleading, but exceptions seems maybe too much. think this through?
+                return default;
             }
-            
-            // TODO: returning a default value might be bit misleading, but exceptions seems maybe too much. think this through?
-            return default;
+            return container.HandleRequest<TRequest, TResponse>(requestObject);
         }
-    }
-
-    public class WebRequestWrapper
-    {
-        public Uri Uri { get; }
-        public string Payload { get; }
-        public HttpMethod Method { get; }
-
-        public WebRequestWrapper(Uri uri, HttpMethod method = null, string payload = null)
-        {
-            this.Uri = uri;
-            this.Method = method;
-            this.Payload = payload;
-        }
-
     }
 }

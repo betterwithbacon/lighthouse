@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json;
 
 namespace Lighthouse.Core.Utils
 {
@@ -14,11 +15,21 @@ namespace Lighthouse.Core.Utils
 				return input;
 		}
 
-        public static Uri ToUri(this string input)
+        public static T ConvertJsonToTarget<T>(this string input, bool throwErrors = false)
         {
-            if (Uri.TryCreate(input, UriKind.Absolute, out var val))
-                return val;
-            return null;
+            T result = default;
+            try
+            {
+                result = JsonConvert.DeserializeObject<T>(input);
+                return result;
+            }
+            // TODO: make this less generic Exception, just catch ones that try to deserialze
+            catch (Exception)
+            {
+                if (throwErrors)
+                    throw;
+            }
+            return result;
         }
     }
 }

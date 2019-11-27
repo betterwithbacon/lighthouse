@@ -17,7 +17,7 @@ namespace Lighthouse.Core.Tests.IO
 		[Fact]
 		public async Task GetStringAsync_RootRoute_ReturnsValue()
 		{
-			var provider = new InternetNetworkProvider(Container);
+			var provider = new InternetNetworkProvider();
 
 			var port = 51515;
 			var uri = new UriBuilder(Uri.UriSchemeHttp, "127.0.0.1", port).Uri;
@@ -39,7 +39,7 @@ namespace Lighthouse.Core.Tests.IO
 		[Fact]
 		public async Task GetStringAsync_SubRoute_ReturnsValue()
 		{
-			var provider = new InternetNetworkProvider(Container);
+			var provider = new InternetNetworkProvider();
 
 			var port = 51516;
 			var uri = new UriBuilder(Uri.UriSchemeHttp, "127.0.0.1", port,"/PING").Uri;

@@ -10,6 +10,7 @@ namespace Lighthouse.Core.IO
     {
 		IList<NetworkScope> SupportedScopes { get; }
 
-		Task<T> GetObjectAsync<T>(Uri uri, bool throwErrors = false);
-	}
+        Task<TResponse> GetObjectAsync<TRequest, TResponse>(Uri uri, TRequest requestObject, bool throwErrors = false)
+            where TRequest : class;
+    }
 }

@@ -6,7 +6,7 @@ using Xunit;
 using Lighthouse.Core.Storage.Scopes;
 using Lighthouse.Core.Storage.Stores.Memory;
 
-namespace Lighthouse.CORE.Storage.Tests.Memory
+namespace Lighthouse.Core.Storage.Tests.Memory
 {
     public class MemoryStoreTest
     {

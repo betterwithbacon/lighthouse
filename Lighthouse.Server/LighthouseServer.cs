@@ -6,7 +6,6 @@ using Lighthouse.Core.Logging;
 using Lighthouse.Core.Storage;
 using Lighthouse.Core.Utils;
 using Lighthouse.Server.Utils;
-using Lighthouse.CORE.Storage;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -68,36 +67,22 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Constructors
-		public LighthouseServer(
-			string serverName = "Lighthouse Server",
-			Action<string> localLogger = null,
-			string workingDirectory = null,
-			Action<LighthouseServer> preLoadOperations = null)
+		public LighthouseServer(string serverName = "Lighthouse Server")
 		{
 			ServerName = serverName;
 			OS = RuntimeServices.GetOS();
-			WorkingDirectory = workingDirectory ?? Environment.CurrentDirectory;
-
-			// configure base logger
-			AddLocalLogger(localLogger ?? Console.WriteLine);
-						
+			
 			// the server is now actually configuring itself
 			Log(LogLevel.Debug, LogType.Info, this, "Lighthouse server initializing...");
 
-			// perform some operations before the server loads it's configuration, the most likely operations are actually adding support for loading the configuration.			
-			preLoadOperations?.Invoke(this);
+			//// perform some operations before the server loads it's configuration, the most likely operations are actually adding support for loading the configuration.			
+			//preLoadOperations?.Invoke(this);
 
             InitScheduler().GetAwaiter().GetResult();
         }
 		#endregion
 
 		#region Server Lifecycle
-		public void AddLocalLogger(Action<string> logAction)
-		{
-			if(logAction != null)
-				LocalLoggers.Add(logAction);
-		}
-
 		public void Start()
 		{			
 			Log(LogLevel.Debug,LogType.Info,this, "Lighthouse server starting");
@@ -107,13 +92,6 @@ namespace Lighthouse.Server
 
             StartScheduler().GetAwaiter().GetResult();
         }
-
-		public void BindServicePort(int servicePort)
-		{
-			ServicePort = servicePort;
-			
-			// TODO: Need to restart the listening I assume?
-		}
 
 		public async Task Stop()
 		{
@@ -242,21 +220,13 @@ namespace Lighthouse.Server
 		}
 		#endregion
 
-		#region Resources
-		
-
-		public void AddAvailableNetworkProviders()
-		{
-			// add a basic internet network provider, that wraps the .Net libraries
-			RegisterResourceProvider(new InternetNetworkProvider(this));
-		}
-
-		public void AddAvailableFileSystemProviders()
+		#region Resources		
+		public void AddAvailableFileSystemProviders(string workingDirectory = null)
 		{
 			// TODO: factor out how the "root" directory is found. This probably needs to be an environment config option
 			// File System providers
 			if (OS == OSPlatform.Windows)
-				RegisterResourceProvider(new WindowsFileSystemProvider(WorkingDirectory, this));
+				RegisterResourceProvider(new WindowsFileSystemProvider(workingDirectory, this));
 			else if (OS == OSPlatform.Linux || OS == OSPlatform.OSX)
 				RegisterResourceProvider(new UnixFileSystemProvider());
 		}
@@ -552,6 +522,11 @@ namespace Lighthouse.Server
         public Task<TResponse> MakeRequest<TRequest, TResponse>(TRequest request) where TRequest : class
         {
             throw new NotImplementedException();
+        }
+
+        public void Bind(int port)
+        {
+            this.ServicePort = port;
         }
     }
 
