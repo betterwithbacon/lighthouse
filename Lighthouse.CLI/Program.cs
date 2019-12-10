@@ -47,74 +47,10 @@ namespace Lighthouse.CLI
         {
         }
 
-        static async Task Main(string[] args)
-        {            
-            var result  = Parser.Default.ParseArguments<RunOptions, InspectOptions>(args)
-                .MapResult(
-                    (RunOptions run) =>
-                    {
-                        if (run.IsFileMode)
-                        {
-                            var fileContents = File.ReadAllText(run.File);
-
-                            var config = YamlUtil.ParseYaml<LighthouseRunConfig>(fileContents);
-
-                            
-
-                            // load resources first
-                            foreach (var resource in config.Resources)
-                            {
-
-                            }
-
-                            // then launch apps
-                            foreach (var app in config.Applications)
-                            {
-
-                            }
-                        }
-                        else
-                        {
-                            if(run.Where != null)
-                            {
-                                var client = new LighthouseClient(run.Where.ToUri());
-                                client.AddLogger(Console.WriteLine);
-                                // make a connection to the other serer
-                                var response = client.MakeRequest<RemoteAppRunRequest, RemoteAppRunHandle>(new RemoteAppRunRequest(run.What)).GetAwaiter().GetResult();
-                                Console.WriteLine($"Task was {response.Status} (ID: {response.Id})");
-                            }
-                            else
-                            {
-                                Type appType = LighthouseFetcher.Fetch(run.What);
-                                if (appType == null)
-                                {
-                                    throw new ApplicationException($"Can't find app with name: {run.What}");
-                                }
-
-                                // start a lighthouse server locally, and have it run the task
-                                var server = new LighthouseServer();
-                                server.AddLogger(Console.WriteLine);
-                                server.Launch(appType).GetAwaiter().GetResult();
-                            }
-                        }
-
-                        return 0;
-                    },
-                    (InspectOptions inspect) =>
-                    {
-                        var client = new LighthouseClient(inspect.Where.ToUri());
-                        client.AddLogger(Console.WriteLine);
-
-                        // this REQUIRES a local
-                        if (inspect.Where == null)
-                            throw new Exception("Must include Where to inspect.");
-
-                        var response = client.MakeRequest<StatusRequest, StatusResponse>(new StatusRequest()).GetAwaiter().GetResult();
-                        Console.WriteLine("");
-                        return 0;
-                    },
-                    errs => 1
-                );
+        static void Main(string[] args)
+        {
+            var runner = new CommandLineRunner(Console.WriteLine,Console.ReadLine);
+            var result = runner.Run(args);
 
             _ = Console.ReadLine();
         }
