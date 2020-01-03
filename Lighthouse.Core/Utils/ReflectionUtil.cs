@@ -19,4 +19,26 @@ namespace Lighthouse.Core.Utils
 				.ToDictionary(mi => mi.GetParameters().Single().ParameterType, mx => mx);				
 		}
 	}
+
+    public class TypeFactory
+    {
+        private Dictionary<Type, Func<object>> TypeToFactories { get; } = new Dictionary<Type, Func<object>>();
+
+        public void Register<T>(Func<object> factoryMethod)
+        {
+            TypeToFactories.Add(typeof(T), factoryMethod);
+        }
+
+        public T Create<T>()
+            where T : class
+        {
+            if(TypeToFactories.TryGetValue(typeof(T), out var func))
+            {
+                return func() as T;
+            }
+
+            // tries to use paramaterless constructor
+            return Activator.CreateInstance<T>();
+        }
+    }
 }
