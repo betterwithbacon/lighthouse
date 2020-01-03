@@ -20,6 +20,8 @@ namespace Lighthouse.CLI
             public string Where { get; set; }
             [Option("how", Required = false, HelpText = "JSON payload sent to the action to run.")]
             public string How { get; set; }
+            [Option("printOnly", Required = false, Default = false)]
+            public bool PrintOnly { get; set; }
         }
 
         [Verb("run")]

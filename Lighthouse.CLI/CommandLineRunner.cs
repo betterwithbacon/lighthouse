@@ -8,21 +8,25 @@ using Lighthouse.Core.Utils;
 using Lighthouse.Server;
 using static Lighthouse.CLI.Program;
 using System.Linq;
+using System.Collections.Generic;
+using Lighthouse.Core.IO;
 
 namespace Lighthouse.CLI
 {
     public class CommandLineRunner
     {
-        public CommandLineRunner(Action<string> consoleWrite, Func<string> consoleRead)
-        {
+        public CommandLineRunner(Action<string> consoleWrite, Func<string> consoleRead, INetworkProvider networkProvider = null)
+        { 
             ConsoleWrite = consoleWrite;
             ConsoleRead = consoleRead;
+            NetworkProvider = networkProvider;
         }
 
         public Action<string> ConsoleWrite { get; }
         public Func<string> ConsoleRead { get; }
+        public INetworkProvider NetworkProvider { get; private set; }
 
-        public int Run(string[] args)
+        public int Run(IEnumerable<string> args)
         {
             var result = Parser.Default.ParseArguments<RunOptions, InspectOptions>(args)
             .MapResult(
@@ -30,31 +34,47 @@ namespace Lighthouse.CLI
                 {
                     if (run.IsFileMode)
                     {
-                        var fileContents = File.ReadAllText(run.File);
+                        //if (run.PrintOnly)
+                        //{
+                        //    ConsoleWrite($"Reading file contents from {run.File}.");
+                        //}
+                        //else
+                        //{
+                            var fileContents = File.ReadAllText(run.File);
 
-                        var config = YamlUtil.ParseYaml<LighthouseRunConfig>(fileContents);
+                            var config = YamlUtil.ParseYaml<LighthouseRunConfig>(fileContents);
 
-                        // load resources first
-                        foreach (var resource in config.Resources)
-                        {
+                            // load resources first
+                            foreach (var resource in config.Resources)
+                            {
 
-                        }
+                            }
 
-                        // then launch apps
-                        foreach (var app in config.Applications)
-                        {
+                            // then launch apps
+                            foreach (var app in config.Applications)
+                            {
 
-                        }
+                            }
+                        //}
                     }
                     else
                     {
                         if (run.Where != null)
                         {
-                            var client = new LighthouseClient(run.Where.ToUri());
+                            var client = new LighthouseClient(run.Where.ToUri(), NetworkProvider);
                             client.AddLogger(ConsoleWrite);
-                            // make a connection to the other serer
-                            var response = client.MakeRequest<RemoteAppRunRequest, RemoteAppRunHandle>(new RemoteAppRunRequest(run.What)).GetAwaiter().GetResult();
-                            ConsoleWrite($"Task was {response.Status} (ID: {response.Id})");
+                            
+                            // TODO: I HATE this, but just want to get tests working first.
+                            //if (run.PrintOnly)
+                            //{
+                            //    ConsoleWrite($"Request will be made to {client}");
+                            //}
+                            //else
+                            //{
+                                // make a connection to the other serer
+                                var response = client.MakeRequest<RemoteAppRunRequest, RemoteAppRunHandle>(new RemoteAppRunRequest(run.What)).GetAwaiter().GetResult();
+                                ConsoleWrite($"Request {response.Status} (ID: {response.Id})");
+                            //}
                         }
                         else
                         {
@@ -75,7 +95,7 @@ namespace Lighthouse.CLI
                 },
                 (InspectOptions inspect) =>
                 {
-                    var client = new LighthouseClient(inspect.Where.ToUri());
+                    var client = new LighthouseClient(inspect.Where.ToUri(), NetworkProvider);
                     client.AddLogger(ConsoleWrite);
 
                     // this REQUIRES a local

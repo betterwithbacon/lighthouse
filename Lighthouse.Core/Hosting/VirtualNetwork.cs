@@ -25,15 +25,16 @@ namespace Lighthouse.Core.Hosting
 
         public bool Deregister(Uri uri) => Containers.Remove(uri);
 
-        public Task<TResponse> GetObjectAsync<TRequest, TResponse>(Uri uri, TRequest requestObject, bool throwErrors = false)
+        public async Task<TResponse> GetObjectAsync<TRequest, TResponse>(Uri uri, TRequest requestObject, bool throwErrors = false)
             where TRequest : class
         {
             if (!Containers.TryGetValue(uri, out var container))
             {
                 // TODO: returning a default value might be bit misleading, but exceptions seems maybe too much. think this through?
-                return default;
+                // return await Task.FromResult<TResponse>(default);
+                throw new Exception($"URI not found {uri}");
             }
-            return container.HandleRequest<TRequest, TResponse>(requestObject);
+            return await container.HandleRequest<TRequest, TResponse>(requestObject);
         }
     }
 }
