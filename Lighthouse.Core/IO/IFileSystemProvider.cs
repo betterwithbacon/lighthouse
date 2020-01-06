@@ -50,7 +50,14 @@ namespace Lighthouse.Core.IO
 	{
 		public ILighthouseServiceContainer LighthouseContainer => throw new NotImplementedException();
 
-		public Task AppendToFileOnFileSystem(string fileName, byte[] data)
+        public string WorkingDirectory { get; }
+
+        public UnixFileSystemProvider(string workingDirectory)
+        {
+            WorkingDirectory = workingDirectory;
+        }
+
+        public Task AppendToFileOnFileSystem(string fileName, byte[] data)
 		{
 			throw new NotImplementedException();
 		}

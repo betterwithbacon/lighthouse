@@ -104,14 +104,6 @@ namespace Lighthouse.Server.Tests
             Container.AddAvailableFileSystemProviders();
 			Container.GetFileSystemProviders().Should().NotBeEmpty();
 		}
-
-		[Fact]
-		[Trait("Tag", "Resource Providers")]
-		[Trait("Category", "Unit")]
-		public void WorkingDirectory_ShouldMatchEnvironment()
-		{
-			Container.WorkingDirectory.Should().Be(Environment.CurrentDirectory);
-		}
 		#endregion
 
 		#region Processing

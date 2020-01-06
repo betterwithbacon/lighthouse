@@ -18,7 +18,7 @@ namespace Lighthouse.Core.Tests.IO
 		public WindowsFileSystemProviderTests(ITestOutputHelper output)
 			: base(output)
 		{
-			Provider = new WindowsFileSystemProvider(Container.WorkingDirectory, Container);
+			Provider = new WindowsFileSystemProvider("C:\\", Container);
 			Container.RegisterResourceProvider(Provider);
 		}
 

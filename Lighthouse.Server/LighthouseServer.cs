@@ -26,8 +26,7 @@ namespace Lighthouse.Server
 	{
 		#region Fields - Server Metadata
 		public string ServerName { get; private set; }
-		public const string DEFAULT_APP_NAME = "Lighthouse Server";		
-		public string WorkingDirectory { get; private set; } = @"C:\";
+		public const string DEFAULT_APP_NAME = "Lighthouse Server";
 		public readonly OSPlatform OS;
         public int ServicePort { get; private set; }
         #endregion
@@ -228,7 +227,7 @@ namespace Lighthouse.Server
 			if (OS == OSPlatform.Windows)
 				RegisterResourceProvider(new WindowsFileSystemProvider(workingDirectory, this));
 			else if (OS == OSPlatform.Linux || OS == OSPlatform.OSX)
-				RegisterResourceProvider(new UnixFileSystemProvider());
+				RegisterResourceProvider(new UnixFileSystemProvider(workingDirectory));
 		}
 
 		public IEnumerable<T> GetResourceProviders<T>()
@@ -504,29 +503,18 @@ namespace Lighthouse.Server
             KnownTypes.AddRange(Assembly.GetExecutingAssembly().GetExportedTypes());
         }
 
-        public void DiscoverOtherContainers()
-        {
-            throw new NotImplementedException();
-        }
-
         public void AddLogger(Action<string> logger)
         {
-            throw new NotImplementedException();
+            LocalLoggers.Add(logger);
         }
 
-        public IEnumerable<IResourceProvider> GetResourceProviders()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<TResponse> MakeRequest<TRequest, TResponse>(TRequest request) where TRequest : class
-        {
-            throw new NotImplementedException();
-        }
+        public IEnumerable<IResourceProvider> GetResourceProviders() => Resources;
 
         public void Bind(int port)
         {
             this.ServicePort = port;
+
+            // TODO: actually start listening?
         }
     }
 

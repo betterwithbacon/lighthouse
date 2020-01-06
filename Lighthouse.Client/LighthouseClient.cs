@@ -47,7 +47,7 @@ namespace Lighthouse.Client
             }
         }
 
-        public async Task<TResponse> MakeRequest<TRequest, TResponse>(TRequest request) where TRequest : class =>
+        public async Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest request) where TRequest : class =>
             // a VERY naive implementation, says that ALL messages are sent to a single port
             // , and that, we don't need endpoints because of that.
             await NetworkProvider.GetObjectAsync<TRequest, TResponse>(Uri, request, true);

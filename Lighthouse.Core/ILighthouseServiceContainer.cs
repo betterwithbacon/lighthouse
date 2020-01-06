@@ -15,7 +15,7 @@ namespace Lighthouse.Core
     /// </summary>
     public interface ILighthousePeer
     {
-        Task<TResponse> MakeRequest<TRequest, TResponse>(TRequest request)
+        Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest request)
             where TRequest : class;
     }
 

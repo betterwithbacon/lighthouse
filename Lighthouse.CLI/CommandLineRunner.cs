@@ -68,7 +68,7 @@ namespace Lighthouse.CLI
                             client.AddLogger(ConsoleWrite);
                             
                             // make a connection to the other serer
-                            var response = client.MakeRequest<RemoteAppRunRequest, RemoteAppRunHandle>(new RemoteAppRunRequest(run.What)).GetAwaiter().GetResult();
+                            var response = client.HandleRequest<RemoteAppRunRequest, RemoteAppRunHandle>(new RemoteAppRunRequest(run.What)).GetAwaiter().GetResult();
                             ConsoleWrite($"Request {response.Status} (ID: {response.Id})");
                         }
                         else
@@ -98,7 +98,7 @@ namespace Lighthouse.CLI
                     if (inspect.Where == null)
                         throw new Exception("Must include Where to inspect.");
 
-                    var response = client.MakeRequest<StatusRequest, StatusResponse>(new StatusRequest()).GetAwaiter().GetResult();
+                    var response = client.HandleRequest<StatusRequest, StatusResponse>(new StatusRequest()).GetAwaiter().GetResult();
                     ConsoleWrite("");
                     return 0;
                 },

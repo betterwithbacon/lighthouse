@@ -1,4 +1,3 @@
-using System;
 using System.Diagnostics.Contracts;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -10,6 +9,7 @@ using Xunit;
 
 namespace Lighthouse.Core.Tests
 {
+
     public class LighthouseClientTests
     {
         [Fact]
@@ -19,9 +19,11 @@ namespace Lighthouse.Core.Tests
             var otherContainerPort = 12_345;
             var uri = $"http://127.0.0.1:{otherContainerPort}".ToUri();
 
-            var otherContainer = NSubstitute.Substitute.For<ILighthouseServiceContainer>();
+            var otherContainer = new MockLighthouseServer();
             otherContainer.Bind(otherContainerPort);
-            _ = otherContainer.HandleRequest<TestRequest, TestResponse>(Arg.Any<TestRequest>()).ReturnsForAnyArgs((v) => v.ArgAt<object>(0));
+            otherContainer.OnHandleRequest<TestRequest, TestResponse>((request) => new TestResponse { Payload = ((TestRequest)request).Payload });
+
+            // _ = otherContainer.HandleRequest<TestRequest, TestResponse>(Arg.Any<TestRequest>()).ReturnsForAnyArgs((v) => v.ArgAt<object>(0));
 
             var virtualNetwork = new VirtualNetwork();
             virtualNetwork.Register(otherContainer, uri);
@@ -34,7 +36,7 @@ namespace Lighthouse.Core.Tests
                 Payload = testPayload
             };
 
-            var response = await client.MakeRequest<TestRequest, TestResponse>(testRequest);
+            var response = await client.HandleRequest<TestRequest, TestResponse>(testRequest);
             response.Payload.Should().Be(testPayload);
         }
 
