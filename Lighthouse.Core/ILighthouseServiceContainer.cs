@@ -54,9 +54,6 @@ namespace Lighthouse.Core
 
 		Task EmitEvent(IEvent ev, object source = null);
 
-        Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest request)
-            where TRequest : class;
-
         T ResolveType<T>() where T : class;
 
         void Bind(int port);
@@ -67,14 +64,8 @@ namespace Lighthouse.Core
         public static IEnumerable<T> GetResourceProviders<T>(this ILighthouseServiceContainer container)
             where T : IResourceProvider => container.GetResourceProviders().OfType<T>();
 
-        public static IEnumerable<INetworkProvider> GetNetworkProviders(this ILighthouseServiceContainer container)
-        {
-            yield return null;
-        }
+        public static IEnumerable<INetworkProvider> GetNetworkProviders(this ILighthouseServiceContainer container) => container.GetResourceProviders<INetworkProvider>();
 
-        public static IEnumerable<IFileSystemProvider> GetFileSystemProviders(this ILighthouseServiceContainer container)
-        {
-            yield return null;
-        }
+        public static IEnumerable<IFileSystemProvider> GetFileSystemProviders(this ILighthouseServiceContainer container) => container.GetResourceProviders<IFileSystemProvider>();
     }
 }

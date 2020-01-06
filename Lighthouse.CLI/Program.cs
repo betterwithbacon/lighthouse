@@ -14,7 +14,7 @@ namespace Lighthouse.CLI
     {
         public abstract class BaseLighthouseOptions
         {
-            [Option("what", Required = true, HelpText = "What to do?")]
+            [Option("what", Required = false, HelpText = "What to do?")]
             public string What { get; set; }
             [Option("where", Required = false, HelpText = "Where to run it?")]
             public string Where { get; set; }

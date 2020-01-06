@@ -29,6 +29,11 @@ namespace Lighthouse.Server
             ServerName = serverName;
             ServerTime = serverTime;
         }
+
+        public override string ToString()
+        {
+            return $"{ServerName} (version: {Version}): {ServerTime.ToLongDateString()}";
+        }
     }
 
     public class StatusRequest

@@ -44,7 +44,6 @@ namespace Lighthouse.Server
         readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
 		readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
 		readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
-        //readonly List<ILighthouseServiceContainerConnection> RemoteContainerConnections = new List<ILighthouseServiceContainerConnection>();
 		#endregion
 
 		#region Fields - Resources
@@ -73,9 +72,6 @@ namespace Lighthouse.Server
 			
 			// the server is now actually configuring itself
 			Log(LogLevel.Debug, LogType.Info, this, "Lighthouse server initializing...");
-
-			//// perform some operations before the server loads it's configuration, the most likely operations are actually adding support for loading the configuration.			
-			//preLoadOperations?.Invoke(this);
 
             InitScheduler().GetAwaiter().GetResult();
         }
@@ -199,11 +195,6 @@ namespace Lighthouse.Server
             Log(LogLevel.Debug, LogType.Info, this, $"{serviceDescription} completed successfully. TaskId {task.Id}");  //{RunningServices.FirstOrDefault(lsr => lsr.TaskId == task.Id)?.Service}", emitEvent:false);
 		}
 
-		private void Service_StatusUpdated(object owner, string status)
-		{
-			Log(LogLevel.Debug, LogType.Info, owner, status, emitEvent: false);
-		}
-
 		public void Log(LogLevel level, LogType logType, object sender, string message = null, Exception exception = null, bool emitEvent = true)
 		{
 			string log = $"[{DateTime.Now.ToLighthouseLogString()}] [{sender}] [{logType}]: {message}";
@@ -235,30 +226,11 @@ namespace Lighthouse.Server
 		{
 			return Resources.OfType<T>();
 		}
+        #endregion
 
-		public IEnumerable<IFileSystemProvider> GetFileSystemProviders()
-		{
-			return GetResourceProviders<IFileSystemProvider>();
-		}
-
-		public IEnumerable<INetworkProvider> GetNetworkProviders()
-		{
-			return GetResourceProviders<INetworkProvider>();
-		}
-		#endregion
-
-		#region Utils
-		public DateTime GetNow()
-		{
-			// for now, just use local time, but this should eventually use UTC
-			return DateTime.Now;
-		}
-
-		public override string ToString()
-		{
-			return ServerName;
-		}
-
+        #region ILighthouseEnvironment
+        public DateTime GetNow() => DateTime.Now;
+        public override string ToString() => ServerName;
         #endregion
 
         #region Events
@@ -300,9 +272,6 @@ namespace Lighthouse.Server
 			// add it
 			Producers.Add(eventProducer);
 
-			// and register this as the context with the producer
-			//eventProducer.Init(this);
-            
 			Log(LogLevel.Debug, LogType.ProducerRegistered, eventProducer);
 			
 			// after registered, go ahead and start the producer.
@@ -333,33 +302,9 @@ namespace Lighthouse.Server
 						{
 							HandleTaskError(task.Exception.InnerException);
 						}
-						// no need to handle successful "do" calls, as they're expected to succeed, and also won't have any thread metadata
-						//else
-						//{
-						//	HandleTaskCompletion(task);
-						//}
 					}, CancellationTokenSource.Token);
 		}
 		#endregion
-
-		//#region  Hosting		
-		//public void RegisterRemotePeer(ILighthouseServiceContainerConnection connection)
-		//{
-		//	// add it to the list
-		//	RemoteContainerConnections.Add(connection);
-
-		//	Log(LogLevel.Info, LogType.Info, this, $"Adding remote lighthouse container: {connection}");
-		//}
-
-		//public ILighthouseServiceContainerConnection Connect(Uri uri)
-		//{
-		//	return new NetworkLighthouseServiceContainerConnection(
-		//		this,
-		//		IPAddress.Parse(uri.Host),
-		//		uri.Port
-		//	);
-		//}
-  //      #endregion
 
         #region Scheduling
         private static string GetDefaultScheduleName(ILighthouseService owner, string scheduleName = null) => scheduleName ?? owner.Id + "_timer";
@@ -368,12 +313,6 @@ namespace Lighthouse.Server
         private static readonly object SchedulerCreationMutex = new object();
         private async Task InitScheduler()
         {
-            //NameValueCollection props = new NameValueCollection
-            //    {
-            //        { "quartz.serializer.type", "binary" }
-            //    };
-            //StdSchedulerFactory factory = new StdSchedulerFactory(props);
-            //factory.Initialize();
             lock (SchedulerCreationMutex)
             {
                 if (Scheduler == null)
@@ -381,8 +320,6 @@ namespace Lighthouse.Server
                     Scheduler = StdSchedulerFactory.GetDefaultScheduler().GetAwaiter().GetResult();
                 }
             }
-
-            //Scheduler = await factory.GetScheduler(Guid.NewGuid().ToString());
         }
 
         private IScheduler Scheduler { get; set; }
@@ -418,7 +355,6 @@ namespace Lighthouse.Server
         {
             await Scheduler.UnscheduleJob(new TriggerKey(GetDefaultScheduleName(owner, scheduleName), owner.Id));
         }
-
         #endregion
 
         private class ScheduledActionJob : IJob
@@ -436,11 +372,6 @@ namespace Lighthouse.Server
                 return Task.CompletedTask;
             }
         }
-
-        //public IEnumerable<ILighthouseServiceContainerConnection> GetServerConnections()
-        //{
-        //    return RemoteContainerConnections;
-        //}
 
         public async Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest storageRequest)
             where TRequest : class

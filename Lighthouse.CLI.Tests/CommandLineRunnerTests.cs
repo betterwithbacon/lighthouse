@@ -21,6 +21,15 @@ namespace Lighthouse.CLI.Tests
 
         public ITestOutputHelper Output { get; }
 
+
+        [Fact]
+        public void Inspect_127_0_0_1_Works()
+        {
+            var where = "http://127.0.0.1";
+            var (_, Succeeded, _) = Inspect(where);
+            Succeeded.Should().BeTrue();
+        }
+
         [Fact]
         public void Run_Ping_127_0_0_1_Works()
         {
@@ -39,7 +48,7 @@ namespace Lighthouse.CLI.Tests
             foreach (var expected in new string[]{ "Request", RemoteAppRunStatus.Succeeded})
             {
                 allLogs.Contains(expected).Should().BeTrue();
-            }            
+            }
         }
 
         [Fact(Skip = "this won't work until we actually have a way for exceptions to be sent back from remote")]
@@ -50,10 +59,44 @@ namespace Lighthouse.CLI.Tests
             Run(what, where).Succeeded.Should().BeFalse();
         }
 
+        private (List<string> Log, bool Succeeded, Exception Error) Inspect(string where)
+        {
+            var command = $"lighthouse inspect --where {where}";
+
+            var virtualNetwork = new VirtualNetwork();
+
+            var typeFactory = new TypeFactory();
+            typeFactory.Register<INetworkProvider>(() => virtualNetwork);
+
+            var pingContainer = Substitute.For<ILighthouseServiceContainer>();
+            virtualNetwork.Register(pingContainer, where.ToUri());
+
+            RemoteAppRunRequest receivedRequest = null;
+            var returnValue = new RemoteAppRunHandle(Guid.NewGuid().ToString());
+
+            pingContainer.HandleRequest<RemoteAppRunRequest, RemoteAppRunHandle>(Arg.Do<RemoteAppRunRequest>(r => receivedRequest = r)).Returns(returnValue);
+
+            var consoleWrites = new List<string>();
+            var runner = new CommandLineRunner((log) => {
+                consoleWrites.Add(log);
+                Output.WriteLine(log);
+            }, () => "no_console_reads", typeFactory);
+
+            try
+            {
+                var returnCode = runner.Run(command.Split(" ").Skip(1));
+                receivedRequest.Should().NotBeNull();
+                
+                return (consoleWrites, true, null);
+            }
+            catch (Exception e)
+            {
+                return (consoleWrites, false, e);
+            }
+        }
+
         private (List<string> Log, bool Succeeded, Exception Error) Run(string what, string where)
         {
-            //var where = "http://127.0.0.1";
-            //var what = "ping";
             var command = $"lighthouse run --what {what} --where {where}";
 
             var typeFactory = new TypeFactory();

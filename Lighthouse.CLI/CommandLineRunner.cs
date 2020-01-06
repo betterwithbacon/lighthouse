@@ -99,7 +99,7 @@ namespace Lighthouse.CLI
                         throw new Exception("Must include Where to inspect.");
 
                     var response = client.HandleRequest<StatusRequest, StatusResponse>(new StatusRequest()).GetAwaiter().GetResult();
-                    ConsoleWrite("");
+                    ConsoleWrite(response.ToString());
                     return 0;
                 },
                 errs =>
