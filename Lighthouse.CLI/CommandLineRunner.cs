@@ -16,20 +16,25 @@ namespace Lighthouse.CLI
     public class CommandLineRunner
     {
         public CommandLineRunner(Action<string> consoleWrite, Func<string> consoleRead,
-            TypeFactory typeFactory)
+            TypeFactory typeFactory = null)
         { 
             ConsoleWrite = consoleWrite;
             ConsoleRead = consoleRead;
-            TypeFactory = typeFactory;
-
-            //NetworkProvider = networkProvider;
+            if(typeFactory== null)
+            {
+                typeFactory = new TypeFactory();
+                typeFactory.Register<INetworkProvider>(() => new InternetNetworkProvider());
+            }
+            else
+            {
+                TypeFactory = typeFactory;
+            }            
         }
 
         public Action<string> ConsoleWrite { get; }
         public Func<string> ConsoleRead { get; }
         public TypeFactory TypeFactory { get; }
-        // public INetworkProvider NetworkProvider { get; private set; }
-
+        
         public int Run(IEnumerable<string> args)
         {
             var result = Parser.Default.ParseArguments<RunOptions, InspectOptions>(args)

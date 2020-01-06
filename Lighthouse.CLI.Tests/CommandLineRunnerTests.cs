@@ -4,6 +4,7 @@ using System.Linq;
 using FluentAssertions;
 using Lighthouse.Core;
 using Lighthouse.Core.Hosting;
+using Lighthouse.Core.IO;
 using Lighthouse.Core.Utils;
 using NSubstitute;
 using Xunit;
@@ -25,9 +26,12 @@ namespace Lighthouse.CLI.Tests
         {
             var where = "http://127.0.0.1";
             var what = "ping";
-
+            var typeFactory = new TypeFactory();
+            
             // just create a dumb network, that will let the console run and fail expectedly
             var virtualNetwork = new VirtualNetwork();
+            typeFactory.Register<INetworkProvider>(() => virtualNetwork);
+
             var pingContainer = Substitute.For<ILighthouseServiceContainer>();
             virtualNetwork.Register(pingContainer, where.ToUri());
 
@@ -40,7 +44,7 @@ namespace Lighthouse.CLI.Tests
             var runner = new CommandLineRunner((log) => {
                 consoleWrites.Add(log);
                 Output.WriteLine(log);
-            }, () => "no_console_reads", virtualNetwork);
+            }, () => "no_console_reads", typeFactory);
 
             var returnCode = runner.Run($"lighthouse run --what {what}--where {where}".Split(" ").Skip(1));
 
