@@ -22,10 +22,40 @@ namespace Lighthouse.CLI.Tests
         public ITestOutputHelper Output { get; }
 
         [Fact]
-        public void Run_WhatWhere_Works()
+        public void Run_Ping_127_0_0_1_Works()
+        {
+            var where = "http://127.0.0.1";
+            var what = "ping";            
+            Run(what, where);
+        }
+
+        [Fact]
+        public void Run_Ping_127_0_0_1_LogsWritten()
         {
             var where = "http://127.0.0.1";
             var what = "ping";
+            var (logs, _, _) = Run(what, where);
+            var allLogs = string.Join(" ", logs);
+            foreach (var expected in new string[]{ "Request", RemoteAppRunStatus.Succeeded})
+            {
+                allLogs.Contains(expected).Should().BeTrue();
+            }            
+        }
+
+        [Fact(Skip = "this won't work until we actually have a way for exceptions to be sent back from remote")]
+        public void Run_Invalid_127_0_0_1_Fails()
+        {
+            var where = "http://127.0.0.1";
+            var what = "invalid";
+            Run(what, where).Succeeded.Should().BeFalse();
+        }
+
+        private (List<string> Log, bool Succeeded, Exception Error) Run(string what, string where)
+        {
+            //var where = "http://127.0.0.1";
+            //var what = "ping";
+            var command = $"lighthouse run --what {what} --where {where}";
+
             var typeFactory = new TypeFactory();
             
             // just create a dumb network, that will let the console run and fail expectedly
@@ -46,10 +76,19 @@ namespace Lighthouse.CLI.Tests
                 Output.WriteLine(log);
             }, () => "no_console_reads", typeFactory);
 
-            var returnCode = runner.Run($"lighthouse run --what {what} --where {where}".Split(" ").Skip(1));
+            try
+            {
+                var returnCode = runner.Run(command.Split(" ").Skip(1));
+                receivedRequest.Should().NotBeNull();
 
-            receivedRequest.Should().NotBeNull();
-            receivedRequest.What.Should().Be(what);
+                // the response just roundtrips the request
+                receivedRequest.What.Should().Be(what);
+                return (consoleWrites, true, null);
+            }
+            catch(Exception e)
+            {
+                return (consoleWrites, false, e);
+            }
         }
 
         //[Fact]

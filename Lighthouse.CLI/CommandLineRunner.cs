@@ -67,7 +67,7 @@ namespace Lighthouse.CLI
                             var client = new LighthouseClient(run.Where.ToUri(), networkProvider);
                             client.AddLogger(ConsoleWrite);
                             
-                            // make a connection to the other serer
+                            // make a connection to the other server
                             var response = client.HandleRequest<RemoteAppRunRequest, RemoteAppRunHandle>(new RemoteAppRunRequest(run.What)).GetAwaiter().GetResult();
                             ConsoleWrite($"Request {response.Status} (ID: {response.Id})");
                         }
