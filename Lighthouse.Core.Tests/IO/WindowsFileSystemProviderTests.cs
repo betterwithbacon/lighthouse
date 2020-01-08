@@ -19,7 +19,7 @@ namespace Lighthouse.Core.Tests.IO
 			: base(output)
 		{
 			Provider = new WindowsFileSystemProvider("C:\\", Container);
-			Container.RegisterResourceProvider(Provider);
+			Container.RegisterResource(Provider);
 		}
 
 		[Fact]

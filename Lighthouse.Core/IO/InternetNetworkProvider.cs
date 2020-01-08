@@ -44,5 +44,10 @@ namespace Lighthouse.Core.IO
                 return (await responseContent.ReadAsStringAsync()).ConvertJsonToTarget<TResponse>(throwErrors);
             }
         }
+
+        public void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null)
+        {
+            // no op, it doesn't care here either
+        }
     }
 }

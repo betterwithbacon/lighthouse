@@ -75,5 +75,10 @@ namespace Lighthouse.Core.IO
 				}
 			});
 		}
-	}
+
+        public void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null)
+        {
+            // no op, it doesn't care here either
+        }
+    }
 }

@@ -180,12 +180,15 @@ namespace Lighthouse.Server
                 }, CancellationTokenSource.Token);
 		}
 
-		public void RegisterResourceProvider(IResourceProvider resourceProvider)
+		public void RegisterResource(IResourceProvider resourceProvider)
 		{
 			Log(LogLevel.Debug, LogType.Info, this, $"Added resource: {resourceProvider}.");
-			
-			// subclass specific operations
-			Resources.Add(resourceProvider);
+
+            // inform the resource of what is reigstering it
+            resourceProvider.Register(this);
+
+            // subclass specific operations
+            Resources.Add(resourceProvider);
 		}
 		#endregion
 
@@ -216,9 +219,9 @@ namespace Lighthouse.Server
 			// TODO: factor out how the "root" directory is found. This probably needs to be an environment config option
 			// File System providers
 			if (OS == OSPlatform.Windows)
-				RegisterResourceProvider(new WindowsFileSystemProvider(workingDirectory, this));
+				RegisterResource(new WindowsFileSystemProvider(workingDirectory, this));
 			else if (OS == OSPlatform.Linux || OS == OSPlatform.OSX)
-				RegisterResourceProvider(new UnixFileSystemProvider(workingDirectory));
+				RegisterResource(new UnixFileSystemProvider(workingDirectory));
 		}
 
 		public IEnumerable<T> GetResourceProviders<T>()

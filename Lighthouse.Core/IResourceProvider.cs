@@ -8,6 +8,7 @@ namespace Lighthouse.Core
 {
     public interface IResourceProvider
     {
+        void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null);
     }
 
     public abstract class ConfigBase
@@ -106,5 +107,9 @@ namespace Lighthouse.Core
 
     public class DatabaseResourceProvider : IResourceProvider
     {
+        public void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null)
+        {
+            // no op, it doesn't care here either
+        }
     }
 }

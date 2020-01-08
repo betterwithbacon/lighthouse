@@ -81,9 +81,9 @@ namespace Lighthouse.Core.Tests
             throw new NotImplementedException();
         }
 
-        public void RegisterResourceProvider(IResourceProvider resourceProvider)
+        public void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null)
         {
-            throw new NotImplementedException();
+            // no op, it doesn't care here either
         }
 
         public Task RemoveScheduledActions(ILighthouseService owner, string scheduleName = null)
@@ -92,6 +92,11 @@ namespace Lighthouse.Core.Tests
         }
 
         public T ResolveType<T>() where T : class
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterResource(IResourceProvider resourceProvider)
         {
             throw new NotImplementedException();
         }

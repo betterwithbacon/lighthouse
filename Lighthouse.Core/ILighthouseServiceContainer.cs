@@ -39,7 +39,7 @@ namespace Lighthouse.Core
 
         IEnumerable<IResourceProvider> GetResourceProviders();
 
-        void RegisterResourceProvider(IResourceProvider resourceProvider);
+        void RegisterResource(IResourceProvider resourceProvider);
 
         Task Do(Action<ILighthouseServiceContainer> action, string logMessage = "");
 

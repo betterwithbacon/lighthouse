@@ -26,7 +26,7 @@ namespace Lighthouse.Core.Tests
             // _ = otherContainer.HandleRequest<TestRequest, TestResponse>(Arg.Any<TestRequest>()).ReturnsForAnyArgs((v) => v.ArgAt<object>(0));
 
             var virtualNetwork = new VirtualNetwork();
-            virtualNetwork.Register(otherContainer, uri);
+            virtualNetwork.Register(otherContainer, new System.Collections.Generic.Dictionary<string, string>() { {VirtualNetwork.DesiredUriKey, uri.ToString() } } );
                 
             var client = new LighthouseClient(uri, virtualNetwork);
 
