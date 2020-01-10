@@ -17,6 +17,17 @@ namespace Lighthouse.Core.Hosting
 
         public IList<NetworkScope> SupportedScopes => new[] { NetworkScope.Local };
 
+        public Uri ResolveUri(ILighthousePeer peer)
+        {
+            foreach(var uriAndPeer in Containers)
+            {
+                if (uriAndPeer.Value == peer)
+                    return uriAndPeer.Key;
+            }
+
+            return null;
+        }
+
         public async Task<TResponse> GetObjectAsync<TRequest, TResponse>(Uri uri, TRequest requestObject, bool throwErrors = false)
             where TRequest : class
         {
@@ -33,19 +44,19 @@ namespace Lighthouse.Core.Hosting
         {
             if (!Containers.ContainsValue(node))
             {
-                if (otherConfig.ContainsKey(DesiredUriKey))
+                if (otherConfig?.ContainsKey(DesiredUriKey) ?? false)
                 {
                     if(Containers.ContainsKey(DesiredUriKey.ToUri()))
                     {
                         throw new ApplicationException("Desired URI is already taken.");
                     }
 
-                    Containers.Add($"127.0.0.{highestSubdomain++}".ToUri(), node);
+                    Containers.Add($"http://127.0.0.{highestSubdomain++}".ToUri(), node);
                 }
                 else
                 {
                     // incrememt the URI (these addresses are just automatically assigned, low-rent DHCP)
-                    Containers.Add($"127.0.0.{highestSubdomain++}".ToUri(), node);
+                    Containers.Add($"http://127.0.0.{highestSubdomain++}".ToUri(), node);
                 }
                 
             }

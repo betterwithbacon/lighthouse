@@ -69,7 +69,7 @@ namespace Lighthouse.CLI.Tests
             typeFactory.Register<INetworkProvider>(() => virtualNetwork);
 
             var pingContainer = Substitute.For<ILighthouseServiceContainer>();
-            virtualNetwork.Register(pingContainer); //, where.ToUri());
+            virtualNetwork.Register(pingContainer);
 
             RemoteAppRunRequest receivedRequest = null;
             var returnValue = new RemoteAppRunHandle(Guid.NewGuid().ToString());

@@ -7,11 +7,12 @@ namespace Lighthouse.Server
 {
     public class StatusRequestHandler : LighthouseServiceBase, IRequestHandler<StatusRequest, StatusResponse>
     {
+        public const string GLOBAL_VERSION_NUMBER = "1.0.0.0";
         public StatusResponse Handle(StatusRequest request)
         {
             return new StatusResponse (
-                new Version("0.0.0.0"),// TODO: get version
-                "", //Container.ServerName,
+                new Version(GLOBAL_VERSION_NUMBER),// TODO: get version
+                Container.ToString(),
                 Container.GetNow()
             );
         }
@@ -32,7 +33,7 @@ namespace Lighthouse.Server
 
         public override string ToString()
         {
-            return $"{ServerName} (version: {Version}): {ServerTime.ToLongDateString()}";
+            return $"{ServerName} (version: {Version}): {ServerTime.ToShortTimeString()}";
         }
     }
 

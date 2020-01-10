@@ -36,8 +36,7 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Fields - Task Management
-		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();		
-		public bool IsRunning { get; private set; }
+		private readonly CancellationTokenSource CancellationTokenSource = new CancellationTokenSource();
         #endregion
 
 		#region Fields - Events		
@@ -74,19 +73,26 @@ namespace Lighthouse.Server
 			Log(LogLevel.Debug, LogType.Info, this, "Lighthouse server initializing...");
 
             InitScheduler().GetAwaiter().GetResult();
+
+            AddBaseServices();
         }
-		#endregion
 
-		#region Server Lifecycle
-		public void Start()
-		{			
-			Log(LogLevel.Debug,LogType.Info,this, "Lighthouse server starting");
-
-			// the service is now runnable
-			IsRunning = true;
-
-            StartScheduler().GetAwaiter().GetResult();
+        private void AddBaseServices()
+        {
+            Launch(new StatusRequestHandler()).GetAwaiter().GetResult();
         }
+        #endregion
+
+        #region Server Lifecycle
+  //      public void Start()
+		//{			
+		//	Log(LogLevel.Debug,LogType.Info,this, "Lighthouse server starting");
+
+		//	// the service is now runnable
+		//	IsRunning = true;
+
+  //          StartScheduler().GetAwaiter().GetResult();
+  //      }
 
 		public async Task Stop()
 		{
@@ -110,12 +116,6 @@ namespace Lighthouse.Server
 
 			Log(LogLevel.Debug,LogType.Info,this, "[Lighthouse Server Stopped]");
             await Task.CompletedTask; //< -- temp hackj
-		}
-
-		void AssertIsRunning()
-		{
-			if (!IsRunning)
-				throw new InvalidOperationException("Lighthouse server is not running.");	
 		}
 		#endregion
 
@@ -145,8 +145,6 @@ namespace Lighthouse.Server
 		#region Service Launching
 		public async Task Launch(Type serviceType)
 		{
-			AssertIsRunning();
-
 			Log(LogLevel.Debug,LogType.Info,this, $"Attempting to start app: {serviceType.Name}");
 
 			if (!(Activator.CreateInstance(serviceType) is ILighthouseService service))
@@ -157,8 +155,6 @@ namespace Lighthouse.Server
 
         public async Task Launch(ILighthouseService service)
 		{
-			AssertIsRunning();
-
             service.Initialize(this);
 
             // put the service in a runnable state
@@ -376,9 +372,11 @@ namespace Lighthouse.Server
             }
         }
 
-        public async Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest storageRequest)
+        public async Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest request)
             where TRequest : class
         {
+            Log(LogLevel.Debug, LogType.Info, this, $"Request Received {request}");
+
             // find request handlers
             foreach(var service in GetRunningServices())
             {
@@ -389,7 +387,7 @@ namespace Lighthouse.Server
                         var methods = ReflectionUtil.GetMethodsBySingleParameterType(requestHandler.GetType(), "Handle");
                         if (methods.TryGetValue(typeof(TRequest), out var method))
                         {
-                            return await Task.Run(() => (TResponse)method.Invoke(requestHandler, new[] { storageRequest }));
+                            return await Task.Run(() => (TResponse)method.Invoke(requestHandler, new[] { request }));
                         }
                     }
                 }

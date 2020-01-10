@@ -40,8 +40,7 @@ namespace Lighthouse.Server
 
             var server = new LighthouseServer();
             server.AddLogger(Console.WriteLine);
-            server.Start();
-
+            
             Parser.Default.ParseArguments<RunOptions, ViewOptions>(args)
                 .MapResult(
                     (RunOptions runOptions) =>
