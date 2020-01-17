@@ -204,8 +204,8 @@ namespace Lighthouse.Server
 
 		private void LogLocally(string log)
 		{
-			// fire and forget		
-			LocalLoggers.ParallelForEachAsync((logger) => Task.Run(() => logger(log)));
+            // fire and forget		
+            LocalLoggers.ParallelForEachAsync(async (logger) => await Task.Run(() => logger(log))).GetAwaiter().GetResult();
 		}
 		#endregion
 

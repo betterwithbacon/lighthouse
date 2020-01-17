@@ -39,5 +39,9 @@ namespace Lighthouse.Server
 
     public class StatusRequest
     {
+        public override string ToString()
+        {
+            return "Status Request";
+        }
     }
 }

@@ -32,15 +32,11 @@ namespace Lighthouse.CLI.Tests
             // these nodes represent, machines starting up, and joining a local network
             // we have to assume the networking is configured properly, they have IP addresses,
             // also assigned by the network, that they may or may not be aware of
-            var consoleLog = new List<string>();
-            var currentConsole = "";
-
+            
+            
             void writeDelegate(string text)
             {
-                currentConsole = text;
-                Output.WriteLine(text);
-                Console.WriteLine(text);
-                consoleLog.Add(text);
+                Output.WriteLine(text);                
             };
 
             string readDelegate() => Console.ReadLine();
@@ -48,28 +44,52 @@ namespace Lighthouse.CLI.Tests
 
             var container1Name = "container1";
             var container1 = new LighthouseServer(container1Name);
-            container1.AddLogger((log) => writeDelegate($"{container1Name}: {log}"));
+            container1.AddLogger((log) => writeDelegate($"{container1Name} LOG: {log}"));
             container1.RegisterResource(network);
 
             var container2Name = "container2";
             var container2 = new LighthouseServer(container2Name);
-            container1.AddLogger((log) => writeDelegate($"{container2Name}: {log}"));
+            container2.AddLogger((log) => writeDelegate($"{container2Name} LOG: {log}"));
             container2.RegisterResource(network);
 
             var container3Name = "container3";
             var container3 = new LighthouseServer(container3Name);
-            container1.AddLogger((log) => writeDelegate($"{container3Name}: {log}"));
+            container3.AddLogger((log) => writeDelegate($"{container3Name} LOG: {log}"));
             container3.RegisterResource(network);
 
             // now we assume a user
+            // the user, literally can only do what a person can do, and vice versa
             var user = new User(writeDelegate, readDelegate, network);
 
-            // the user, literally can only do what a person can do, and vice versa
-            user.Type($"lighthouse inspect --where {network.ResolveUri(container1)}");
+            // can we reach each server
+            user.ActAndAssert(
+                act => act.Type($"lighthouse inspect --where {network.ResolveUri(container1)}"),
+                (console) =>
+                {
+                    console.Should().Contain(StatusRequestHandler.GLOBAL_VERSION_NUMBER);
+                    console.Should().Contain(container1Name);
+                }
+            );
 
-            // this should return a simple status message
-            currentConsole.Should().Contain(StatusRequestHandler.GLOBAL_VERSION_NUMBER);
-            currentConsole.Should().Contain(container1Name);
+            user.ActAndAssert(
+               act => act.Type($"lighthouse inspect --where {network.ResolveUri(container2)}"),
+               (console) =>
+               {
+                   console.Should().Contain(StatusRequestHandler.GLOBAL_VERSION_NUMBER);
+                   console.Should().Contain(container2Name);
+               }
+           );
+
+            user.ActAndAssert(
+               act => act.Type($"lighthouse inspect --where {network.ResolveUri(container3)}"),
+               (console) =>
+               {
+                   console.Should().Contain(StatusRequestHandler.GLOBAL_VERSION_NUMBER);
+                   console.Should().Contain(container3Name);
+               }
+           );
+
+
         }
     }
 
@@ -80,7 +100,10 @@ namespace Lighthouse.CLI.Tests
         public CommandLineRunner Runner { get; }
         public VirtualNetwork Network { get; }
         public TypeFactory TypeFactory { get; }
-
+        private string currentConsole { get; set; }
+        private List<string> consoleLog { get; set; } = new List<string>();
+        public IReadOnlyCollection<string> ConsoleLog => consoleLog;
+        
         public User(Action<string> writeDelegate, Func<string> readDelegate, VirtualNetwork network)
         {
             WriteDelegate = writeDelegate;
@@ -88,14 +111,25 @@ namespace Lighthouse.CLI.Tests
             Network = network;
             TypeFactory = new TypeFactory();
             TypeFactory.Register<INetworkProvider>(() => Network);
-            Runner = new CommandLineRunner(WriteDelegate, ReadDelegate, TypeFactory);
+            Runner = new CommandLineRunner((text) => {
+                WriteDelegate(text);
+                currentConsole = text;
+                ((List<string>)ConsoleLog).Add(text); // this is SUPPER hacky....just create  backing field for the list
+            }, ReadDelegate, TypeFactory);
         }
 
         public void Type(string text)
         {
+            WriteDelegate($"USER: {text}");
             Runner.Run(text.Split(" ").Skip(1));
         }
 
         public string Read() => ReadDelegate();
+
+        internal void ActAndAssert(Action<User> textToEnter, Action<string> console)
+        {
+            textToEnter(this);
+            console(currentConsole);
+        }
     }
 }

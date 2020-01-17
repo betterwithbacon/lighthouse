@@ -61,5 +61,10 @@ namespace Lighthouse.Core.Hosting
                 
             }
         }
+
+        public override string ToString()
+        {
+            return $"Virtual Network ({Containers.Count} peers)";
+        }
     }
 }
