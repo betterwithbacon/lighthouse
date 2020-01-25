@@ -69,7 +69,7 @@ namespace Lighthouse.CLI
                             
                             // make a connection to the other server
                             var response = client.HandleRequest<RemoteAppRunRequest, RemoteAppRunHandle>(new RemoteAppRunRequest(run.What)).GetAwaiter().GetResult();
-                            ConsoleWrite($"Request {response.Status} (ID: {response.Id})");
+                            ConsoleWrite($"Request {response?.Status ?? "no response"} (ID: {response?.Id ?? "no ID"})");
                         }
                         else
                         {

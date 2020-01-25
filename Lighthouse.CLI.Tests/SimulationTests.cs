@@ -89,6 +89,16 @@ namespace Lighthouse.CLI.Tests
                }
            );
 
+            // the servers are all active and responding, now see them respond to actual pings
+           user.ActAndAssert(
+               act => act.Type($"lighthouse run --what ping --where {network.ResolveUri(container3)}"),
+               (console) =>
+               {
+                   console.Should().Contain(StatusRequestHandler.GLOBAL_VERSION_NUMBER);
+                   console.Should().Contain(container3Name);
+               }
+           );
+
 
         }
     }

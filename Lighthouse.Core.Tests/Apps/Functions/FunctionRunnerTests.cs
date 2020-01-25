@@ -30,7 +30,7 @@ namespace Lighthouse.Apps.Functions.Tests
         public async Task Start_DiscoversFunctions()
         {
             var functionRunner = new FunctionRunner();
-            Container.Start();
+            
             await Container.Launch(functionRunner);
 
             var functions = functionRunner.Functions;
