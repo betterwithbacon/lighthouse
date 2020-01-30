@@ -32,9 +32,11 @@
     <Folder Include="Storage\Stores\Memory\" />
     <Folder Include="Storage\Scopes\" />
     <Folder Include="Storage\Requests\" />
+    <Folder Include="Services\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Hosting\LocalLighthouseServiceContainerConnection.cs" />
     <Compile Remove="Storage\WarehouseKeyManifest.cs" />
+    <Compile Remove="Services\PingService.cs" />
   </ItemGroup>
 </Project>

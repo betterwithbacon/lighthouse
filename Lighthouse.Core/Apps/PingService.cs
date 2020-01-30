@@ -20,8 +20,10 @@ namespace Lighthouse.Core.Apps
 
         public async Task Start()
         {
-            await Container.AddScheduledAction(this, (time) => Container.Log(LogLevel.Info, LogType.Info, this, $"ping: time: {time}. Container Time: {Container.GetNow()}"),
-                minuteFrequency: 1);
+            await Task.Run(() => {
+                    Container.Log(LogLevel.Info, LogType.Info, this, $"ping: time: {Container.GetNow()}. Container Time: {Container.GetNow()}");
+                }
+            );
         }
 
         public async Task Stop()

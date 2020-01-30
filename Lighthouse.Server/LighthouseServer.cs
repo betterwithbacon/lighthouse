@@ -80,6 +80,7 @@ namespace Lighthouse.Server
         private void AddBaseServices()
         {
             Launch(new StatusRequestHandler()).GetAwaiter().GetResult();
+            Launch(new RemoteAppRunRequestHandler()).GetAwaiter().GetResult();
         }
         #endregion
 

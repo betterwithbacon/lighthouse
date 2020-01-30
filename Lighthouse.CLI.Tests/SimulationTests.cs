@@ -94,12 +94,23 @@ namespace Lighthouse.CLI.Tests
                act => act.Type($"lighthouse run --what ping --where {network.ResolveUri(container3)}"),
                (console) =>
                {
-                   console.Should().Contain(StatusRequestHandler.GLOBAL_VERSION_NUMBER);
-                   console.Should().Contain(container3Name);
+                   console.Should().Contain(RemoteAppRunStatus.Succeeded);
                }
            );
 
+            // the ping should have run, and the result should have been written to this servers log.
+            // read the log
+            user.ActAndAssert(
+                 act => act.Type($"lighthouse inspect --what logs --where {network.ResolveUri(container3)}"),
+                (console) =>
+                {
+                    console.Should().Contain("ping");
+                }
+            );
 
+            Output.WriteLine("Entire command line: ");
+            foreach (var message in user.ConsoleLog)
+                Output.WriteLine(message);
         }
     }
 
@@ -130,7 +141,10 @@ namespace Lighthouse.CLI.Tests
 
         public void Type(string text)
         {
-            WriteDelegate($"USER: {text}");
+            var message = $"USER: {text}";
+            WriteDelegate(message);
+            ((List<string>)ConsoleLog).Add(message);
+
             Runner.Run(text.Split(" ").Skip(1));
         }
 

@@ -32,6 +32,8 @@ namespace Lighthouse.Core
     /// </summary>
     public interface ILighthouseServiceContainer : ILighthousePeer, ILighthouseEnvironment
     {
+        Task Launch(Type serviceType);
+
         Task Launch(ILighthouseService service);
         
         // ? should this be manually added? or apart of the deal

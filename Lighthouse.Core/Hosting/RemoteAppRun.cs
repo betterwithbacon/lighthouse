@@ -1,4 +1,6 @@
-﻿namespace Lighthouse.Core.Hosting
+﻿using System;
+
+namespace Lighthouse.Core.Hosting
 {
     public static class RemoteAppRunStatus
     {
@@ -19,11 +21,11 @@
     public class RemoteAppRunHandle
     {
         public string Id { get; set; }
-        public string Status { get; private set; } = RemoteAppRunStatus.Succeeded;
+        public string Status { get; set; } = RemoteAppRunStatus.Succeeded;
 
-        public RemoteAppRunHandle(string id)
+        public RemoteAppRunHandle(string id = null)
         {
-            Id = id;
+            Id = id ?? Guid.NewGuid().ToString();
         }
     }
 }
