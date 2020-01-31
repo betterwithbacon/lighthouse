@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Core
 {
-	public abstract class LighthouseServiceBase : ILighthouseService, IStorageScope
+    public abstract class LighthouseServiceBase : ILighthouseService, IStorageScope
 	{
 		public string Id { get; private set; }
 		public ILighthouseServiceContainer Container { get; private set; }		
@@ -64,6 +64,9 @@ namespace Lighthouse.Core
 		{
 			if (IsInitialized)
 				return;
+
+            // if this has a service moniker us that, otherwise just for got type
+            Id = this.ExternalServiceName() ?? GetType().Name;
 
 			Container = context;
 

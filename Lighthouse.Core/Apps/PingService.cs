@@ -31,4 +31,6 @@ namespace Lighthouse.Core.Apps
             await Container.RemoveScheduledActions(this);
         }
     }
+
+    
 }

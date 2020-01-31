@@ -41,6 +41,8 @@ namespace Lighthouse.Core
 
         IEnumerable<IResourceProvider> GetResourceProviders();
 
+        IEnumerable<ILighthouseService> GetRunningServices();
+
         void RegisterResource(IResourceProvider resourceProvider);
 
         Task Do(Action<ILighthouseServiceContainer> action, string logMessage = "");
@@ -51,7 +53,7 @@ namespace Lighthouse.Core
 
         void RegisterEventProducer(IEventProducer eventSource);
 
-		void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer)
+        void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer)
 			where TEvent : IEvent;
 
 		Task EmitEvent(IEvent ev, object source = null);

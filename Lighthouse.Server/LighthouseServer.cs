@@ -81,6 +81,7 @@ namespace Lighthouse.Server
         {
             Launch(new StatusRequestHandler()).GetAwaiter().GetResult();
             Launch(new RemoteAppRunRequestHandler()).GetAwaiter().GetResult();
+            Launch(new InspectHandler()).GetAwaiter().GetResult();
         }
         #endregion
 
@@ -401,7 +402,7 @@ namespace Lighthouse.Server
             = new ConcurrentBag<ILighthouseService>();
         public List<Type> KnownTypes { get; private set; }
 
-        private IEnumerable<ILighthouseService> GetRunningServices()
+        public IEnumerable<ILighthouseService> GetRunningServices()
         {
             return RunningServices;
         }
