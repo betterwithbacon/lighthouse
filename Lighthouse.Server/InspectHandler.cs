@@ -30,7 +30,7 @@ namespace Lighthouse.Server
                 List<string> state = new List<string>();
 
                 // we found it so just check to see if the service is inspectable..if not, then just dump ToString()
-                if(service is ILighthouseServiceHasState statefulService)
+                if (service is ILighthouseServiceHasState statefulService)
                 {
                     state.AddRange(statefulService.GetState());
                 }

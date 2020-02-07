@@ -104,7 +104,15 @@ namespace Lighthouse.CLI.Tests
                  act => act.Type($"lighthouse inspect --what logs --where {network.ResolveUri(container3)}"),
                 (console) =>
                 {
-                    console.Should().Contain("ping");
+                    console.Should().Contain("ping:");
+                }
+            );
+
+            user.ActAndAssert(
+                 act => act.Type($"lighthouse stop --what ping --where {network.ResolveUri(container3)}"),
+                (console) =>
+                {
+                    console.Should().Contain("ping stopped");
                 }
             );
 

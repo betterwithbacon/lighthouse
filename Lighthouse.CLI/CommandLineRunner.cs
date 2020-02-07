@@ -37,7 +37,16 @@ namespace Lighthouse.CLI
         
         public int Run(IEnumerable<string> args)
         {
-            var result = Parser.Default.ParseArguments<RunOptions, InspectOptions>(args)
+            LighthouseClient GetClient(Uri target)
+            {
+                var networkProvider = TypeFactory.Create<INetworkProvider>();
+                var client = new LighthouseClient(target, networkProvider);
+                client.AddLogger(ConsoleWrite);
+                return client;
+            }
+
+
+            var result = Parser.Default.ParseArguments<RunOptions, InspectOptions, StopOptions>(args)
             .MapResult(
                 (RunOptions run) =>
                 {
@@ -63,10 +72,8 @@ namespace Lighthouse.CLI
                     {
                         if (run.Where != null)
                         {
-                            var networkProvider = TypeFactory.Create<INetworkProvider>();
-                            var client = new LighthouseClient(run.Where.ToUri(), networkProvider);
-                            client.AddLogger(ConsoleWrite);
-                            
+                            var client = GetClient(run.Where.ToUri());
+
                             // make a connection to the other server
                             var response = client.HandleRequest<RemoteAppRunRequest, RemoteAppRunHandle>(new RemoteAppRunRequest(run.What)).GetAwaiter().GetResult();
                             ConsoleWrite($"Request {response?.Status ?? "no response"} (ID: {response?.Id ?? "no ID"})");
@@ -90,9 +97,7 @@ namespace Lighthouse.CLI
                 },
                 (InspectOptions inspect) =>
                 {
-                    var networkProvider = TypeFactory.Create<INetworkProvider>();
-                    var client = new LighthouseClient(inspect.Where.ToUri(), networkProvider);
-                    client.AddLogger(ConsoleWrite);
+                    var client = GetClient(inspect.Where.ToUri());
 
                     // this REQUIRES a local
                     if (inspect.Where == null)
@@ -111,6 +116,23 @@ namespace Lighthouse.CLI
 
                         ConsoleWrite(response.ToString());
                     }
+
+                    return 0;
+                },
+                (StopOptions stop) =>
+                {
+                    if(stop.What == null || stop.Where == null)
+                    {
+                        throw new Exception("Stop what and where?");
+                    }
+
+                    var client = GetClient(stop.Where.ToUri());
+
+                    var response = client.HandleRequest<StopRequest, bool>(
+                            new StopRequest { What = stop.What }
+                        ).GetAwaiter().GetResult();
+
+                    ConsoleWrite(response ? $"{stop.What} stopped on {stop.Where}" : "failed");
 
                     return 0;
                 },

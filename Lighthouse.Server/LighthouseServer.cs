@@ -22,8 +22,8 @@ using Dasync.Collections;
 
 namespace Lighthouse.Server
 {
-    public class LighthouseServer : ILighthouseServiceContainer
-	{
+    public class LighthouseServer : ILighthouseServiceContainer, IRequestHandler, IRequestHandler<StopRequest, bool>
+    {
 		#region Fields - Server Metadata
 		public string ServerName { get; private set; }
 		public const string DEFAULT_APP_NAME = "Lighthouse Server";
@@ -82,6 +82,7 @@ namespace Lighthouse.Server
             Launch(new StatusRequestHandler()).GetAwaiter().GetResult();
             Launch(new RemoteAppRunRequestHandler()).GetAwaiter().GetResult();
             Launch(new InspectHandler()).GetAwaiter().GetResult();
+            Launch(new LogsReader()).GetAwaiter().GetResult();
         }
         #endregion
 
@@ -160,7 +161,14 @@ namespace Lighthouse.Server
             service.Initialize(this);
 
             // put the service in a runnable state
-            RunningServices.Add(service);
+            var serviceName = service.ExternalServiceName() ?? service.GetType().Name;
+
+            if (RunningServices.ContainsKey(serviceName))
+            {
+                throw new Exception($"Service {serviceName} already running");
+            }
+
+            RunningServices.TryAdd(serviceName, service);
 
 			// start it, in a separate thread, that will run the business logic for this
 			await Task.Run(async () => await service.Start(), CancellationTokenSource.Token).ContinueWith(
@@ -379,32 +387,52 @@ namespace Lighthouse.Server
         {
             Log(LogLevel.Debug, LogType.Info, this, $"Request Received {request}");
 
-            // find request handlers
-            foreach(var service in GetRunningServices())
+            // first check the container to see if it supports the request
+            IRequestHandler handler = null;
+            
+            // first see if the service container itself can handle it, then check running services
+            if (this.HandlesRequest<TRequest>())
             {
-                if(service is IRequestHandler requestHandler)
+                handler = this;
+            }
+            else
+            {
+                handler = GetRunningServices()
+                            .OfType<IRequestHandler>()
+                            .FirstOrDefault(h => h.HandlesRequest<TRequest>());
+            }
+            
+            //foreach (var service in GetRunningServices())
+            //{
+            //    if(service is IRequestHandler requestHandler)
+            //    {
+            //        if(requestHandler.HandlesRequest<TRequest>())
+            //        {
+            //            handler = requestHandler;
+            //        }
+            //    }
+            //}
+
+            if (handler != null)
+            {
+                var methods = ReflectionUtil.GetMethodsBySingleParameterType(handler.GetType(), "Handle");
+                if (methods.TryGetValue(typeof(TRequest), out var method))
                 {
-                    if(requestHandler.HandlesRequest<TRequest>())
-                    {
-                        var methods = ReflectionUtil.GetMethodsBySingleParameterType(requestHandler.GetType(), "Handle");
-                        if (methods.TryGetValue(typeof(TRequest), out var method))
-                        {
-                            return await Task.Run(() => (TResponse)method.Invoke(requestHandler, new[] { request }));
-                        }
-                    }
+                    return await Task.Run(() => (TResponse)method.Invoke(handler, new[] { request }));
                 }
             }
 
             return default;
         }
 
-        ConcurrentBag<ILighthouseService> RunningServices { get; set; } 
-            = new ConcurrentBag<ILighthouseService>();
+        ConcurrentDictionary<string, ILighthouseService> RunningServices { get; set; } 
+            = new ConcurrentDictionary<string, ILighthouseService>();
+
         public List<Type> KnownTypes { get; private set; }
 
         public IEnumerable<ILighthouseService> GetRunningServices()
         {
-            return RunningServices;
+            return RunningServices.Values;
         }
 
         public T ResolveType<T>()
@@ -449,6 +477,20 @@ namespace Lighthouse.Server
             this.ServicePort = port;
 
             // TODO: actually start listening?
+        }
+
+        public bool Handle(StopRequest request)
+        {
+
+            if(!RunningServices.ContainsKey(request.What))
+            {
+                return false;
+            }
+
+            var service = RunningServices[request.What];
+            service.Stop();
+
+            return true;
         }
     }
 

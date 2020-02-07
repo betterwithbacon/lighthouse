@@ -38,8 +38,8 @@ namespace Lighthouse.CLI
         {
         }
 
-        [Verb("ping")]
-        public class PingOptions : BaseLighthouseOptions
+        [Verb("stop")]
+        public class StopOptions : BaseLighthouseOptions
         {
         }
 

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Lighthouse.Core.Hosting
 {
@@ -14,6 +15,13 @@ namespace Lighthouse.Core.Hosting
         public IList<string> RawResponse { get; set; } = new List<string>();
         public bool Exists { get; set; } = false;
 
-        public override string ToString() => $"Inspect Response ({RawResponse.Count} lines)";
+        public override string ToString() => string.Join(Environment.NewLine, RawResponse);
+    }
+
+    public class StopRequest
+    {
+        public string What { get; set; }
+
+        public override string ToString() => $"Stop Request for {What}";
     }
 }
