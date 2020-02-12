@@ -98,21 +98,38 @@ namespace Lighthouse.CLI.Tests
                }
            );
 
+           user.ActAndAssert(
+                 act => act.Type($"lighthouse inspect --what services --where {network.ResolveUri(container3)}"),
+                consoleMultiLine: (console) =>
+                {
+                    console.Any(s => s.Contains("ping")).Should().BeFalse();
+                }
+           );
+
             // the ping should have run, and the result should have been written to this servers log.
             // read the log
-            user.ActAndAssert(
-                 act => act.Type($"lighthouse inspect --what logs --where {network.ResolveUri(container3)}"),
-                (console) =>
-                {
-                    console.Should().Contain("ping:");
-                }
-            );
+            // TODO: find way to add this back in a less verbose way
+            //user.ActAndAssert(
+            //     act => act.Type($"lighthouse inspect --what logs --where {network.ResolveUri(container3)}"),
+            //    (console) =>
+            //    {
+            //        console.Should().Contain("ping:");
+            //    }
+            //);
 
             user.ActAndAssert(
                  act => act.Type($"lighthouse stop --what ping --where {network.ResolveUri(container3)}"),
                 (console) =>
                 {
                     console.Should().Contain("ping stopped");
+                }
+            );
+
+            user.ActAndAssert(
+                 act => act.Type($"lighthouse inspect --what services --where {network.ResolveUri(container3)}"),
+                consoleMultiLine: (console) =>
+                {
+                    console.Any(s => s.Contains("ping")).Should().BeFalse();
                 }
             );
 
@@ -158,10 +175,22 @@ namespace Lighthouse.CLI.Tests
 
         public string Read() => ReadDelegate();
 
-        internal void ActAndAssert(Action<User> textToEnter, Action<string> console)
+        internal void ActAndAssert(Action<User> textToEnter, Action<string> console = null, Action<string[]> consoleMultiLine = null)
         {
             textToEnter(this);
-            console(currentConsole);
+
+            if(consoleMultiLine != null)
+            {
+                consoleMultiLine(currentConsole.Split(Environment.NewLine));
+            }
+            else if (console != null)
+            {
+                console(currentConsole);
+            }
+            else
+            {
+                // no op
+            }
         }
     }
 }

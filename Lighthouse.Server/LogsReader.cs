@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Lighthouse.Core;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
@@ -23,6 +24,15 @@ namespace Lighthouse.Server
         public IEnumerable<string> GetState()
         {
             return Log;
+        }
+    }
+
+    [ExternalLighthouseService("services")]
+    public class ServicesReader : LighthouseServiceBase, ILighthouseServiceHasState
+    {
+        public IEnumerable<string> GetState()
+        {
+            return Container.GetRunningServices().Select(s => s.ExternalServiceName()).ToList();
         }
     }
 }

@@ -30,7 +30,7 @@ namespace Lighthouse.Core
                 .GetType()
                 .GetCustomAttributes(typeof(ExternalLighthouseServiceAttribute))?
                 .OfType<ExternalLighthouseServiceAttribute>()
-                .FirstOrDefault()?.Name;
+                .FirstOrDefault()?.Name ?? service.ToString();
         }
     }
 }

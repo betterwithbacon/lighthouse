@@ -79,10 +79,18 @@ namespace Lighthouse.Server
 
         private void AddBaseServices()
         {
-            Launch(new StatusRequestHandler()).GetAwaiter().GetResult();
-            Launch(new RemoteAppRunRequestHandler()).GetAwaiter().GetResult();
-            Launch(new InspectHandler()).GetAwaiter().GetResult();
-            Launch(new LogsReader()).GetAwaiter().GetResult();
+            void attach<T>()
+                where T : ILighthouseService
+            {
+                var instance = Activator.CreateInstance<T>();
+                Launch(instance).GetAwaiter().GetResult();
+            }
+
+            attach<StatusRequestHandler>();
+            attach<RemoteAppRunRequestHandler>();
+            attach<InspectHandler>();
+            attach<LogsReader>();
+            attach<ServicesReader>();
         }
         #endregion
 
@@ -402,17 +410,6 @@ namespace Lighthouse.Server
                             .FirstOrDefault(h => h.HandlesRequest<TRequest>());
             }
             
-            //foreach (var service in GetRunningServices())
-            //{
-            //    if(service is IRequestHandler requestHandler)
-            //    {
-            //        if(requestHandler.HandlesRequest<TRequest>())
-            //        {
-            //            handler = requestHandler;
-            //        }
-            //    }
-            //}
-
             if (handler != null)
             {
                 var methods = ReflectionUtil.GetMethodsBySingleParameterType(handler.GetType(), "Handle");
@@ -489,6 +486,8 @@ namespace Lighthouse.Server
 
             var service = RunningServices[request.What];
             service.Stop();
+
+            RunningServices.Remove(request.What, out var _);
 
             return true;
         }

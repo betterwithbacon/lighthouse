@@ -99,7 +99,6 @@ namespace Lighthouse.CLI
                 {
                     var client = GetClient(inspect.Where.ToUri());
 
-                    // this REQUIRES a local
                     if (inspect.Where == null)
                         throw new Exception("Must include Where to inspect.");
 
@@ -114,7 +113,7 @@ namespace Lighthouse.CLI
                             new InspectRequest { What = inspect.What }
                         ).GetAwaiter().GetResult();
 
-                        ConsoleWrite(response.ToString());
+                        ConsoleWrite(string.Join(Environment.NewLine, response.RawResponse));
                     }
 
                     return 0;
