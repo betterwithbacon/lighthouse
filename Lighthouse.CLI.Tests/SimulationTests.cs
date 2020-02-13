@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using FluentAssertions;
 using Lighthouse.Core;
 using Lighthouse.Core.Hosting;
@@ -102,7 +103,7 @@ namespace Lighthouse.CLI.Tests
                  act => act.Type($"lighthouse inspect --what services --where {network.ResolveUri(container3)}"),
                 consoleMultiLine: (console) =>
                 {
-                    console.Any(s => s.Contains("ping")).Should().BeFalse();
+                    console.Any(s => s.Contains("ping")).Should().BeTrue();
                 }
            );
 
@@ -133,9 +134,33 @@ namespace Lighthouse.CLI.Tests
                 }
             );
 
+            
+            user.ActAndAssert(
+                 act => act.Type($"lighthouse run -what function --where {network.ResolveUri(container3)}"),
+                consoleMultiLine: (console) =>
+                {
+                    console.Any(s => s.Contains("ping")).Should().BeFalse();
+                }
+            );
+
+            var warehouseConfig = WarehouseConfig();
+            var serializedConfig = warehouseConfig.SerializeToJSON();
+
+            user.ActAndAssert(
+                 act => act.Type($"lighthouse run -what warehouse --where {network.ResolveUri(container3)} --how \"{serializedConfig}\""),
+                consoleMultiLine: (console) =>
+                {
+                    console.Any(s => s.Contains("ping")).Should().BeFalse();
+                }
+            );
+
+
+
+            #region Logging
             Output.WriteLine("Entire command line: ");
             foreach (var message in user.ConsoleLog)
                 Output.WriteLine(message);
+            #endregion
         }
     }
 

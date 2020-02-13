@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Lighthouse.Core.Storage.Tests
+namespace Lighthouse.Core.Storage.Legacy.Tests
 {
     public class WarehouseTests
 	{

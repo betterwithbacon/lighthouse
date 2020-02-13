@@ -32,7 +32,7 @@ namespace Lighthouse.Server
     {
         public IEnumerable<string> GetState()
         {
-            return Container.GetRunningServices().Select(s => s.ExternalServiceName()).ToList();
+            return Container.GetRunningServices().Where(s => !(s is IRequestHandler)).Select(s => s.ExternalServiceName()).ToList();
         }
     }
 }

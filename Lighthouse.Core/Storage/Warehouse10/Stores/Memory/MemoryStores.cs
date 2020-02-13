@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Lighthouse.Core.Storage.Stores.Memory
+namespace Lighthouse.Core.Storage.Legacy.Stores.Memory
 {
     public class InMemoryObjectStore : IObjectStore
     {        

@@ -22,21 +22,5 @@ namespace Lighthouse.Core.Hosting
 		}
 	}
 
-	public static class LighthouseContainerCommunicationUtilExtensions
-	{
-		public static string SerializeForManagementInterface(this object toSerialize)
-		{
-			return JsonConvert.SerializeObject(toSerialize);
-		}
-
-		public static T DeserializeForManagementInterface<T>(this string serializedText)
-		{
-			return JsonConvert.DeserializeObject<T>(serializedText);
-		}
-
-		//public static ManagementInterfaceResponse ToMIResponse(this string serializedMI)
-		//{
-		//	return new ManagementInterfaceResponse(true, serializedMI);
-		//}
-	}
+	
 }

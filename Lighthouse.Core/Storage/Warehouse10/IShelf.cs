@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Lighthouse.Core.Storage
+namespace Lighthouse.Core.Storage.Legacy
 {
     /// <summary>
     /// A specialized store of objects.

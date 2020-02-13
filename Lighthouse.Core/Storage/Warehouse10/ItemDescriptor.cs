@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Lighthouse.Core.Storage
+namespace Lighthouse.Core.Storage.Legacy
 {
     public class ItemDescriptor : IEqualityComparer<ItemDescriptor>
     {

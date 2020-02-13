@@ -27,12 +27,11 @@
     <Folder Include="Apps\" />
     <Folder Include="Apps\Storage\" />
     <Folder Include="Apps\Functions\" />
-    <Folder Include="Storage\Stores\" />
-    <Folder Include="Storage\Stores\Disk\" />
-    <Folder Include="Storage\Stores\Memory\" />
-    <Folder Include="Storage\Scopes\" />
-    <Folder Include="Storage\Requests\" />
     <Folder Include="Services\" />
+    <Folder Include="Storage\Warehouse10\" />
+    <Folder Include="Storage\Warehouse10\Requests\" />
+    <Folder Include="Storage\Warehouse10\Scopes\" />
+    <Folder Include="Storage\Warehouse10\Stores\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Hosting\LocalLighthouseServiceContainerConnection.cs" />

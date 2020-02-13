@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Lighthouse.Core.Storage.Stores.Disk
+namespace Lighthouse.Core.Storage.Legacy.Stores.Disk
 {
 	public class LocalDiskStore : IKeyValueStore, IObjectStore
 	{

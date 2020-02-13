@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Lighthouse.Core.Storage
+namespace Lighthouse.Core.Storage.Legacy
 {
     // A simple storage abstraction. It sits directly on top of a persistent (or not) storage mechanism...
     // ... and provides a common interface for writing to and reading from. 

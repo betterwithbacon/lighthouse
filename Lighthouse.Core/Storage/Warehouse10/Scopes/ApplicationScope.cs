@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Lighthouse.Core.Storage.Scopes
+namespace Lighthouse.Core.Storage.Legacy.Scopes
 {
 	public class ApplicationScope : IStorageScope
 	{	

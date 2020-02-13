@@ -20,5 +20,16 @@ namespace Lighthouse.Core.Utils
 
             return string.Empty;
         }
+
+        public static string SerializeToJSON(this object toSerialize)
+        {
+            return JsonConvert.SerializeObject(toSerialize);
+        }
+
+        public static T DeserializeFromJSON<T>(this string serializedText)
+        {
+            return JsonConvert.DeserializeObject<T>(serializedText);
+        }
+        
     }
 }

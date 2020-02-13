@@ -1,6 +1,6 @@
 ﻿using Lighthouse.Core.Storage;
 
-namespace Lighthouse.Core.Storage.Requests
+namespace Lighthouse.Core.Storage.Legacy.Requests
 {
     public class RetrieveRequest : StorageRequest
     {

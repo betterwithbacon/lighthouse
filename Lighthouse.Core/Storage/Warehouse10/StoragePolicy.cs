@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Lighthouse.Core.Storage
+namespace Lighthouse.Core.Storage.Legacy
 {
 	/// <summary>
 	/// A descriptor to describe how data might be stored. A given quantum of data might have multiple policies affecting it.

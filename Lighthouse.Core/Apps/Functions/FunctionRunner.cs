@@ -1,4 +1,5 @@
 ﻿using Lighthouse.Core;
+using Lighthouse.Core.Configuration.ServiceDiscovery;
 using Lighthouse.Core.Functions;
 using Lighthouse.Core.Storage;
 using System;
@@ -35,5 +36,11 @@ namespace Lighthouse.Apps.Functions
 
             await Task.CompletedTask;
         }
+    }
+
+    [ExternalLighthouseService("function")]
+    public class FunctionExecuter : LighthouseServiceBase
+    {
+
     }
 }
