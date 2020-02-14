@@ -13,7 +13,7 @@ namespace Lighthouse.Core
         ILighthouseServiceContainer Container { get; }
 
         // Puts the service in a runnable state. 		
-        void Initialize(ILighthouseServiceContainer container);
+        void Initialize(ILighthouseServiceContainer container, object context = null);
 
 		// Begins execution of the service
 		Task Start();

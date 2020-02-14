@@ -32,11 +32,10 @@ namespace Lighthouse.Core
     /// </summary>
     public interface ILighthouseServiceContainer : ILighthousePeer, ILighthouseEnvironment
     {
-        Task Launch(Type serviceType);
+        Task Launch(Type serviceType, object launchContext = null);
 
-        Task Launch(ILighthouseService service);
+        Task Launch(ILighthouseService service, object launchContext = null);
         
-        // ? should this be manually added? or apart of the deal
         Warehouse Warehouse { get; }
 
         IEnumerable<IResourceProvider> GetResourceProviders();

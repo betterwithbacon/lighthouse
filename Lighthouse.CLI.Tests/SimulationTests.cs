@@ -6,6 +6,7 @@ using FluentAssertions;
 using Lighthouse.Core;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
+using Lighthouse.Core.Storage;
 using Lighthouse.Core.Utils;
 using Lighthouse.Server;
 using Xunit;
@@ -145,10 +146,15 @@ namespace Lighthouse.CLI.Tests
 
             // var warehouseConfig = WarehouseConfig();
             // var serializedConfig = warehouseConfig.SerializeToJSON();
-            var serializedConfig = "";
+            var serializedConfig = new WarehouseStoreRequest
+            {
+                Key = "",
+                Value = ""
+            };
+
 
             user.ActAndAssert(
-                 act => act.Type($"lighthouse run -what warehouse --where {network.ResolveUri(container3)} --how \"{serializedConfig}\""),
+                 act => act.Type($"lighthouse run -what store --where {network.ResolveUri(container3)} --how \"{serializedConfig}\""),
                 consoleMultiLine: (console) =>
                 {
                     console.Any(s => s.Contains("ping")).Should().BeFalse();

@@ -13,7 +13,7 @@ namespace Lighthouse.Core.Apps
 
         public ILighthouseServiceContainer Container { get; private set; }
 
-        public void Initialize(ILighthouseServiceContainer container)
+        public void Initialize(ILighthouseServiceContainer container, object context = null)
         {
             Container = container;
         }
@@ -30,7 +30,5 @@ namespace Lighthouse.Core.Apps
         {
             await Container.RemoveScheduledActions(this);
         }
-    }
-
-    
+    }    
 }

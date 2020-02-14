@@ -11,10 +11,12 @@ namespace Lighthouse.Core.Hosting
     public class RemoteAppRunRequest
     {
         public string What { get; set; }
+        public string How { get; set; }
 
-        public RemoteAppRunRequest(string what)
+        public RemoteAppRunRequest(string what, string how = null)
         {
             this.What = what;
+            this.How = how;
         }
     }
 

@@ -26,10 +26,9 @@ namespace Lighthouse.Server
                     return handle;
                 }
 
-
                 // if you can run it!
                 // inform the container the run the app dats it!
-                Container.Launch(appType).GetAwaiter().GetResult();
+                Container.Launch(appType, request.How).GetAwaiter().GetResult();
             }
             catch(Exception e)
             {

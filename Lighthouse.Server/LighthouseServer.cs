@@ -144,19 +144,19 @@ namespace Lighthouse.Server
 		#endregion
 
 		#region Service Launching
-		public async Task Launch(Type serviceType)
+		public async Task Launch(Type serviceType, object launchContext = null)
 		{
 			Log(LogLevel.Debug,LogType.Info,this, $"Attempting to start app: {serviceType.Name}");
 
 			if (!(Activator.CreateInstance(serviceType) is ILighthouseService service))
 				throw new ApplicationException($"App launch config doesn't represent Lighthouse app. {serviceType.AssemblyQualifiedName}");
 
-			await Launch(service);
+            await Launch(service, launchContext);
 		}
 
-        public async Task Launch(ILighthouseService service)
+        public async Task Launch(ILighthouseService service, object launchContext = null)
 		{
-            service.Initialize(this);
+            service.Initialize(this, launchContext);
 
             // put the service in a runnable state
             var serviceName = service.ExternalServiceName() ?? service.GetType().Name;
