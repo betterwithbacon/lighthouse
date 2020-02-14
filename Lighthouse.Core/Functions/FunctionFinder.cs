@@ -1,9 +1,7 @@
-﻿using Lighthouse.Core;
+﻿
 using Lighthouse.Core.Storage;
-using Lighthouse.Core.Storage.Scopes;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Lighthouse.Core.Functions
 {
@@ -20,8 +18,8 @@ namespace Lighthouse.Core.Functions
 
             var functions = new List<Function>();
             var functionStrings = container
-                .Warehouse
-                .Retrieve<IList<string>>(StorageScope.Global, functionNamespace);
+                .Warehouse?
+                .Retrieve<IList<string>>(functionNamespace);
 
             if (functionStrings == null || functionStrings.Count == 0)
             {

@@ -37,7 +37,7 @@ namespace Lighthouse.Core
         Task Launch(ILighthouseService service);
         
         // ? should this be manually added? or apart of the deal
-        IWarehouse Warehouse { get; }
+        Warehouse Warehouse { get; }
 
         IEnumerable<IResourceProvider> GetResourceProviders();
 

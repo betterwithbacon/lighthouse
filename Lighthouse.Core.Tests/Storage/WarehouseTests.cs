@@ -1,8 +1,6 @@
 using FluentAssertions;
 using Lighthouse.Core;
 using Lighthouse.Core.Storage;
-using Lighthouse.Core.Storage.Scopes;
-using Lighthouse.Core.Storage.Stores.Memory;
 using NSubstitute;
 using System;
 using System.Diagnostics;
@@ -14,144 +12,143 @@ using Xunit.Abstractions;
 
 namespace Lighthouse.Core.Storage.Legacy.Tests
 {
-    public class WarehouseTests
-	{
-		private readonly ITestOutputHelper output;
-        IStorageScope scope = new ApplicationScope("TestApp");
-        string key = "testKey";
-        string payload = "testPayload";
-        readonly Warehouse warehouse = new Warehouse();
-        readonly ILighthouseServiceContainer container;
+ //   public class WarehouseTests
+	//{
+	//	private readonly ITestOutputHelper output;
+ //       string key = "testKey";
+ //       string payload = "testPayload";
+ //       readonly Warehouse warehouse = new Warehouse();
+ //       readonly ILighthouseServiceContainer container;
 
-        public WarehouseTests(ITestOutputHelper output)
-		{
-			this.output = output;
-            container = Substitute.For<ILighthouseServiceContainer>();
-            warehouse.Initialize(container);
-        }
+ //       public WarehouseTests(ITestOutputHelper output)
+	//	{
+	//		this.output = output;
+ //           container = Substitute.For<ILighthouseServiceContainer>();
+ //           warehouse.Initialize(container);
+ //       }
 
-		[Fact]
-		[Trait("Function", "StoreAndRetrieve")]
-		public void MemoryWarehouseShouldStoreAndReturnPallet()
-		{
-            var receipt = warehouse.Store(scope, key, payload, new[] { StoragePolicy.Ephemeral });
-            var returnedValue = warehouse.Retrieve(scope, key);
-            returnedValue.Should().Be(payload);
-		}
+	//	[Fact]
+	//	[Trait("Function", "StoreAndRetrieve")]
+	//	public void MemoryWarehouseShouldStoreAndReturnPallet()
+	//	{
+ //           var receipt = warehouse.Store(scope, key, payload, new[] { StoragePolicy.Ephemeral });
+ //           var returnedValue = warehouse.Retrieve(scope, key);
+ //           returnedValue.Should().Be(payload);
+	//	}
 
-		[Fact]
-		[Trait("Function", "Signing")]
-		public void PayloadSigningShouldRoundtrip()
-		{
-            var bigPayload = string.Join(',',Enumerable.Range(1, 10).Select(i => $"record{i}-{Guid.NewGuid()}"));
+	//	[Fact]
+	//	[Trait("Function", "Signing")]
+	//	public void PayloadSigningShouldRoundtrip()
+	//	{
+ //           var bigPayload = string.Join(',',Enumerable.Range(1, 10).Select(i => $"record{i}-{Guid.NewGuid()}"));
 			
-			Stopwatch timer = new Stopwatch();
+	//		Stopwatch timer = new Stopwatch();
 
-			timer.Start();
-			var receipt = warehouse.Store(scope, key, bigPayload);
-			var returnedValue = warehouse.Retrieve(scope, key);
-			Warehouse.VerifyChecksum(returnedValue, receipt.SHA256Checksum).Should().BeTrue();
-			timer.Stop();
+	//		timer.Start();
+	//		var receipt = warehouse.Store(scope, key, bigPayload);
+	//		var returnedValue = warehouse.Retrieve(scope, key);
+	//		Warehouse.VerifyChecksum(returnedValue, receipt.SHA256Checksum).Should().BeTrue();
+	//		timer.Stop();
 
-			// the amount of time to store, and retrieve a few kilobytes
-			output.WriteLine($"Runtime was {Encoding.UTF8.GetByteCount(bigPayload)} bytes in {timer.ElapsedMilliseconds}ms.");
-			timer.ElapsedMilliseconds.Should().BeLessThan(100);
-		}
+	//		// the amount of time to store, and retrieve a few kilobytes
+	//		output.WriteLine($"Runtime was {Encoding.UTF8.GetByteCount(bigPayload)} bytes in {timer.ElapsedMilliseconds}ms.");
+	//		timer.ElapsedMilliseconds.Should().BeLessThan(100);
+	//	}
 
-        [Fact]
-		[Trait("Category", "Performance")]
-		[Trait("Function", "Signing")]
-		public void PayloadSigningShouldRoundtripQuickly()
-		{
-			var payload = "Test Test test";
+ //       [Fact]
+	//	[Trait("Category", "Performance")]
+	//	[Trait("Function", "Signing")]
+	//	public void PayloadSigningShouldRoundtripQuickly()
+	//	{
+	//		var payload = "Test Test test";
 			
-			var receipt = warehouse.Store(scope, "test", payload, new[] { StoragePolicy.Ephemeral });
+	//		var receipt = warehouse.Store(scope, "test", payload, new[] { StoragePolicy.Ephemeral });
 
-			var returnedValue = warehouse.Retrieve(scope, "test");
+	//		var returnedValue = warehouse.Retrieve(scope, "test");
 
-			Warehouse.VerifyChecksum(returnedValue, receipt.SHA256Checksum).Should().BeTrue();
-		}
+	//		Warehouse.VerifyChecksum(returnedValue, receipt.SHA256Checksum).Should().BeTrue();
+	//	}
 
-		//[Fact]
-		//[Trait("Type", "Warehouse")]
-		//[Trait("Function", "StoreAndRetrieve")]
-		//public void MemoryWarehouseShouldStoreAndReturnAndAppendAndReturnPallet()
-		//{	
-		//	var receipt = warehouse.Store(scope, key , payload, new[] { StoragePolicy.Ephemeral });
+	//	//[Fact]
+	//	//[Trait("Type", "Warehouse")]
+	//	//[Trait("Function", "StoreAndRetrieve")]
+	//	//public void MemoryWarehouseShouldStoreAndReturnAndAppendAndReturnPallet()
+	//	//{	
+	//	//	var receipt = warehouse.Store(scope, key , payload, new[] { StoragePolicy.Ephemeral });
 
-		//	var returnedValue = warehouse.Retrieve<string>(key).ToList();
+	//	//	var returnedValue = warehouse.Retrieve<string>(key).ToList();
 
-		//	returnedValue.Should().Contain(payload);
+	//	//	returnedValue.Should().Contain(payload);
 
-		//	var nextText = " 123456789";
-		//	payload += nextText;
+	//	//	var nextText = " 123456789";
+	//	//	payload += nextText;
 
-		//	warehouse.St(key, new[] { nextText });
+	//	//	warehouse.St(key, new[] { nextText });
 
-		//	var newReturnedValue = warehouse.Retrieve<string>(key);
-		//	newReturnedValue.Should().Contain(payload);
-		//}
+	//	//	var newReturnedValue = warehouse.Retrieve<string>(key);
+	//	//	newReturnedValue.Should().Contain(payload);
+	//	//}
 
-		[Fact]
-		[Trait("Function", "StoreAndRetrieve")]
-		[Trait("Category", "Performance")]
-		[Trait("Facet", "Mult-Threading")]
-		public void MultiThreadedWriteReadPerformanceTest()
-		{	
-            _ = Parallel.ForEach(Enumerable.Range(1, 10),
-                new ParallelOptions { MaxDegreeOfParallelism = 10 },
-                    (index) => {
-                        var threadKey = index.ToString();
-                        var testPayload = index.ToString();
-                        warehouse.Store(scope, threadKey, testPayload);
-                        output.WriteLine($"Index stored: {index}");
-                        warehouse.Retrieve(scope, threadKey).Should().Be(testPayload);
-                    }
-                );
-		}
+	//	[Fact]
+	//	[Trait("Function", "StoreAndRetrieve")]
+	//	[Trait("Category", "Performance")]
+	//	[Trait("Facet", "Mult-Threading")]
+	//	public void MultiThreadedWriteReadPerformanceTest()
+	//	{	
+ //           _ = Parallel.ForEach(Enumerable.Range(1, 10),
+ //               new ParallelOptions { MaxDegreeOfParallelism = 10 },
+ //                   (index) => {
+ //                       var threadKey = index.ToString();
+ //                       var testPayload = index.ToString();
+ //                       warehouse.Store(scope, threadKey, testPayload);
+ //                       output.WriteLine($"Index stored: {index}");
+ //                       warehouse.Retrieve(scope, threadKey).Should().Be(testPayload);
+ //                   }
+ //               );
+	//	}
 
-		[Fact]
-		[Trait("Function", "StoreAndRetrieve")]
-		[Trait("Category", "Performance")]
-		public void GetManifest_SizeAndPoliciesMatches()
-		{
+	//	[Fact]
+	//	[Trait("Function", "StoreAndRetrieve")]
+	//	[Trait("Category", "Performance")]
+	//	public void GetManifest_SizeAndPoliciesMatches()
+	//	{
 			
-		}
+	//	}
 
-        [Fact]
-        [Trait("Function", "StoreAndRetrieve")]
-        [Trait("Category", "Manifests")]
-        public void GetScopeeManifest_SizeAndPoliciesMatches()
-        {
-            //var payload = "Test Test test";
+ //       [Fact]
+ //       [Trait("Function", "StoreAndRetrieve")]
+ //       [Trait("Category", "Manifests")]
+ //       public void GetScopeeManifest_SizeAndPoliciesMatches()
+ //       {
+ //           //var payload = "Test Test test";
 
-            //var receipt = warehouse.Store(scope, "test", payload, new[] { StoragePolicy.Ephemeral });
-            //var allData = warehouse.GetManifest(StorageScope.Global);
-        }
+ //           //var receipt = warehouse.Store(scope, "test", payload, new[] { StoragePolicy.Ephemeral });
+ //           //var allData = warehouse.GetManifest(StorageScope.Global);
+ //       }
 
-        [Fact]
-        public async Task PerformStorageMaintenance_IsPerformed()
-        {
-            var dateTime = new DateTime(2019, 1, 1);
-            var otherStore = new InMemoryKeyValueStore();
+ //       [Fact]
+ //       public async Task PerformStorageMaintenance_IsPerformed()
+ //       {
+ //           var dateTime = new DateTime(2019, 1, 1);
+ //           var otherStore = new InMemoryKeyValueStore();
             
-            warehouse.Store(StorageScope.Global, "key", "payload");
-            warehouse.AddStore(otherStore);
+ //           warehouse.Store(StorageScope.Global, "key", "payload");
+ //           warehouse.AddStore(otherStore);
 
-            var operationsPerformed = await warehouse.PerformStorageMaintenance(dateTime);
+ //           var operationsPerformed = await warehouse.PerformStorageMaintenance(dateTime);
 
-            operationsPerformed.Count().Should().Be(1);
-        }
+ //           operationsPerformed.Count().Should().Be(1);
+ //       }
 
-        //[Fact]
-        //public async Task Handle_RetrieveRequest_RecordRetrieved()
-        //{
-        //    var dateTime = new DateTime(2019, 1, 1);
-        //    var otherStore = new InMemoryKeyValueStore();
+ //       //[Fact]
+ //       //public async Task Handle_RetrieveRequest_RecordRetrieved()
+ //       //{
+ //       //    var dateTime = new DateTime(2019, 1, 1);
+ //       //    var otherStore = new InMemoryKeyValueStore();
 
-        //    warehouse.Store(StorageScope.Global, "key", "payload");
-        //    warehouse.AddStore(otherStore);
+ //       //    warehouse.Store(StorageScope.Global, "key", "payload");
+ //       //    warehouse.AddStore(otherStore);
          
-        //}
-    }
+ //       //}
+    //}
 }

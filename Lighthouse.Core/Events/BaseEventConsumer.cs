@@ -10,7 +10,7 @@ using Lighthouse.Core.Storage;
 
 namespace Lighthouse.Core.Events
 {
-	public abstract class BaseEventConsumer : IEventConsumer, IStorageScope
+	public abstract class BaseEventConsumer : IEventConsumer
 	{		
 		public abstract IList<Type> Consumes { get; }
 
@@ -30,16 +30,6 @@ namespace Lighthouse.Core.Events
 
 			// Get all the methods named HandleEvent, then fijnd the ones with just ONE argument, and then separate them by type
 			// TODO: this doesn't handle 
-		}
-
-		public bool Equals(IStorageScope x, IStorageScope y)
-		{
-			return x.ScopeName == y.ScopeName && x.Identifier == y.Identifier;
-		}
-
-		public int GetHashCode(IStorageScope obj)
-		{
-			return HashCode.Combine(obj.Identifier, obj.ScopeName);
 		}
 
 		public virtual void HandleEvent(IEvent ev)

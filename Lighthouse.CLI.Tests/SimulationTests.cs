@@ -143,8 +143,9 @@ namespace Lighthouse.CLI.Tests
                 }
             );
 
-            var warehouseConfig = WarehouseConfig();
-            var serializedConfig = warehouseConfig.SerializeToJSON();
+            // var warehouseConfig = WarehouseConfig();
+            // var serializedConfig = warehouseConfig.SerializeToJSON();
+            var serializedConfig = "";
 
             user.ActAndAssert(
                  act => act.Type($"lighthouse run -what warehouse --where {network.ResolveUri(container3)} --how \"{serializedConfig}\""),

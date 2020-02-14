@@ -47,20 +47,9 @@ namespace Lighthouse.Server
 
 		#region Fields - Resources
 		private readonly ConcurrentBag<IResourceProvider> Resources = new ConcurrentBag<IResourceProvider>();
-        IWarehouse warehouse;
-        public IWarehouse Warehouse
-        {
-            get
-            {
-                if(warehouse == null)
-                {
-                    warehouse = new Warehouse();
-                    // TODO: this seems like it needs to be more complex
-                    Launch((ILighthouseService)warehouse).GetAwaiter().GetResult();
-                }
-                return warehouse;
-            }
-        }
+        
+        public Warehouse Warehouse { get; private set; }
+        
 		#endregion
 
 		#region Constructors
@@ -86,11 +75,12 @@ namespace Lighthouse.Server
                 Launch(instance).GetAwaiter().GetResult();
             }
 
+            attach<Warehouse>();
             attach<StatusRequestHandler>();
             attach<RemoteAppRunRequestHandler>();
             attach<InspectHandler>();
             attach<LogsReader>();
-            attach<ServicesReader>();
+            attach<ServicesReader>();            
         }
         #endregion
 

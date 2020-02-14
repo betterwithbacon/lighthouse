@@ -3,18 +3,21 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Lighthouse.Core.Storage;
+using Lighthouse.Core.Utils;
 
 namespace Lighthouse.Core.Events.Logging
 {
     public class LogEventConsumer : BaseEventConsumer
     {	
-		private IList<StoragePolicy> LoadingDockPolicies => new[] { StoragePolicy.Ephemeral };
-        public List<string> AllLogRecords => new List<string>(); // Container.Warehouse.Retrieve<List<string>>( new StorageKey(LOG_NAME, this)).ToList();		
+        public List<string> AllLogRecords => new List<string>();
 		public override IList<Type> Consumes => new[] { typeof(LogEvent) };
 
 		public void HandleEvent(LogEvent logEvent)
 		{
-			Container.Warehouse.Store(this, GetLongTimeName(), new[] { $"[{logEvent.EventTime}] {logEvent.Message}" });
+			Container.Warehouse.Store(
+                $"log_event_consume_{GetLongTimeName()}",
+                (new[] { $"[{logEvent.EventTime}] {logEvent.Message}" }).ConvertToJson()
+            );
 		}
 
         protected override void OnInit()

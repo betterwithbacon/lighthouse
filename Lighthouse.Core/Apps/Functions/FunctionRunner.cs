@@ -39,7 +39,7 @@ namespace Lighthouse.Apps.Functions
     }
 
     [ExternalLighthouseService("function")]
-    public class FunctionExecuter : LighthouseServiceBase
+    public class FunctionExecuter : LighthouseServiceBase, IRequestHandler
     {
 
     }

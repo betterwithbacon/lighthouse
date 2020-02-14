@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Lighthouse.Core.Storage
+namespace Lighthouse.Core.Storage.Legacy
 {
 	public interface IStorageScope : IEqualityComparer<IStorageScope>
 	{
@@ -43,18 +43,6 @@ namespace Lighthouse.Core.Storage
         public string Key { get; set; }
         public string Value { get; set; }
     }
-
-    public class AckResponse
-    {
-        public bool WasSuccessful { get; set; } = false;
-        public Receipt Receipt { get; set; }
-    }
-
-    public class InspectRequest : StorageRequest
-    {
-        public string Key { get; set; }
-    }
-
     public class InspectResponse
     {
         public List<ItemDescriptor> Items { get; set; }

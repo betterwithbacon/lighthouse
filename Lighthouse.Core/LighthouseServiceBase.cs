@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Core
 {
-    public abstract class LighthouseServiceBase : ILighthouseService, IStorageScope
+    public abstract class LighthouseServiceBase : ILighthouseService
 	{
 		public string Id { get; private set; }
 		public ILighthouseServiceContainer Container { get; private set; }		
@@ -83,15 +83,6 @@ namespace Lighthouse.Core
 			return $"[{GetType().Name}|{Id}]";
 		}
 
-		public bool Equals(IStorageScope x, IStorageScope y)
-		{
-			return x.Identifier == y.Identifier;
-		}
-
-		public int GetHashCode(IStorageScope obj)
-		{
-			return obj.Identifier.GetHashCode();
-		}
 
 		protected virtual string GetServiceIdentifier()
 		{

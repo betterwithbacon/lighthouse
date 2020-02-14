@@ -9,7 +9,7 @@ namespace Lighthouse.Core.Tests
 {
     public class MockLighthouseServer : ILighthouseServiceContainer
     {
-        public IWarehouse Warehouse => throw new NotImplementedException();
+        public Warehouse Warehouse => throw new NotImplementedException();
 
         private Func<object, object> OnHandleHandler { get; set; }
 
@@ -102,6 +102,11 @@ namespace Lighthouse.Core.Tests
         }
 
         public Task Launch(Type serviceType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<ILighthouseService> GetRunningServices()
         {
             throw new NotImplementedException();
         }

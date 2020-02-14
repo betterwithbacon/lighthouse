@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Lighthouse.Core.Storage
+namespace Lighthouse.Core.Storage.Legacy
 {
 	public class Receipt
 	{
