@@ -140,7 +140,7 @@ namespace Lighthouse.CLI.Tests
 
             // var warehouseConfig = WarehouseConfig();
             // var serializedConfig = warehouseConfig.SerializeToJSON();
-            var serializedConfig = new WarehouseStoreRequest
+            var storeRequest = new WarehouseStoreRequest
             {
                 Key = key,
                 Value = payload
@@ -148,14 +148,25 @@ namespace Lighthouse.CLI.Tests
 
             // {serializedConfig}
             user.ActAndAssert(
-                act => act.Type($"lighthouse store --what {serializedConfig} --where {network.ResolveUri(container3)}"),
+                act => act.Type($"lighthouse store --what {storeRequest} --where {network.ResolveUri(container3)}"),
                 consoleMultiLine: (console) =>
                 {
                     console.Should().Contain("stored");
                 }
             );
 
+            var retrieveRequest = new WarehouseRetrieveRequest
+            {
+                Key = key                
+            }.ConvertToJson(true);
 
+            user.ActAndAssert(
+                act => act.Type($"lighthouse retrieve --what {retrieveRequest} --where {network.ResolveUri(container3)}"),
+                consoleMultiLine: (console) =>
+                {
+                    console.Should().Equal(payload);
+                }
+            );
 
             #region Logging
             Output.WriteLine("Entire command line: ");

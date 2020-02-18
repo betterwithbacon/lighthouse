@@ -20,8 +20,6 @@ namespace Lighthouse.CLI
             public string Where { get; set; }
             [Option("how", Required = false, HelpText = "JSON payload sent to the action to run.")]
             public string How { get; set; }
-            [Option("printOnly", Required = false, Default = false)]
-            public bool PrintOnly { get; set; }
         }
 
         [Verb("run")]
@@ -43,17 +41,17 @@ namespace Lighthouse.CLI
         {
         }
 
-        // I'm not sure if this one needs to exist at this level, Ping seems like it can do a lot of the same things
-        [Verb("benchmark")]
-        public class BenchmarkOptions : BaseLighthouseOptions
-        {
-        }
 
         [Verb("store")]
         public class StoreOptions : BaseLighthouseOptions
         {
-
         }
+
+        [Verb("retrieve")]
+        public class RetrieveOptions : BaseLighthouseOptions
+        {
+        }
+        
 
         static void Main(string[] args)
         {

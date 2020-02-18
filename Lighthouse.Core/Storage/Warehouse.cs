@@ -11,7 +11,7 @@ namespace Lighthouse.Core.Storage
     [ExternalLighthouseService("warehouse")]
     public class Warehouse : LighthouseServiceBase,
                                IRequestHandler<WarehouseStoreRequest, bool>,
-                               IRequestHandler<WarehouseRetrieveRequest, RetrieveResponse>
+                               IRequestHandler<WarehouseRetrieveRequest, WarehouseRetrieveResponse>
     {
         private ConcurrentDictionary<string, string> Data { get; set; } = new ConcurrentDictionary<string, string>();
 
@@ -31,11 +31,11 @@ namespace Lighthouse.Core.Storage
             return true;
         }
 
-        public RetrieveResponse Handle(WarehouseRetrieveRequest request)
+        public WarehouseRetrieveResponse Handle(WarehouseRetrieveRequest request)
         {
-            return new RetrieveResponse
+            return new WarehouseRetrieveResponse
             {
-                Data = Retrieve(request.Key)
+                Value = Retrieve(request.Key)
             };
         }
     }
@@ -50,6 +50,11 @@ namespace Lighthouse.Core.Storage
     public class WarehouseRetrieveRequest
     {
         public string Key { get; set; }
+    }
+
+    public class WarehouseRetrieveResponse
+    {
+        public string Value { get; set; }
     }
 
     public static class WarehouseExtensions

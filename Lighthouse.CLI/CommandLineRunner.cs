@@ -46,7 +46,7 @@ namespace Lighthouse.CLI
                 return client;
             }
 
-            var result = Parser.Default.ParseArguments<RunOptions, InspectOptions, StopOptions, StoreOptions>(args)
+            var result = Parser.Default.ParseArguments<RunOptions, InspectOptions, StopOptions, StoreOptions, RetrieveOptions>(args)
             .MapResult(
                 (RunOptions run) =>
                 {
@@ -150,6 +150,24 @@ namespace Lighthouse.CLI
                         ).GetAwaiter().GetResult();
 
                     ConsoleWrite(response ? "stored" : "failed");
+
+                    return 0;
+                },
+                (RetrieveOptions retrieve) =>
+                {
+                    if (retrieve.What == null || retrieve.Where == null)
+                    {
+                        throw new Exception("Stop what and where?");
+                    }
+
+                    var client = GetClient(retrieve.Where.ToUri());
+                    var deserialize = retrieve.What.DeserializeFromJSON<WarehouseRetrieveRequest>();
+
+                    var response = client.HandleRequest<WarehouseRetrieveRequest, WarehouseRetrieveResponse>(
+                            new WarehouseRetrieveRequest { Key = deserialize.Key}
+                        ).GetAwaiter().GetResult();
+
+                    ConsoleWrite(response.Value);
 
                     return 0;
                 },
