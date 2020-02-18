@@ -10,6 +10,7 @@ using static Lighthouse.CLI.Program;
 using System.Linq;
 using System.Collections.Generic;
 using Lighthouse.Core.IO;
+using Lighthouse.Core.Storage;
 
 namespace Lighthouse.CLI
 {
@@ -45,8 +46,7 @@ namespace Lighthouse.CLI
                 return client;
             }
 
-
-            var result = Parser.Default.ParseArguments<RunOptions, InspectOptions, StopOptions>(args)
+            var result = Parser.Default.ParseArguments<RunOptions, InspectOptions, StopOptions, StoreOptions>(args)
             .MapResult(
                 (RunOptions run) =>
                 {
@@ -135,13 +135,33 @@ namespace Lighthouse.CLI
 
                     return 0;
                 },
+                (StoreOptions store) =>
+                {
+                    if (store.What == null || store.Where == null)
+                    {
+                        throw new Exception("Stop what and where?");
+                    }
+
+                    var client = GetClient(store.Where.ToUri());
+                    var deserialize = store.What.DeserializeFromJSON<WarehouseStoreRequest>();
+                    
+                    var response = client.HandleRequest<WarehouseStoreRequest, bool>(
+                            new WarehouseStoreRequest { Key = deserialize.Key, Value=deserialize.Value }
+                        ).GetAwaiter().GetResult();
+
+                    ConsoleWrite(response ? "stored" : "failed");
+
+                    return 0;
+                },
                 errs =>
                 {
                     foreach(var error in errs)
                     {
                         ConsoleWrite(error.ToString());
                     }
-                    return errs.Count();
+
+                    throw new Exception(string.Join(",", errs));
+                    //return errs.Count();
                 }); 
 
             return 0;

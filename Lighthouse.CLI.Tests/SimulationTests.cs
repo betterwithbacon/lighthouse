@@ -135,29 +135,23 @@ namespace Lighthouse.CLI.Tests
                 }
             );
 
-            
-            user.ActAndAssert(
-                 act => act.Type($"lighthouse run -what function --where {network.ResolveUri(container3)}"),
-                consoleMultiLine: (console) =>
-                {
-                    console.Any(s => s.Contains("ping")).Should().BeFalse();
-                }
-            );
+            var key = "key";
+            var payload = "payload";
 
             // var warehouseConfig = WarehouseConfig();
             // var serializedConfig = warehouseConfig.SerializeToJSON();
             var serializedConfig = new WarehouseStoreRequest
             {
-                Key = "",
-                Value = ""
-            };
+                Key = key,
+                Value = payload
+            }.ConvertToJson(true);
 
-
+            // {serializedConfig}
             user.ActAndAssert(
-                 act => act.Type($"lighthouse run -what store --where {network.ResolveUri(container3)} --how \"{serializedConfig}\""),
+                act => act.Type($"lighthouse store --what {serializedConfig} --where {network.ResolveUri(container3)}"),
                 consoleMultiLine: (console) =>
                 {
-                    console.Any(s => s.Contains("ping")).Should().BeFalse();
+                    console.Should().Contain("stored");
                 }
             );
 

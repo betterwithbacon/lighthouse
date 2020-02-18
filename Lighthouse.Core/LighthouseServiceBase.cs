@@ -60,7 +60,7 @@ namespace Lighthouse.Core
         }
 		#endregion
 
-		public void Initialize(ILighthouseServiceContainer context)
+		public void Initialize(ILighthouseServiceContainer container, object context = null)
 		{
 			if (IsInitialized)
 				return;
@@ -68,7 +68,7 @@ namespace Lighthouse.Core
             // if this has a service moniker us that, otherwise just for got type
             Id = this.ExternalServiceName() ?? GetType().Name;
 
-			Container = context;
+			Container = container;
 
 			OnInit();			
 		}
@@ -88,5 +88,5 @@ namespace Lighthouse.Core
 		{
 			return GetType().Name;
 		}
-	}
+    }
 }

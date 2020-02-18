@@ -49,6 +49,12 @@ namespace Lighthouse.CLI
         {
         }
 
+        [Verb("store")]
+        public class StoreOptions : BaseLighthouseOptions
+        {
+
+        }
+
         static void Main(string[] args)
         {
             var runner = new CommandLineRunner(Console.WriteLine,Console.ReadLine);

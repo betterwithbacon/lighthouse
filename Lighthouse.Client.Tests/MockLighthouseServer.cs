@@ -110,5 +110,15 @@ namespace Lighthouse.Core.Tests
         {
             throw new NotImplementedException();
         }
+
+        public Task Launch(Type serviceType, object launchContext = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task Launch(ILighthouseService service, object launchContext = null)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
