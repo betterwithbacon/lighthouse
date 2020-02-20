@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Core.IO
 {
-	public class InternetNetworkProvider : INetworkProvider
+    public class InternetNetworkProvider : INetworkProvider
 	{
 		public IList<NetworkScope> SupportedScopes { get; } = new List<NetworkScope> { NetworkScope.Internet, NetworkScope.Local };
         public IList<NetworkProtocol> SupportedProtocols { get; } = new List<NetworkProtocol> { NetworkProtocol.HTTP }; // for now only HTTP
@@ -48,6 +48,12 @@ namespace Lighthouse.Core.IO
         public void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null)
         {
             // no op, it doesn't care here either
+        }
+
+        public IEnumerable<ILighthousePeer> GetLighthousePeers()
+        {
+            // not sure how this will scan the network looking for peers
+            throw new NotImplementedException();
         }
     }
 }

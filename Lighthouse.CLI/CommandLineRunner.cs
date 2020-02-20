@@ -167,7 +167,7 @@ namespace Lighthouse.CLI
                             new WarehouseRetrieveRequest { Key = deserialize.Key}
                         ).GetAwaiter().GetResult();
 
-                    ConsoleWrite(response.Value);
+                    ConsoleWrite(response.Value ?? string.Empty);
 
                     return 0;
                 },

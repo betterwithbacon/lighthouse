@@ -120,5 +120,10 @@ namespace Lighthouse.Core.Tests
         {
             throw new NotImplementedException();
         }
+
+        public IEnumerable<ILighthousePeer> GetPeers()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -12,5 +12,7 @@ namespace Lighthouse.Core.IO
 
         Task<TResponse> GetObjectAsync<TRequest, TResponse>(Uri uri, TRequest requestObject, bool throwErrors = false)
             where TRequest : class;
+
+        IEnumerable<ILighthousePeer> GetLighthousePeers();
     }
 }

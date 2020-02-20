@@ -168,6 +168,27 @@ namespace Lighthouse.CLI.Tests
                 }
             );
 
+            // ask a DIFFERENT warehouse, if it has the data, and see if it'll talk to another warehouse.
+            // this is probably the simplest form of distributed storage
+            user.ActAndAssert(
+                act => act.Type($"lighthouse retrieve --what {retrieveRequest} --where {network.ResolveUri(container3)}"),
+                consoleMultiLine: (console) =>
+                {
+                    console.Should().Equal(payload);
+                }
+            );
+
+            // retrieve the logs from warehouse number 2!
+            // it should reach out to it's peers and try to find the keys, this basically makes a warehouse cluster, a single unit
+            // this still needs scoping but we'll add that in later
+            user.ActAndAssert(
+                act => act.Type($"lighthouse retrieve --what {retrieveRequest} --where {network.ResolveUri(container2)}"),
+                consoleMultiLine: (console) =>
+                {
+                    console.Should().Equal(payload);
+                }
+            );
+
             #region Logging
             Output.WriteLine("Entire command line: ");
             foreach (var message in user.ConsoleLog)
@@ -194,7 +215,8 @@ namespace Lighthouse.CLI.Tests
             Network = network;
             TypeFactory = new TypeFactory();
             TypeFactory.Register<INetworkProvider>(() => Network);
-            Runner = new CommandLineRunner((text) => {
+            Runner = new CommandLineRunner((text) =>
+            {
                 WriteDelegate(text);
                 currentConsole = text;
                 ((List<string>)ConsoleLog).Add(text); // this is SUPPER hacky....just create  backing field for the list

@@ -66,5 +66,10 @@ namespace Lighthouse.Core.Hosting
         {
             return $"Virtual Network ({Containers.Count} peers)";
         }
+
+        public IEnumerable<ILighthousePeer> GetLighthousePeers()
+        {
+            return Containers.Values;
+        }
     }
 }

@@ -22,7 +22,27 @@ namespace Lighthouse.Core.Storage
 
         public string Retrieve(string key)
         {
-            return Data.TryGetValue(key, out var val) ? val : null;
+            // first hit local version
+            // this does absolutely nothing for cache invalidation
+
+            if(!Data.TryGetValue(key, out var val))
+            {
+                // talk to other warehouses
+                foreach(var peer in Container.GetPeers())
+                {
+                    var returnedval = peer.HandleRequest<WarehouseRetrieveRequest, WarehouseRetrieveResponse>(new WarehouseRetrieveRequest
+                    {
+                        Key = key
+                    }).GetAwaiter().GetResult();
+                    if (returnedval.Value != null)
+                    {
+                        val = returnedval.Value;
+                        break;
+                    }
+                }
+            }
+
+            return val;
         }
 
         public bool Handle(WarehouseStoreRequest request)

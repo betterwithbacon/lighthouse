@@ -481,6 +481,12 @@ namespace Lighthouse.Server
 
             return true;
         }
+
+        public IEnumerable<ILighthousePeer> GetPeers()
+        {
+            // check all network adapters and see what's there
+            return GetResourceProviders<INetworkProvider>().SelectMany(prov => prov.GetLighthousePeers());                
+        }
     }
 
     public static class IRequestHandlerExtensions

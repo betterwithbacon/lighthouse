@@ -60,6 +60,8 @@ namespace Lighthouse.Core
         T ResolveType<T>() where T : class;
 
         void Bind(int port);
+
+        IEnumerable<ILighthousePeer> GetPeers();
     }
 
     public static class ContainerExtensions
