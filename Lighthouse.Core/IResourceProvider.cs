@@ -35,6 +35,11 @@ namespace Lighthouse.Core
         public string ConnectionString { get; set; }
     }
 
+    public class AddResourceRequest
+    {
+        public ResourceProviderConfigType ResourceType
+    }
+
     public static class ResourceFactory
     {
         public static (bool wasSuccessful, string errorReason) TryCreate(ResourceProviderConfig config, out IResourceProvider resourceProvider)

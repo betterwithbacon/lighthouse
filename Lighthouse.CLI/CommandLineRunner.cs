@@ -171,6 +171,25 @@ namespace Lighthouse.CLI
 
                     return 0;
                 },
+                (ConfigureOptions configure) =>
+                 {
+                     if (configure.What == null || configure.Where == null || configure.How == null)
+                     {
+                         throw new Exception("Configure what,where, and how?");
+                     }
+
+                     var client = GetClient(configure.Where.ToUri());
+                     var deserialize = configure.What.DeserializeFromJSON<WarehouseRetrieveRequest>();
+
+                     var response = client.HandleRequest<WarehouseRetrieveRequest, WarehouseRetrieveResponse>(
+                             new WarehouseRetrieveRequest { Key = deserialize.Key }
+                         ).GetAwaiter().GetResult();
+
+                     ConsoleWrite(response.Value ?? string.Empty);
+
+                     return 0;
+                 },
+
                 errs =>
                 {
                     foreach(var error in errs)

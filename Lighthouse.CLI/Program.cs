@@ -51,8 +51,12 @@ namespace Lighthouse.CLI
         public class RetrieveOptions : BaseLighthouseOptions
         {
         }
-        
 
+        [Verb("configure")]
+        public class ConfigureOptions : BaseLighthouseOptions
+        {
+        }
+                
         static void Main(string[] args)
         {
             var runner = new CommandLineRunner(Console.WriteLine,Console.ReadLine);
