@@ -10,7 +10,7 @@ namespace Lighthouse.Core.IO
 	/// File paths should be provided as non-root relative paths. The virtual "root" of the provider will be somewhere else.
 	/// </summary>
 	public interface IFileSystemProvider : IResourceProvider
-	{
+    {
 		/// <summary>
 		/// Provides abstracted access to the runtime file system. This might be either a linux or window host. 
 		/// The storage might also not be truly persistent, if the container is hosted on an ephemeral file system.
@@ -48,9 +48,11 @@ namespace Lighthouse.Core.IO
 	/// </summary>
 	public class UnixFileSystemProvider : IFileSystemProvider
 	{
-		public ILighthouseServiceContainer LighthouseContainer => throw new NotImplementedException();
+		public ILighthouseServiceContainer LighthouseContainer { get; set; }
 
         public string WorkingDirectory { get; }
+
+		public ResourceProviderType Type => ResourceProviderType.FileSystem;
 
         public UnixFileSystemProvider(string workingDirectory)
         {

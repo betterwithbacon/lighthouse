@@ -178,13 +178,20 @@ namespace Lighthouse.CLI.Tests
                 }
             );
 
-            var resourceAddRequest = new WarehouseRetrieveRequest
+            var resourceAddRequest = new ResourceRequest
             {
-                Key = key
+                ResourceType = ResourceProviderType.Database,
+                RequestType= ResourceRequestType.Add,
+                Config = new ResourceProviderConfig
+                {
+                    Type="Database",
+                    SubType = "mssql",
+                    ConnectionString = "sql_connection_string"
+                }
             }.ConvertToJson(true);
 
             user.ActAndAssert(
-                act => act.Type($"lighthouse add --what resource --where {network.ResolveUri(container3)} --how {resourceAddRequest}"),
+                act => act.Type($"lighthouse configure --what resource --where {network.ResolveUri(container3)} --how {resourceAddRequest}"),
                 consoleMultiLine: (console) =>
                 {
                     console.Any(s => s.Contains("added")).Should().BeTrue();

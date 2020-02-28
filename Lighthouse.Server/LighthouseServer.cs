@@ -19,10 +19,12 @@ using Quartz;
 using System.Reflection;
 using Lighthouse.Core.Functions;
 using Dasync.Collections;
+using System.Security;
 
 namespace Lighthouse.Server
 {
-    public class LighthouseServer : ILighthouseServiceContainer, IRequestHandler, IRequestHandler<StopRequest, bool>
+    public class LighthouseServer : IPriviledgedLighthouseServiceContainer, IRequestHandler,
+        IRequestHandler<StopRequest, bool>
     {
 		#region Fields - Server Metadata
 		public string ServerName { get; private set; }
@@ -43,17 +45,29 @@ namespace Lighthouse.Server
         readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
 		readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
 		readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
-		#endregion
+        #endregion
 
-		#region Fields - Resources
-		private readonly ConcurrentBag<IResourceProvider> Resources = new ConcurrentBag<IResourceProvider>();
+        #region Fields - Resources
+        private readonly IProducerConsumerCollection<IResourceProvider> Resources = new ConcurrentBag<IResourceProvider>();
         
         public Warehouse Warehouse { get; private set; }
-        
-		#endregion
 
-		#region Constructors
-		public LighthouseServer(string serverName = "Lighthouse Server")
+        #endregion
+
+        private ConcurrentDictionary<string, ILighthouseService> RunningServices { get; set; } = new ConcurrentDictionary<string, ILighthouseService>();
+
+        public List<Type> KnownTypes { get; private set; }
+        public ResourceManager ResourceManager { get; private set; }
+        private static string GetDefaultScheduleName(ILighthouseService owner, string scheduleName = null) => scheduleName ?? owner.Id + "_timer";
+        private const string SchedulerSerializedObjectKeyName = "actionToPerform";
+
+        private static readonly object SchedulerCreationMutex = new object();
+        private IScheduler Scheduler { get; set; }
+
+        IProducerConsumerCollection<IResourceProvider> IPriviledgedLighthouseServiceContainer.Resources => Resources;
+
+        #region Constructors
+        public LighthouseServer(string serverName = "Lighthouse Server")
 		{
 			ServerName = serverName;
 			OS = RuntimeServices.GetOS();
@@ -68,11 +82,12 @@ namespace Lighthouse.Server
 
         private void AddBaseServices()
         {
-            void attach<T>()
+            T attach<T>()
                 where T : ILighthouseService
             {
                 var instance = Activator.CreateInstance<T>();
                 Launch(instance).GetAwaiter().GetResult();
+                return instance;
             }
 
             attach<Warehouse>();
@@ -80,7 +95,8 @@ namespace Lighthouse.Server
             attach<RemoteAppRunRequestHandler>();
             attach<InspectHandler>();
             attach<LogsReader>();
-            attach<ServicesReader>();            
+            attach<ServicesReader>();
+            ResourceManager = attach<ResourceManager>();
         }
         #endregion
 
@@ -184,20 +200,21 @@ namespace Lighthouse.Server
                 }, CancellationTokenSource.Token);
 		}
 
-		public void RegisterResource(IResourceProvider resourceProvider)
-		{
-			Log(LogLevel.Debug, LogType.Info, this, $"Added resource: {resourceProvider}.");
+        public void RegisterResource(IResourceProvider resourceProvider)
+        {
+            ResourceManager.Register(resourceProvider);
+            //Log(LogLevel.Debug, LogType.Info, this, $"Added resource: {resourceProvider}.");
 
-            // inform the resource of what is reigstering it
-            resourceProvider.Register(this);
+            //// inform the resource of what is reigstering it
+            //resourceProvider.Register(this);
 
-            // subclass specific operations
-            Resources.Add(resourceProvider);
-		}
-		#endregion
+            //// subclass specific operations
+            //Resources.Add(resourceProvider);
+        }
+        #endregion
 
-		#region Auditing/Logging
-		private void HandleTaskCompletion(string serviceDescription, Task task)
+        #region Auditing/Logging
+        private void HandleTaskCompletion(string serviceDescription, Task task)
 		{
             Log(LogLevel.Debug, LogType.Info, this, $"{serviceDescription} completed successfully. TaskId {task.Id}");  //{RunningServices.FirstOrDefault(lsr => lsr.TaskId == task.Id)?.Service}", emitEvent:false);
 		}
@@ -314,10 +331,6 @@ namespace Lighthouse.Server
 		#endregion
 
         #region Scheduling
-        private static string GetDefaultScheduleName(ILighthouseService owner, string scheduleName = null) => scheduleName ?? owner.Id + "_timer";
-        private const string SchedulerSerializedObjectKeyName = "actionToPerform";
-
-        private static readonly object SchedulerCreationMutex = new object();
         private async Task InitScheduler()
         {
             lock (SchedulerCreationMutex)
@@ -329,7 +342,6 @@ namespace Lighthouse.Server
             }
         }
 
-        private IScheduler Scheduler { get; set; }
 
         private async Task StartScheduler()
         {
@@ -362,7 +374,7 @@ namespace Lighthouse.Server
         {
             await Scheduler.UnscheduleJob(new TriggerKey(GetDefaultScheduleName(owner, scheduleName), owner.Id));
         }
-        #endregion
+        
 
         private class ScheduledActionJob : IJob
         {
@@ -379,6 +391,7 @@ namespace Lighthouse.Server
                 return Task.CompletedTask;
             }
         }
+        #endregion
 
         public async Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest request)
             where TRequest : class
@@ -409,14 +422,10 @@ namespace Lighthouse.Server
                 }
             }
 
-            return default;
+            throw new InvalidOperationException($"server can not handle {request?.GetType().Name ?? "unknown"} request");
         }
 
-        ConcurrentDictionary<string, ILighthouseService> RunningServices { get; set; } 
-            = new ConcurrentDictionary<string, ILighthouseService>();
-
-        public List<Type> KnownTypes { get; private set; }
-
+        
         public IEnumerable<ILighthouseService> GetRunningServices()
         {
             return RunningServices.Values;
@@ -484,8 +493,30 @@ namespace Lighthouse.Server
 
         public IEnumerable<ILighthousePeer> GetPeers()
         {
-            // check all network adapters and see what's there
-            return GetResourceProviders<INetworkProvider>().SelectMany(prov => prov.GetLighthousePeers());                
+            // check all network adapters and see what's there, that's not this
+            return GetResourceProviders<INetworkProvider>()
+                .SelectMany(prov => prov
+                    .GetLighthousePeers()
+                    .Where(p => p != this)
+                );
+        }
+
+        public override bool Equals(object obj) => (obj is LighthouseServer ls) ? ls == this : false;
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+        public void RunPriveleged(ILighthouseService source, Action<IPriviledgedLighthouseServiceContainer> act)
+        {
+            // currently only do a cursory check that the service is running inside of this container.
+            var serviceName = source.ExternalServiceName();
+            if (!RunningServices.ContainsKey(serviceName))
+            {
+                throw new SecurityException($"{serviceName} can only operate priviledged within own container.");
+            }
+
+            act(this);
         }
     }
 

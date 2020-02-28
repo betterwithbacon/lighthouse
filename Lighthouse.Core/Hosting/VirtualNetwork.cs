@@ -10,6 +10,7 @@ namespace Lighthouse.Core.Hosting
 {
     public class VirtualNetwork : INetworkProvider
     {
+        public ResourceProviderType Type => ResourceProviderType.Network;
         public const string DesiredUriKey = "desiredUri";
         private int highestSubdomain = 1;
 

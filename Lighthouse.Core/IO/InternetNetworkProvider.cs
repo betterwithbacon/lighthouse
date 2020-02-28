@@ -14,7 +14,9 @@ namespace Lighthouse.Core.IO
 		public IList<NetworkScope> SupportedScopes { get; } = new List<NetworkScope> { NetworkScope.Internet, NetworkScope.Local };
         public IList<NetworkProtocol> SupportedProtocols { get; } = new List<NetworkProtocol> { NetworkProtocol.HTTP }; // for now only HTTP
 
-		public Task<string> GetStringAsync(Uri uri)
+        public ResourceProviderType Type => ResourceProviderType.Network;
+
+        public Task<string> GetStringAsync(Uri uri)
 		{
 			var client = new HttpClient();
 			return client.GetStringAsync(uri);

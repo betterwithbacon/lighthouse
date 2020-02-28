@@ -46,7 +46,7 @@ namespace Lighthouse.CLI
                 return client;
             }
 
-            var result = Parser.Default.ParseArguments<RunOptions, InspectOptions, StopOptions, StoreOptions, RetrieveOptions>(args)
+            var result = Parser.Default.ParseArguments<RunOptions, InspectOptions, StopOptions, StoreOptions, RetrieveOptions, ConfigureOptions>(args)
             .MapResult(
                 (RunOptions run) =>
                 {
@@ -179,15 +179,21 @@ namespace Lighthouse.CLI
                      }
 
                      var client = GetClient(configure.Where.ToUri());
-                     var deserialize = configure.What.DeserializeFromJSON<WarehouseRetrieveRequest>();
 
-                     var response = client.HandleRequest<WarehouseRetrieveRequest, WarehouseRetrieveResponse>(
-                             new WarehouseRetrieveRequest { Key = deserialize.Key }
-                         ).GetAwaiter().GetResult();
+                     if (configure.What == "resource")
+                     {
+                         var request = configure.How.DeserializeFromJSON<ResourceRequest>();
 
-                     ConsoleWrite(response.Value ?? string.Empty);
+                         var response = client.HandleRequest<ResourceRequest, ResourceResponse>(request).GetAwaiter().GetResult();
 
-                     return 0;
+                         foreach (var val in response.ActionsTaken)
+                             ConsoleWrite(val);
+
+                         return 0;
+                     }
+
+                     ConsoleWrite($"unsupported configure target {configure.What}");
+                     return -1;
                  },
 
                 errs =>
@@ -198,7 +204,6 @@ namespace Lighthouse.CLI
                     }
 
                     throw new Exception(string.Join(",", errs));
-                    //return errs.Count();
                 }); 
 
             return 0;

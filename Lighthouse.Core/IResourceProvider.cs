@@ -1,5 +1,4 @@
-﻿using Lighthouse.Core.Database;
-using Lighthouse.Core.Logging;
+﻿using Lighthouse.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,6 +7,7 @@ namespace Lighthouse.Core
 {
     public interface IResourceProvider
     {
+        ResourceProviderType Type { get; }
         void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null);
     }
 
@@ -28,29 +28,17 @@ namespace Lighthouse.Core
         public string Configuration { get; set; }
     }
 
-    public class ResourceProviderConfig
-    {
-        public string Type { get; set; }
-        public string SubType { get; set; }
-        public string ConnectionString { get; set; }
-    }
-
-    public class AddResourceRequest
-    {
-        public ResourceProviderConfigType ResourceType
-    }
-
     public static class ResourceFactory
     {
         public static (bool wasSuccessful, string errorReason) TryCreate(ResourceProviderConfig config, out IResourceProvider resourceProvider)
         {
             resourceProvider = null;
 
-            if (Enum.TryParse<ResourceProviderConfigType>(config.Type, out var configType))
+            if (Enum.TryParse<ResourceProviderType>(config.Type, out var configType))
             {
                 switch (configType)
                 {
-                    case ResourceProviderConfigType.Database:
+                    case ResourceProviderType.Database:
                         var (worked, errorReason) = DatabaseResourceFactory.TryCreate(config, out var databaseResourceProvider);
 
                         if (!worked)
@@ -69,52 +57,6 @@ namespace Lighthouse.Core
             }
 
             return (false, null);
-        }
-    }
-
-    public enum ResourceProviderConfigType
-    {
-        Database,
-    }
-
-    public static class DatabaseResourceProviderConfigSubtype
-    {
-        public const string SqlServer = "sqlserver";
-        public const string Redis = "redis";
-        
-    }
-
-    
-    public static class DatabaseResourceFactory
-    {
-        public static (bool wasSuccessful, string errorReason) TryCreate(ResourceProviderConfig config, out IDatabaseResourceProvider<string> provider)
-        {
-            provider = null;
-
-            if (string.IsNullOrEmpty(config.SubType))
-                return (false, "no subtype provided");
-
-            switch(config.SubType.ToLower())
-            {
-                case DatabaseResourceProviderConfigSubtype.SqlServer:
-                    provider = new MsSqlDbResourceProvider();
-                    break;
-                case DatabaseResourceProviderConfigSubtype.Redis:
-                    provider = new RedisDbResourceProvider();
-                    break;
-                default:
-                    return (false, $"subtype {config.SubType} is invalid.");
-            }
-
-            return (true, null);
-        }
-    }
-
-    public class DatabaseResourceProvider : IResourceProvider
-    {
-        public void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null)
-        {
-            // no op, it doesn't care here either
         }
     }
 }

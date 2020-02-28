@@ -4,6 +4,7 @@ using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using Lighthouse.Core.Storage;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -28,6 +29,14 @@ namespace Lighthouse.Core
     }
 
     /// <summary>
+    ///  A container that exposes internal state of the container
+    /// </summary>
+    public interface IPriviledgedLighthouseServiceContainer : ILighthouseServiceContainer
+    {
+        IProducerConsumerCollection<IResourceProvider> Resources { get; }
+    }
+
+    /// <summary>
     /// Provides: scheduling, event bus, request/response infrastructure
     /// </summary>
     public interface ILighthouseServiceContainer : ILighthousePeer, ILighthouseEnvironment
@@ -35,13 +44,13 @@ namespace Lighthouse.Core
         Task Launch(Type serviceType, object launchContext = null);
 
         Task Launch(ILighthouseService service, object launchContext = null);
-        
-        Warehouse Warehouse { get; }
 
         IEnumerable<IResourceProvider> GetResourceProviders();
 
         IEnumerable<ILighthouseService> GetRunningServices();
 
+        Warehouse Warehouse { get; }
+        
         void RegisterResource(IResourceProvider resourceProvider);
 
         Task Do(Action<ILighthouseServiceContainer> action, string logMessage = "");
@@ -62,6 +71,8 @@ namespace Lighthouse.Core
         void Bind(int port);
 
         IEnumerable<ILighthousePeer> GetPeers();
+
+        void RunPriveleged(ILighthouseService source, Action<IPriviledgedLighthouseServiceContainer> act);
     }
 
     public static class ContainerExtensions

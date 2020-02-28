@@ -125,5 +125,10 @@ namespace Lighthouse.Core.Tests
         {
             throw new NotImplementedException();
         }
+
+        public void RunPriveleged(ILighthouseService source, Action<IPriviledgedLighthouseServiceContainer> act)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

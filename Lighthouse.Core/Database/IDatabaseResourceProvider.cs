@@ -19,6 +19,7 @@ namespace Lighthouse.Core.Database
 
     public class RedisDbResourceProvider : LighthouseServiceBase, IDatabaseResourceProvider<string>
     {
+        public ResourceProviderType Type => ResourceProviderType.Database;
 
         public Task<IEnumerable<TResult>> Query<TResult>(string queryObject)
         {
@@ -33,6 +34,8 @@ namespace Lighthouse.Core.Database
 
     public class MsSqlDbResourceProvider : LighthouseServiceBase, IDatabaseResourceProvider<string>
     {
+        public ResourceProviderType Type => ResourceProviderType.Database;
+
         public string ConnectionString { get; set; }
 
         public Action<MsSqlDbResourceProvider> InitializeConnectionFunc { get; set; }

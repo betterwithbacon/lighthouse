@@ -12,7 +12,9 @@ namespace Lighthouse.Core.IO
 
 		public ILighthouseServiceContainer LighthouseContainer { get; }
 
-		public WindowsFileSystemProvider(string rootDirectory, ILighthouseServiceContainer container)
+        public ResourceProviderType Type => ResourceProviderType.FileSystem;
+
+        public WindowsFileSystemProvider(string rootDirectory, ILighthouseServiceContainer container)
 		{
 			if (string.IsNullOrEmpty(rootDirectory))
 			{
