@@ -1,11 +1,24 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Lighthouse.Core.Database;
 
 namespace Lighthouse.Core
 {
     public static class DatabaseResourceFactory
     {
+        private static IList<string> AvailableSubTypes;
+
+        static DatabaseResourceFactory()
+        {
+            AvailableSubTypes = Enum
+                    .GetValues(typeof(DatabaseResourceProviderConfigSubtype))
+                    .OfType<DatabaseResourceProviderConfigSubtype>()
+                    .Select(w => w.ToString())
+                    .ToList();
+        }
+
         public static (bool wasSuccessful, string errorReason) TryCreate(ResourceProviderConfig config, out IDatabaseResourceProvider<string> provider)
         {
             provider = null;
@@ -29,7 +42,10 @@ namespace Lighthouse.Core
 
                 return (true, null);
             }
-            return (false, $"subtype {config.SubType} is invalid. All valid subtypes for {config.Type} are {string.Join(",", (IEnumerable)Enum.GetValues(typeof(DatabaseResourceProviderConfigSubtype)))}");
+
+            
+
+            return (false,errorReason: $"subtype {config.SubType} is invalid. All valid subtypes for {config.Type} are {string.Join(",",AvailableSubTypes)}");
         }
     }
 }
