@@ -185,7 +185,7 @@ namespace Lighthouse.CLI.Tests
                 Config = new ResourceProviderConfig
                 {
                     Type="Database",
-                    SubType = "mssql",
+                    SubType = "sqlserver",
                     ConnectionString = "sql_connection_string"
                 }
             }.ConvertToJson(true);

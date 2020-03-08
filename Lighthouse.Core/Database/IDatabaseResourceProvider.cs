@@ -20,7 +20,7 @@ namespace Lighthouse.Core.Database
     public class RedisDbResourceProvider : LighthouseServiceBase, IDatabaseResourceProvider<string>
     {
         public ResourceProviderType Type => ResourceProviderType.Database;
-
+        public string ConnectionString { get; set; }
         public Task<IEnumerable<TResult>> Query<TResult>(string queryObject)
         {
             throw new NotImplementedException();
@@ -63,7 +63,7 @@ namespace Lighthouse.Core.Database
 
         public void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null)
         {
-            throw new NotImplementedException();
+            // do nothing
         }
     }
 }

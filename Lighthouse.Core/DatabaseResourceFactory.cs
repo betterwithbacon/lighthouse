@@ -31,10 +31,16 @@ namespace Lighthouse.Core
                 switch (subtype)
                 {
                     case DatabaseResourceProviderConfigSubtype.sqlserver:
-                        provider = new MsSqlDbResourceProvider();
+                        provider = new MsSqlDbResourceProvider
+                        {
+                            ConnectionString = config.ConnectionString
+                        };
                         break;
                     case DatabaseResourceProviderConfigSubtype.redis:
-                        provider = new RedisDbResourceProvider();
+                        provider = new RedisDbResourceProvider
+                        {
+                            ConnectionString = config.ConnectionString
+                        };
                         break;
                     default:
                         return (false, $"subtype {config.SubType} is invalid.");
