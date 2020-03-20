@@ -1,4 +1,5 @@
-﻿using Lighthouse.Core.Logging;
+﻿using Lighthouse.Core.Events;
+using Lighthouse.Core.Logging;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -58,5 +59,28 @@ namespace Lighthouse.Core
 
             return (false, null);
         }
+    }
+
+    public class ResourceAvailableEvent : IEvent
+    {
+        public ILighthouseServiceContainer LighthouseContainer { get; }
+        public IResourceProvider Resource { get; }
+        public ResourceProviderType? ResourceType => Resource?.Type;
+        public string ResourceName { get; }
+        public DateTime EventTime { get; } = DateTime.Now;
+
+        public ResourceAvailableEvent(ILighthouseServiceContainer container, IResourceProvider resource)
+        {
+            LighthouseContainer = container;
+            Resource = resource;
+        }
+    }
+
+    public class ConfigurationChangedEvent : IEvent
+    {
+        public ILighthouseServiceContainer LighthouseContainer { get; }
+        public DateTime EventTime { get; } = DateTime.Now;
+        public ILighthouseService Target { get; set;  }
+        public string ChangeDescription { get; set; }
     }
 }

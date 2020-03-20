@@ -7,10 +7,9 @@ using Lighthouse.Core.Utils;
 
 namespace Lighthouse.Core.Events.Logging
 {
-    public class LogEventConsumer : BaseEventConsumer
+    public class LogEventConsumer : BaseEventConsumer, IEventConsumer<LogEvent>
     {	
         public List<string> AllLogRecords => new List<string>();
-		public override IList<Type> Consumes => new[] { typeof(LogEvent) };
 
 		public void HandleEvent(LogEvent logEvent)
 		{

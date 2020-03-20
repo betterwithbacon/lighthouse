@@ -8,17 +8,11 @@ namespace Lighthouse.Core.Events
 {
 	public interface IEventConsumer
 	{
-		IList<Type> Consumes { get; }
-
-		void HandleEvent(IEvent ev);
 	}
 
-	public static class IEventExtensions
+	public interface IEventConsumer<TEvent> : IEventConsumer
+		where TEvent : IEvent
 	{
-		public static void ThrowIfInvalidEvent(this IEventConsumer consumer, IEvent ev)
-		{
-			if (!consumer.Consumes.Contains(ev?.GetType()))
-				throw new InvalidEventException(ev.GetType(), consumer.Consumes.ToArray());
-		}
+		void HandleEvent(TEvent e);
 	}
 }

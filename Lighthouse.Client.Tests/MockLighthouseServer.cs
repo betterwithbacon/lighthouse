@@ -71,11 +71,6 @@ namespace Lighthouse.Core.Tests
             throw new NotImplementedException();
         }
 
-        public void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer) where TEvent : IEvent
-        {
-            throw new NotImplementedException();
-        }
-
         public void RegisterEventProducer(IEventProducer eventSource)
         {
             throw new NotImplementedException();
@@ -127,6 +122,11 @@ namespace Lighthouse.Core.Tests
         }
 
         public void RunPriveleged(ILighthouseService source, Action<IPriviledgedLighthouseServiceContainer> act)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterEventConsumer<TEvent>(IEventConsumer<TEvent> eventConsumer) where TEvent : IEvent
         {
             throw new NotImplementedException();
         }

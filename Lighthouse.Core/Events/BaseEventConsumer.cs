@@ -12,8 +12,6 @@ namespace Lighthouse.Core.Events
 {
 	public abstract class BaseEventConsumer : IEventConsumer
 	{		
-		public abstract IList<Type> Consumes { get; }
-
 		public ILighthouseServiceContainer Container { get; protected set; }
 
 		public string ScopeName => Identifier;

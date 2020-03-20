@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Lighthouse.Core;
 using Lighthouse.Core.Events;
@@ -6,7 +7,7 @@ using Lighthouse.Core.Logging;
 
 namespace Lighthouse.Server
 {
-    public class ResourceManager : LighthouseServiceBase, IRequestHandler<ResourceRequest, ResourceResponse>
+    public class ResourceManager : LighthouseServiceBase, IRequestHandler<ResourceRequest, ResourceResponse>, IEventConsumer
     {
         public ResourceResponse Handle(ResourceRequest request)
         {
@@ -22,7 +23,7 @@ namespace Lighthouse.Server
                     if(wasSuccessful)
                     {
                         // create the resource now add it
-                        this.Register(resourceProvider);
+                        Register(resourceProvider);
                         response.ActionsTaken.Add("added");
                     }
                     else
@@ -38,6 +39,11 @@ namespace Lighthouse.Server
                     break;
             }
             return response;
+        }
+
+        public void HandleEvent(IEvent ev)
+        {
+            throw new NotImplementedException();
         }
 
         //public T Find<T>(string name)
@@ -67,21 +73,7 @@ namespace Lighthouse.Server
             );
 
             // inform the container that the resource is available
-            Container.EmitEvent(new ResourceAvailableEvent(Container,resourceProvider));
-        }
-    }
-
-    public class ResourceAvailableEvent : IEvent
-    {
-        public ILighthouseServiceContainer LighthouseContainer { get; }
-        public IResourceProvider Resource { get; }
-        public ResourceProviderType? ResourceType => Resource?.Type;
-        public DateTime EventTime { get; } = DateTime.Now;
-
-        public ResourceAvailableEvent(ILighthouseServiceContainer container, IResourceProvider resource)
-        {
-            LighthouseContainer = container;
-            Resource = resource;
+            Container.EmitEvent(new ResourceAvailableEvent(Container, resourceProvider));
         }
     }
 }

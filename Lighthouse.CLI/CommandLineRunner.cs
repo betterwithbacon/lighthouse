@@ -188,6 +188,9 @@ namespace Lighthouse.CLI
 
                          foreach (var val in response.ActionsTaken)
                              ConsoleWrite(val);
+                         
+                         // inspect the event stream for bound events
+                         
 
                          return 0;
                      }

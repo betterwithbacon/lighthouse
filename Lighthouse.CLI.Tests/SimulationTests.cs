@@ -199,7 +199,8 @@ namespace Lighthouse.CLI.Tests
                 }
             );
 
-            // I AHVE NO IDEA< why this doesn't work on mac...it actively freezes. I'd love to see if this works on PC
+            // UPDATE: I think there was a stack overflow because of a recursive function without a stop condition
+            // I AHVE NO IDEA< why this doesn't work on mac...it actively freezes. I'd love to see if this works on PC            
             //retrieve the logs from warehouse number 2!            
             // it should reach out to it's peers and try to find the keys, this basically makes a warehouse cluster, a single unit
             // this still needs scoping but we'll add that in later

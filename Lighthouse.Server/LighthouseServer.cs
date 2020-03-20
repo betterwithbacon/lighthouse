@@ -20,6 +20,7 @@ using System.Reflection;
 using Lighthouse.Core.Functions;
 using Dasync.Collections;
 using System.Security;
+using System.Collections.ObjectModel;
 
 namespace Lighthouse.Server
 {
@@ -44,7 +45,8 @@ namespace Lighthouse.Server
 		#region Fields - Events		
         readonly ConcurrentBag<IEventProducer> Producers = new ConcurrentBag<IEventProducer>();
 		readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
-		readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
+        //readonly ConcurrentDictionary<Type, IList<IEventConsumer>> Consumers = new ConcurrentDictionary<Type, IList<IEventConsumer>>();
+        readonly ConcurrentBag<IEvent> AllReceivedEvents = new ConcurrentBag<IEvent>();
         #endregion
 
         #region Fields - Resources
@@ -90,7 +92,9 @@ namespace Lighthouse.Server
                 return instance;
             }
 
-            attach<Warehouse>();
+            Warehouse = attach<Warehouse>();
+            RegisterEventConsumer(Warehouse);
+
             attach<StatusRequestHandler>();
             attach<RemoteAppRunRequestHandler>();
             attach<InspectHandler>();
@@ -276,15 +280,39 @@ namespace Lighthouse.Server
 		private async Task HandleEvent(IEvent ev)
 		{
 			// handle tasks in a separate Task
-			await Do((container) => {				
-				AllReceivedEvents.Add(ev);				
-				if (Consumers.TryGetValue(ev.GetType(), out var consumers))
-				{
-					foreach (var consumer in consumers)
-						consumer.HandleEvent(ev);
-				}
-			});
+			//await // Do((container) => {				
+			AllReceivedEvents.Add(ev);
+            if (Consumers.TryGetValue(ev.GetType(), out var consumers))
+            {
+                foreach (var consumer in consumers)
+                {
+                    // TODO: find the HandleEvent method, and call it
+                    // I'm not thrilled about this, but it seems to be the only way to get the generic support
+                    // While also including a base type that 
+                    var method = GetMethod(consumer.GetType(), ev.GetType(), "HandleEvent");
+                    method.Invoke(consumer, new[] { ev });
+                    // consumer.HandleEvent(ev);
+                }   
+			}
+
+            await Task.CompletedTask;
 		}
+
+        private readonly Dictionary<(Type, Type), MethodInfo> MethodCache = new Dictionary<(Type, Type), MethodInfo>();
+
+        MethodInfo GetMethod(Type classType, Type eventType, string methodName)
+        {
+            if(!MethodCache.TryGetValue((classType, eventType), out var method))
+            {
+                var vals = ReflectionUtil.GetMethodsBySingleParameterType(classType, methodName);
+                foreach (var keyVal in vals)
+                {
+                    MethodCache.Add((classType, keyVal.Key), keyVal.Value);
+                }
+                method = vals[eventType];
+            }
+            return method;
+        }
 
 		public IEnumerable<IEvent> GetAllReceivedEvents(PointInTime since = null)
 		{
@@ -302,15 +330,23 @@ namespace Lighthouse.Server
 			eventProducer.Start();
 		}
 
-		public void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer)
-			where TEvent : IEvent
-		{
-			Consumers.GetOrAdd(typeof(TEvent), new List<IEventConsumer> { eventConsumer });
+		//public void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer)
+		//	where TEvent : IEvent
+		//{
+		//	Consumers.TryAdd(typeof(TEvent), new List<IEventConsumer> { eventConsumer });
 
-			Log(LogLevel.Debug, LogType.ConsumerRegistered, sender: eventConsumer, message: eventConsumer?.ToString());
-		}
+		//	Log(LogLevel.Debug, LogType.ConsumerRegistered, sender: eventConsumer, message: eventConsumer?.ToString());
+		//}
 
-		public async Task Do(Action<ILighthouseServiceContainer> action, string logMessage = null)
+        public void RegisterEventConsumer<TEvent>(IEventConsumer<TEvent> eventConsumer)
+            where TEvent : IEvent
+        {
+            Consumers.TryAdd(typeof(TEvent), new List<IEventConsumer> { eventConsumer });
+
+            Log(LogLevel.Debug, LogType.ConsumerRegistered, sender: eventConsumer, message: eventConsumer?.ToString());
+        }
+
+        public async Task Do(Action<ILighthouseServiceContainer> action, string logMessage = null)
 		{
 			if(logMessage != null)
 				Log(LogLevel.Debug, LogType.Info,this, $"Performing action {logMessage ?? "<unknown>"}");

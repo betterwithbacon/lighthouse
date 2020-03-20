@@ -61,8 +61,8 @@ namespace Lighthouse.Core
 
         void RegisterEventProducer(IEventProducer eventSource);
 
-        void RegisterEventConsumer<TEvent>(IEventConsumer eventConsumer)
-			where TEvent : IEvent;
+        void RegisterEventConsumer<TEvent>(IEventConsumer<TEvent> eventConsumer)
+            where TEvent : IEvent;
 
 		Task EmitEvent(IEvent ev, object source = null);
 

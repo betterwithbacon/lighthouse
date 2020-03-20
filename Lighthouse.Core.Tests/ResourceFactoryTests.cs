@@ -13,7 +13,7 @@ namespace Lighthouse.Core.Tests
             var config = new ResourceProviderConfig
             {
                 Type = "Database",
-                SubType = DatabaseResourceProviderConfigSubtype.SqlServer
+                SubType = DatabaseResourceProviderConfigSubtype.sqlserver.ToString()
             };
 
             (bool worked, string error) = ResourceFactory.TryCreate(config, out var resource);
@@ -28,7 +28,7 @@ namespace Lighthouse.Core.Tests
         {
             var config = new ResourceProviderConfig
             {
-                SubType = DatabaseResourceProviderConfigSubtype.SqlServer.ToString()
+                SubType = DatabaseResourceProviderConfigSubtype.sqlserver.ToString()
             };
 
             (bool worked, string error) = DatabaseResourceFactory.TryCreate(config, out var resource);

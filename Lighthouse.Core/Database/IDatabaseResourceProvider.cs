@@ -9,7 +9,7 @@ namespace Lighthouse.Core.Database
 {
     public interface IDatabaseResourceProvider : IResourceProvider
     {
-
+        string Descriptor { get; }
     }
 
     public interface IDatabaseResourceProvider<TQueryObject> : IDatabaseResourceProvider
@@ -21,6 +21,9 @@ namespace Lighthouse.Core.Database
     {
         public ResourceProviderType Type => ResourceProviderType.Database;
         public string ConnectionString { get; set; }
+
+        public string Descriptor { get; private set; } = "redis";
+
         public Task<IEnumerable<TResult>> Query<TResult>(string queryObject)
         {
             throw new NotImplementedException();
@@ -39,6 +42,8 @@ namespace Lighthouse.Core.Database
         public string ConnectionString { get; set; }
 
         public Action<MsSqlDbResourceProvider> InitializeConnectionFunc { get; set; }
+
+        public string Descriptor { get; private set; } = "sql_server";
 
         protected override void OnInit()
         {
