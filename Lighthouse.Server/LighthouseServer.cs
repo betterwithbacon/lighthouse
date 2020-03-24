@@ -35,7 +35,7 @@ namespace Lighthouse.Server
         #endregion
 
         #region Fields - Log
-        private readonly ConcurrentBag<Action<string>> LocalLoggers = new ConcurrentBag<Action<string>>();		
+        private readonly Stack<Action<string>> LocalLoggers = new Stack<Action<string>>();		
 		#endregion
 
 		#region Fields - Task Management
@@ -67,6 +67,11 @@ namespace Lighthouse.Server
         private IScheduler Scheduler { get; set; }
 
         IProducerConsumerCollection<IResourceProvider> IPriviledgedLighthouseServiceContainer.Resources => Resources;
+
+
+        Stack<Action<string>> IPriviledgedLighthouseServiceContainer.Loggers => LocalLoggers;
+
+        Warehouse ILighthouseServiceContainer.Warehouse => throw new NotImplementedException();
 
         #region Constructors
         public LighthouseServer(string serverName = "Lighthouse Server")
@@ -499,7 +504,7 @@ namespace Lighthouse.Server
 
         public void AddLogger(Action<string> logger)
         {
-            LocalLoggers.Add(logger);
+            LocalLoggers.Push(logger);
         }
 
         public IEnumerable<IResourceProvider> GetResourceProviders() => Resources;
@@ -545,13 +550,14 @@ namespace Lighthouse.Server
 
         public void RunPriveleged(ILighthouseService source, Action<IPriviledgedLighthouseServiceContainer> act)
         {
+            
             // currently only do a cursory check that the service is running inside of this container.
             var serviceName = source.ExternalServiceName();
             if (!RunningServices.ContainsKey(serviceName))
             {
                 throw new SecurityException($"{serviceName} can only operate priviledged within own container.");
             }
-
+            
             act(this);
         }
     }

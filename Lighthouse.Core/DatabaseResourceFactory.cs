@@ -30,6 +30,12 @@ namespace Lighthouse.Core
             {
                 switch (subtype)
                 {
+                    case DatabaseResourceProviderConfigSubtype.in_memory_key_value:
+                        provider = new MsSqlDbResourceProvider
+                        {
+                            ConnectionString = config.ConnectionString
+                        };
+                        break;
                     case DatabaseResourceProviderConfigSubtype.sqlserver:
                         provider = new MsSqlDbResourceProvider
                         {

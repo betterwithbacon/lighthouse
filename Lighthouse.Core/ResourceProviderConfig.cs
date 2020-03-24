@@ -7,5 +7,5 @@ namespace Lighthouse.Core
         public string Type { get; set; }
         public string SubType { get; set; }
         public string ConnectionString { get; set; }
-    }    
+    }
 }

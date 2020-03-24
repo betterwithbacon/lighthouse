@@ -34,6 +34,7 @@ namespace Lighthouse.Core
     public interface IPriviledgedLighthouseServiceContainer : ILighthouseServiceContainer
     {
         IProducerConsumerCollection<IResourceProvider> Resources { get; }
+        Stack<Action<string>> Loggers { get; }
     }
 
     /// <summary>

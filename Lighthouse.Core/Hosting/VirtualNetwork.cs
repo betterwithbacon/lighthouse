@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Utils;
+using System.Linq;
 
 namespace Lighthouse.Core.Hosting
 {
@@ -28,6 +29,11 @@ namespace Lighthouse.Core.Hosting
 
             return null;
         }
+
+        //public Uri ResolveUri(int i)
+        //{
+        //    return Containers.ToList()[i].Key;
+        //}
 
         public async Task<TResponse> GetObjectAsync<TRequest, TResponse>(Uri uri, TRequest requestObject, bool throwErrors = false)
             where TRequest : class

@@ -2,7 +2,9 @@
 {
     public enum DatabaseResourceProviderConfigSubtype
     {
+
         sqlserver,
-        redis
+        redis,
+        in_memory_key_value
     }
 }
