@@ -117,7 +117,6 @@ namespace Lighthouse.CLI.Tests
 		[Fact]
 		public void LargeSimulation_1NodeOrchestrates_OtherPerforms()
 		{
-
 			var scenario = new Scenario(Output);
 
 			scenario.Start(3);
@@ -133,6 +132,7 @@ namespace Lighthouse.CLI.Tests
 			// first, create a key_value DB on the dbNode
 			// this is where the data will be stored, and the work of the worker node will be stored
 			// the worker node, will be completely dumb
+			var dbName = "in_mem_key_val_1";
 			var newDatabaseRequest = new ResourceRequest
 			{
 				ResourceType = ResourceProviderType.Database,
@@ -141,14 +141,32 @@ namespace Lighthouse.CLI.Tests
 				{
 					Type = ResourceProviderType.Database.ToString(),
 					SubType = DatabaseResourceProviderConfigSubtype.in_memory_key_value.ToString(),
-					ConnectionString = "in_mem_key_val_1" // this is the literal "identifier" of the database in memory.
+					ConnectionString = dbName // this is the literal "identifier" of the database in memory.
 				}
 			}.ConvertToJson(true);
 
 			// spin up a large task on the worker node, and then let it get to work, it will be writing data back to the db, as it finishes the work
 			
 			scenario.ActAndAssert(
-				act => act.Type($"lighthouse configure --what resource --where {resolve(dbNode)} --how {newDatabaseRequest}"),
+				act => act.Type($"lighthouse configure --what resource --where {resolve(cpuWorkerNode)} --how {newDatabaseRequest}"),
+				consoleMultiLine: (console) =>
+				{
+					console.Any(s => s.Contains("added")).Should().BeTrue();
+
+					// check the recent server logs and expect to see this log
+					scenario.ServerLog[cpuWorkerNode].Any(l => l.Contains("warehouse added in_mem_key_val")).Should().BeTrue();
+				}
+			);
+
+			// at this point the server is "aware" of the in_mem server
+			// now actually create a server
+			var newServerStartup = new Dictionary<string, string>()
+			{
+				{ "name", dbName }
+			}.ConvertToJson(true);
+
+			scenario.ActAndAssert(
+				act => act.Type($"lighthouse run --what in_mem_key_val_server --where {resolve(dbNode)} --how {newServerStartup}"),
 				consoleMultiLine: (console) =>
 				{
 					console.Any(s => s.Contains("added")).Should().BeTrue();

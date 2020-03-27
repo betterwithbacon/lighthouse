@@ -18,7 +18,7 @@ namespace Lighthouse.Core.Storage
                                IEventConsumer<ResourceAvailableEvent>
     {
         private ConcurrentDictionary<string, string> Data { get; set; } = new ConcurrentDictionary<string, string>();
-        private ConcurrentDictionary<string, IDatabaseResourceProvider<string>> Databases { get; set; } = new ConcurrentDictionary<string, IDatabaseResourceProvider<string>>();
+        private ConcurrentDictionary<string, IDatabaseResourceProvider> Databases { get; set; } = new ConcurrentDictionary<string, IDatabaseResourceProvider>();
 
         public void Store(string key, string data)
         {
@@ -69,7 +69,7 @@ namespace Lighthouse.Core.Storage
             // if a resource is availab, the warehouse might be interested
             if (e.ResourceType == ResourceProviderType.Database)
             {
-                if(e.Resource is IDatabaseResourceProvider<string> db)
+                if(e.Resource is IDatabaseResourceProvider db)
                 {
                     Databases.TryAdd(db.Descriptor,db);
                     var changeDescription = $"warehouse added {db.Descriptor}";

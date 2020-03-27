@@ -19,7 +19,7 @@ namespace Lighthouse.Core
                     .ToList();
         }
 
-        public static (bool wasSuccessful, string errorReason) TryCreate(ResourceProviderConfig config, out IDatabaseResourceProvider<string> provider)
+        public static (bool wasSuccessful, string errorReason) TryCreate(ResourceProviderConfig config, out IDatabaseResourceProvider provider)
         {
             provider = null;
 
@@ -31,21 +31,21 @@ namespace Lighthouse.Core
                 switch (subtype)
                 {
                     case DatabaseResourceProviderConfigSubtype.in_memory_key_value:
-                        provider = new MsSqlDbResourceProvider
+                        provider = new InMemoryKeyValProvider
                         {
-                            ConnectionString = config.ConnectionString
+                            ConnectionString = config.ConnectionString // this will be a service name for a connected cluster.
                         };
                         break;
                     case DatabaseResourceProviderConfigSubtype.sqlserver:
                         provider = new MsSqlDbResourceProvider
                         {
-                            ConnectionString = config.ConnectionString
+                            ConnectionString = config.ConnectionString // the connection string will be a TCP binding
                         };
                         break;
                     case DatabaseResourceProviderConfigSubtype.redis:
                         provider = new RedisDbResourceProvider
                         {
-                            ConnectionString = config.ConnectionString
+                            ConnectionString = config.ConnectionString // this will be an https connection string
                         };
                         break;
                     default:
