@@ -167,15 +167,39 @@ namespace Lighthouse.CLI.Tests
 
 			scenario.ActAndAssert(
 				act => act.Type($"lighthouse run --what in_mem_key_val_server --where {resolve(dbNode)} --how {newServerStartup}"),
-				consoleMultiLine: (console) =>
+				console: (console) =>
 				{
-					console.Any(s => s.Contains("added")).Should().BeTrue();
+					console.Should().Contain(RemoteAppRunStatus.Succeeded);
 
 					// check the recent server logs and expect to see this log
-					scenario.ServerLog[dbNode].Any(l => l.Contains("warehouse added in_mem_key_val")).Should().BeTrue();
+					// scenario.ServerLog[dbNode].Any(l => l.Contains("warehouse added in_mem_key_val")).Should().BeTrue();
 				}
 			);
-
+			
+			// so the database should be running now
+			scenario.ActAndAssert(
+				act => act.Type($"lighthouse inspect --what services --where {resolve(dbNode)}"),
+				consoleMultiLine: (console) =>
+				{
+					console.Any(s => s.Contains("in_mem_key_val_server")).Should().BeTrue();
+				}
+			);
+			
+			// now create a database provider to communicate with the DB
+			// initially I think this was done to facilitate the traditional SQL Server model 
+			// where the server was a completely separate entity that required a separate comms
+			// protocol. THe DB could probably do both, at least on the server it's on (which means it should 
+			// announce itself like a provider
+			// while also facilitating communication via providers
+			scenario.ActAndAssert(
+				act => act.Type($"lighthouse inspect --what services --where {resolve(dbNode)}"),
+				consoleMultiLine: (console) =>
+				{
+					console.Any(s => s.Contains("in_mem_key_val_server")).Should().BeTrue();
+				});
+			
+			
+			
 			// at the end of the task, the DB should be full with 100k records.
 
 		}

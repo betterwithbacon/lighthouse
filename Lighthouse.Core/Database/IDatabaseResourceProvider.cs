@@ -16,7 +16,7 @@ namespace Lighthouse.Core.Database
         string Descriptor { get; }
     }
 
-    public interface IDatabaseResourceProvider<TQueryObject, TResult> : IDatabaseResourceProvider
+    public interface IDatabaseResourceProvider<in TQueryObject, TResult> : IDatabaseResourceProvider
     {
         Task<TResult> Query(TQueryObject queryObject);
     }
@@ -28,12 +28,6 @@ namespace Lighthouse.Core.Database
     public interface ITabularDatabaseProvider : IDatabaseResourceProvider<string, IEnumerable<object>>
     {
         Task<TResult> Query<TResult>(string queryObject);
-    }
-
-    public interface IKeyValue
-    {
-        void Store(string key, string payload);
-        string Retrieve(string key);
     }
 
     [ExternalLighthouseService("in_mem_key_val_server")]
