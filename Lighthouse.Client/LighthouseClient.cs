@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Client
 {
-    public class LighthouseClient : ILighthousePeer, ILighthouseEnvironment
+    public class LighthouseClient : ILighthouseClient, ILighthouseEnvironment
     {
         private List<Action<string>> Loggers { get; set; } = new List<Action<string>>();
         public Uri Uri { get; }
@@ -31,7 +31,6 @@ namespace Lighthouse.Client
 
         public DateTime GetNow() => DateTime.Now;
         
-
         public void Log(LogLevel level, LogType logType, object sender, string message = null, Exception exception = null, bool emitEvent = true)
         {
             foreach(var logger in Loggers)
@@ -47,7 +46,7 @@ namespace Lighthouse.Client
             }
         }
 
-        public async Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest request) where TRequest : class =>
+        public async Task<TResponse> MakeRequest<TRequest, TResponse>(TRequest request) where TRequest : class =>
             // a VERY naive implementation, says that ALL messages are sent to a single port
             // , and that, we don't need endpoints because of that.
             await NetworkProvider.GetObjectAsync<TRequest, TResponse>(Uri, request, true);

@@ -11,8 +11,7 @@ namespace Lighthouse.Core
 		public ILighthouseServiceContainer Container { get; private set; }		
 		private readonly List<Action<ILighthouseServiceContainer>> StartupActions = new List<Action<ILighthouseServiceContainer>>();
 		protected virtual bool IsInitialized { get; }
-		public string ScopeName => Identifier;
-		public string Identifier => GetServiceIdentifier();
+		public virtual string Identifier => GetServiceIdentifier();
 
 		protected void AddStartupTask(Action<ILighthouseServiceContainer> task)
 		{
@@ -70,10 +69,10 @@ namespace Lighthouse.Core
 
 			Container = container;
 
-			OnInit();			
+			OnInit(context);			
 		}
 
-		protected virtual void OnInit()
+		protected virtual void OnInit(object context = null)
 		{
 
 		}

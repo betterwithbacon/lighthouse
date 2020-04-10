@@ -35,6 +35,13 @@ namespace Lighthouse.Core.Database
     {
         readonly ConcurrentDictionary<string, string> Data = new ConcurrentDictionary<string, string>();
 
+        public override string Identifier { get; }
+
+        public InMemoryKeyValueDatabase(string identifier)
+        {
+            Identifier = identifier;
+        }
+
         public string Retrieve(string key)
         {
             return Data.TryGetValue(key, out var val) ? val : null;
@@ -75,7 +82,7 @@ namespace Lighthouse.Core.Database
             return await network.GetObjectAsync<InMemoryKeyValQueryRequest, string>(connection.Address, new InMemoryKeyValQueryRequest { Key = queryObject });
         }
 
-        public void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null)
+        public void Register(ILighthouseServiceContainer peer, Dictionary<string, string> otherConfig = null)
         {
 
         }
@@ -104,6 +111,8 @@ namespace Lighthouse.Core.Database
     {
         public Uri Address { get; set; }
         public string Name { get; set; }
+
+        public static string ToString(string serverName, string identifier) => $"address={serverName};name={identifier}";
     }
 
     public class RedisDbResourceProvider : LighthouseServiceBase, IKeyValueDatabaseProvider
@@ -118,7 +127,7 @@ namespace Lighthouse.Core.Database
             throw new NotImplementedException();
         }
 
-        public void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null)
+        public void Register(ILighthouseServiceContainer peer, Dictionary<string, string> otherConfig = null)
         {            
         }
     }
@@ -133,7 +142,7 @@ namespace Lighthouse.Core.Database
 
         public string Descriptor { get; private set; } = "sql_server";
 
-        protected override void OnInit()
+        protected override void OnInit(object context = null)
         {
             InitializeConnectionFunc?.Invoke(this);
             
@@ -154,7 +163,7 @@ namespace Lighthouse.Core.Database
         //    }
         //}
 
-        public void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null)
+        public void Register(ILighthouseServiceContainer peer, Dictionary<string, string> otherConfig = null)
         {
             // do nothing
         }

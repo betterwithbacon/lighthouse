@@ -14,9 +14,9 @@ namespace Lighthouse.Core
     /// <summary>
     /// An object capable of speaking with a container viable the Request API
     /// </summary>
-    public interface ILighthousePeer
+    public interface ILighthouseClient
     {
-        Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest request)
+        Task<TResponse> MakeRequest<TRequest, TResponse>(TRequest request)
             where TRequest : class;
     }
 
@@ -40,7 +40,7 @@ namespace Lighthouse.Core
     /// <summary>
     /// Provides: scheduling, event bus, request/response infrastructure
     /// </summary>
-    public interface ILighthouseServiceContainer : ILighthousePeer, ILighthouseEnvironment
+    public interface ILighthouseServiceContainer : ILighthouseEnvironment
     {
         Task Launch(Type serviceType, object launchContext = null);
 
@@ -61,7 +61,7 @@ namespace Lighthouse.Core
         Task RemoveScheduledActions(ILighthouseService owner, string scheduleName = null);
 
         void RegisterEventProducer(IEventProducer eventSource);
-
+        
         void RegisterEventConsumer<TEvent>(IEventConsumer<TEvent> eventConsumer)
             where TEvent : IEvent;
 
@@ -71,9 +71,13 @@ namespace Lighthouse.Core
 
         void Bind(int port);
 
-        IEnumerable<ILighthousePeer> GetPeers();
-
         void RunPriveleged(ILighthouseService source, Action<IPriviledgedLighthouseServiceContainer> act);
+
+        Task<TResponse> HandleRequest<TRequest, TResponse>(TRequest request)
+            where TRequest : class;
+
+        Task<TResponse> MakeRequest<TRequest, TResponse>(string serverName, TRequest request)
+            where TRequest : class;
     }
 
     public static class ContainerExtensions

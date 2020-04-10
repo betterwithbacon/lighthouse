@@ -47,12 +47,12 @@ namespace Lighthouse.Core.IO
             }
         }
 
-        public void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null)
+        public void Register(ILighthouseServiceContainer peer, Dictionary<string, string> otherConfig = null)
         {
             // no op, it doesn't care here either
         }
 
-        public IEnumerable<ILighthousePeer> GetLighthousePeers()
+        public IEnumerable<ILighthouseServiceContainer> GetLighthousePeers()
         {
             // not sure how this will scan the network looking for peers
             throw new NotImplementedException();

@@ -532,14 +532,15 @@ namespace Lighthouse.Server
             return true;
         }
 
-        public IEnumerable<ILighthousePeer> GetPeers()
+        public ILighthouseClient GetClient(string serverName)
         {
             // check all network adapters and see what's there, that's not this
-            return GetResourceProviders<INetworkProvider>()
-                .SelectMany(prov => prov
-                    .GetLighthousePeers()
-                    .Where(p => p != this)
-                );
+            //return GetResourceProviders<INetworkProvider>()
+            //    .SelectMany(prov => prov
+            //        .GetLighthousePeers()
+            //        .Where(p => p != this)
+            //    );
+            return null;
         }
 
         public override bool Equals(object obj) => (obj is LighthouseServer ls) ? ls == this : false;
@@ -559,6 +560,15 @@ namespace Lighthouse.Server
             }
             
             act(this);
+        }
+
+        public async Task<TResponse> MakeRequest<TRequest, TResponse>(string serverName, TRequest request) where TRequest : class
+        {
+            // resolve server
+            var client = GetClient(serverName);
+
+            // call the client
+            return await client.MakeRequest<TRequest, TResponse>(request);
         }
     }
 

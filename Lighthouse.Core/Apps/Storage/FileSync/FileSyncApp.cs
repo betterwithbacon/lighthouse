@@ -5,46 +5,67 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 
-namespace Lighthouse.Apps.FileSync
+namespace Lighthouse.Apps.Storage.FileSync
 {
     public class FileSyncFolderStatus
     {
         public Dictionary<string, DateTime> FileUpdateDate { get; set; } = new Dictionary<string, DateTime>();
     }
 
+    public class FileSyncAppConfig
+    {
+        public List<string> FoldersToWatch { get; } = new List<string>();
+        public string SourceServer { get; set; }
+        public string TargetServer { get; set; }
+    }
+
+    [ExternalLighthouseService("filesync")]
     public class FileSyncApp : LighthouseServiceBase
     {
-        private static int _lockFlag = 0; // 0 - free
-        private static readonly ConcurrentDictionary<string, bool> activeFileSyncs = new ConcurrentDictionary<string, bool>();
-        protected readonly ConcurrentDictionary<string, FileSyncFolderStatus> FolderStatus;
+        protected readonly ConcurrentDictionary<string, List<FileSyncFolderStatus>> FolderStatuses = new ConcurrentDictionary<string, List<FileSyncFolderStatus>>();
+        public string SourceServer { get; private set; }
+        public string TargetServer { get; private set; }
 
         public FileSyncApp()
         {
-            // sync every 10 minutes 
-            // TODO: make this time configurable
-            //Container.AddScheduledAction(
-            //	new Schedule(ScheduleFrequency.Minutely, 10), 
-            //	(time) => Sync(time) );
-
-            // c:\folder1 --> FileSyncFolderStatus
-            //	FileSyncFolderStatus 
-            //		file1 --> 1/1/2019
-            //		file2 --> 1/2/2019
-            // c:\folder2 --> FileSyncFolderStatus
-            //FolderStatus = new WarehouseDictionary<string, FileSyncFolderStatus>(Container.Warehouse, this, $"{nameof(FileSyncApp)}.{nameof(FolderStatus)}");
+            // upon startup
         }
 
-        public void Sync(DateTime time)
+        protected override void OnInit(object context = null)
         {
-            // every 10 minute this thread will wake up and look for file changes, it will then put that work on background task to process the files
-            if (Interlocked.CompareExchange(ref _lockFlag, 1, 0) == 0)
+            base.OnInit(context);
+
+            if(context is FileSyncAppConfig appConfig)
             {
-                // track progress in the key/value store
+                foreach(var folder in appConfig.FoldersToWatch)
+                {
+                    FolderStatuses.TryAdd(folder, new List<FileSyncFolderStatus>());
+                }
 
-
-                Interlocked.Decrement(ref _lockFlag);
+                SourceServer = appConfig.SourceServer;
+                TargetServer = appConfig.TargetServer;
             }
+            else
+            {
+                throw new InvalidOperationException($"file sync app was expecting configuration object and instead got {context} ");
+            }
+        }
+
+        protected override async Task OnStart()
+        {
+            // start syncing files
+            // request a file manifest from the remote server recursively for all files in the folders
+            // record the file statuses in the local databases.
+            foreach (var folder in FolderStatuses)
+            {
+                // Container.HandleRequest(new FileSystemRequest { Type=FileSystemRequestType.LS, IsRecurisive=true,  });
+            }
+
+            // after all of the files are there, then begin to copy them (in parallel?)
+
+            await Task.CompletedTask;
         }
     }
 }

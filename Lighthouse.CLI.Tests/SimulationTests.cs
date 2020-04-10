@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using FluentAssertions;
+using Lighthouse.Apps.Storage.FileSync;
 using Lighthouse.Core;
+using Lighthouse.Core.Database;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.IO;
 using Lighthouse.Core.Storage;
@@ -207,7 +210,7 @@ namespace Lighthouse.CLI.Tests
 		[Fact]
 		public void Multi_Node_Event_Parsing()
 		{
-			// create a cluster of 2 nodes
+			// create a cluster of 3 nodes
 
 			// the first node creates an event
 
@@ -217,6 +220,76 @@ namespace Lighthouse.CLI.Tests
 
 			// the second node does not receive it 
 
+		}
+
+		[Fact]
+		public void Remote_Backup_To_local()
+		{
+			// test this without user connections, as we already trust the other pieces work
+			var scenario = new Scenario(Output);
+
+			scenario.Start(3);
+
+			// Create a database, it's sole job is to store the tracking data of the file sync app
+			var dbNode = scenario.Containers[1];
+			const string db_identifier = "in_mem_db";
+			var db = new InMemoryKeyValueDatabase(db_identifier);
+
+			dbNode.Launch(db).GetAwaiter().GetResult();
+
+			var folder = "C:\\test";
+			var vfs_source = new VirtualFileSystem();
+			var max_number_of_test_files = 10;
+			var createdFiles = new Dictionary<string,string>();
+
+			for (int i = 0; i < max_number_of_test_files; i++)
+			{
+				var fileName = $"{folder}\\test_file_{i}.txt";
+				var payload = string.Join("", Enumerable.Repeat(i, 1000));
+				createdFiles.Add(fileName, payload);
+
+				vfs_source.WriteStringToFileSystem(fileName, payload);
+			}
+
+			// this node, has access to the DB, as well as has visibility to a local file system
+			var sourceNode = scenario.Containers[2];
+			
+			sourceNode.RegisterResource(vfs_source);
+			sourceNode.RegisterResource(
+				new InMemoryKeyValProvider {
+					ConnectionString =
+						InMemoryKeyValueDatabaseConnection.ToString(dbNode.ServerName, db.Identifier)
+				}
+			);
+
+			// create cluster of 2 nodes
+			var masterNode = scenario.Containers[0];
+			var vfs_master = new VirtualFileSystem();
+			masterNode.RegisterResource(vfs_master);
+
+			// launch the filesync app
+			var fileSyncApp = new FileSyncApp();
+
+			// tell the file sync config WHERE to watch
+			var fileSyncConfig = new FileSyncAppConfig();
+			fileSyncConfig.FoldersToWatch.Add(folder);
+			fileSyncConfig.SourceServer = sourceNode.ServerName;
+			fileSyncConfig.TargetServer = masterNode.ServerName;
+			
+			// we DON"T need to tell it where to store it's status data, as it'll just store it in the warehouse
+			// and the warehouse will store it in the DB automatically
+			masterNode.Launch(fileSyncApp, fileSyncConfig).GetAwaiter().GetResult();
+
+			// at this point, the minute the file sync app is launched, it will begin attempting to sync all of the data between the folders to watch, and the remote target
+
+			// there will be 10 virtual files, so we should wait a bit, and then verify the virtual files now exist on the file system of the remote machine
+			Thread.Sleep(100); // this is arbitrary
+
+			foreach (var file in createdFiles)
+			{
+				vfs_master.FileExists(file.Key).Should().BeTrue();
+				vfs_master.ReadStringFromFileSystem(file.Key).Should().Be(file.Value);
+			}
 		}
 
 		[Fact]

@@ -75,7 +75,7 @@ namespace Lighthouse.CLI
                             var client = GetClient(run.Where.ToUri());
 
                             // make a connection to the other server
-                            var response = client.HandleRequest<RemoteAppRunRequest, RemoteAppRunHandle>(new RemoteAppRunRequest(run.What)).GetAwaiter().GetResult();
+                            var response = client.MakeRequest<RemoteAppRunRequest, RemoteAppRunHandle>(new RemoteAppRunRequest(run.What)).GetAwaiter().GetResult();
                             ConsoleWrite($"Request {response?.Status ?? "no response"} (ID: {response?.Id ?? "no ID"})");
                         }
                         else
@@ -104,12 +104,12 @@ namespace Lighthouse.CLI
 
                     if (inspect.What == null)
                     {
-                        var response = client.HandleRequest<StatusRequest, StatusResponse>(new StatusRequest()).GetAwaiter().GetResult();
+                        var response = client.MakeRequest<StatusRequest, StatusResponse>(new StatusRequest()).GetAwaiter().GetResult();
                         ConsoleWrite(response.ToString());
                     }
                     else
                     {
-                        var response = client.HandleRequest<InspectRequest, InspectResponse>(
+                        var response = client.MakeRequest<InspectRequest, InspectResponse>(
                             new InspectRequest { What = inspect.What }
                         ).GetAwaiter().GetResult();
 
@@ -127,7 +127,7 @@ namespace Lighthouse.CLI
 
                     var client = GetClient(stop.Where.ToUri());
 
-                    var response = client.HandleRequest<StopRequest, bool>(
+                    var response = client.MakeRequest<StopRequest, bool>(
                             new StopRequest { What = stop.What }
                         ).GetAwaiter().GetResult();
 
@@ -145,7 +145,7 @@ namespace Lighthouse.CLI
                     var client = GetClient(store.Where.ToUri());
                     var deserialize = store.What.DeserializeFromJSON<WarehouseStoreRequest>();
                     
-                    var response = client.HandleRequest<WarehouseStoreRequest, bool>(
+                    var response = client.MakeRequest<WarehouseStoreRequest, bool>(
                             new WarehouseStoreRequest { Key = deserialize.Key, Value=deserialize.Value }
                         ).GetAwaiter().GetResult();
 
@@ -163,7 +163,7 @@ namespace Lighthouse.CLI
                     var client = GetClient(retrieve.Where.ToUri());
                     var deserialize = retrieve.What.DeserializeFromJSON<WarehouseRetrieveRequest>();
 
-                    var response = client.HandleRequest<WarehouseRetrieveRequest, WarehouseRetrieveResponse>(
+                    var response = client.MakeRequest<WarehouseRetrieveRequest, WarehouseRetrieveResponse>(
                             new WarehouseRetrieveRequest { Key = deserialize.Key}
                         ).GetAwaiter().GetResult();
 
@@ -184,14 +184,12 @@ namespace Lighthouse.CLI
                      {
                          var request = configure.How.DeserializeFromJSON<ResourceRequest>();
 
-                         var response = client.HandleRequest<ResourceRequest, ResourceResponse>(request).GetAwaiter().GetResult();
+                         var response = client.MakeRequest<ResourceRequest, ResourceResponse>(request).GetAwaiter().GetResult();
 
                          foreach (var val in response.ActionsTaken)
                              ConsoleWrite(val);
                          
-                         // inspect the event stream for bound events
-                         
-
+                         // inspect the event stream for bound events ???                         
                          return 0;
                      }
 

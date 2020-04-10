@@ -15,11 +15,11 @@ namespace Lighthouse.Core.Hosting
         public const string DesiredUriKey = "desiredUri";
         private int highestSubdomain = 1;
 
-        public Dictionary<Uri, ILighthousePeer> Containers { get; } = new Dictionary<Uri, ILighthousePeer>();
+        public Dictionary<Uri, ILighthouseServiceContainer> Containers { get; } = new Dictionary<Uri, ILighthouseServiceContainer>();
 
         public IList<NetworkScope> SupportedScopes => new[] { NetworkScope.Local };
 
-        public Uri ResolveUri(ILighthousePeer peer)
+        public Uri ResolveUri(ILighthouseServiceContainer peer)
         {
             foreach(var uriAndPeer in Containers)
             {
@@ -30,24 +30,17 @@ namespace Lighthouse.Core.Hosting
             return null;
         }
 
-        //public Uri ResolveUri(int i)
-        //{
-        //    return Containers.ToList()[i].Key;
-        //}
-
         public async Task<TResponse> GetObjectAsync<TRequest, TResponse>(Uri uri, TRequest requestObject, bool throwErrors = false)
             where TRequest : class
         {
             if (!Containers.TryGetValue(uri, out var container))
             {
-                // TODO: returning a default value might be bit misleading, but exceptions seems maybe too much. think this through?
-                // return await Task.FromResult<TResponse>(default);
                 throw new Exception($"URI not found {uri}");
             }
             return await container.HandleRequest<TRequest, TResponse>(requestObject);
         }
 
-        public void Register(ILighthousePeer node, Dictionary<string,string> otherConfig = null)
+        public void Register(ILighthouseServiceContainer node, Dictionary<string,string> otherConfig = null)
         {
             if (!Containers.ContainsValue(node))
             {
@@ -65,7 +58,6 @@ namespace Lighthouse.Core.Hosting
                     // incrememt the URI (these addresses are just automatically assigned, low-rent DHCP)
                     Containers.Add($"http://127.0.0.{highestSubdomain++}".ToUri(), node);
                 }
-                
             }
         }
 
@@ -74,7 +66,7 @@ namespace Lighthouse.Core.Hosting
             return $"Virtual Network ({Containers.Count} peers)";
         }
 
-        public IEnumerable<ILighthousePeer> GetLighthousePeers()
+        public IEnumerable<ILighthouseServiceContainer> GetLighthousePeers()
         {
             return Containers.Values;
         }

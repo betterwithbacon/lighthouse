@@ -9,7 +9,7 @@ namespace Lighthouse.Core
     public interface IResourceProvider
     {
         ResourceProviderType Type { get; }
-        void Register(ILighthousePeer peer, Dictionary<string, string> otherConfig = null);
+        void Register(ILighthouseServiceContainer peer, Dictionary<string, string> otherConfig = null);
     }
 
     public abstract class ConfigBase

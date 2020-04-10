@@ -14,8 +14,6 @@ namespace Lighthouse.Core.Events
 	{		
 		public ILighthouseServiceContainer Container { get; protected set; }
 
-		public string ScopeName => Identifier;
-
 		public string Identifier { get; protected set; }
 
 		private readonly IReadOnlyDictionary<Type, MethodInfo> MethodCache;
