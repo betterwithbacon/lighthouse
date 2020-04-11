@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using CommandLine;
-using Lighthouse.Client;
+using Lighthouse.Core;
 using Lighthouse.Core;
 using Lighthouse.Core.Hosting;
 using Lighthouse.Core.Utils;

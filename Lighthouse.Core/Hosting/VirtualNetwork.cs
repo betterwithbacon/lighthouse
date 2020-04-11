@@ -17,8 +17,6 @@ namespace Lighthouse.Core.Hosting
 
         public Dictionary<Uri, ILighthouseServiceContainer> Containers { get; } = new Dictionary<Uri, ILighthouseServiceContainer>();
 
-        public IList<NetworkScope> SupportedScopes => new[] { NetworkScope.Local };
-
         public Uri ResolveUri(ILighthouseServiceContainer peer)
         {
             foreach(var uriAndPeer in Containers)
@@ -66,9 +64,15 @@ namespace Lighthouse.Core.Hosting
             return $"Virtual Network ({Containers.Count} peers)";
         }
 
-        public IEnumerable<ILighthouseServiceContainer> GetLighthousePeers()
+        public bool CanResolve(string address)
         {
-            return Containers.Values;
+            return Containers.Values.Any(c => c.ToString().Equals(address, StringComparison.OrdinalIgnoreCase));
+        }
+
+        public ILighthouseClient GetClient(string address)
+        {
+            var container = Containers.Values.SingleOrDefault(c => c.ToString().Equals(address, StringComparison.OrdinalIgnoreCase));
+            return container != null ? new VirtualLighthouseClient(container, address) : null;
         }
     }
 }

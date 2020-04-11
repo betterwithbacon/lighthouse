@@ -68,7 +68,6 @@ namespace Lighthouse.Server
 
         IProducerConsumerCollection<IResourceProvider> IPriviledgedLighthouseServiceContainer.Resources => Resources;
 
-
         Stack<Action<string>> IPriviledgedLighthouseServiceContainer.Loggers => LocalLoggers;
 
         Warehouse ILighthouseServiceContainer.Warehouse => throw new NotImplementedException();
@@ -535,12 +534,9 @@ namespace Lighthouse.Server
         public ILighthouseClient GetClient(string serverName)
         {
             // check all network adapters and see what's there, that's not this
-            //return GetResourceProviders<INetworkProvider>()
-            //    .SelectMany(prov => prov
-            //        .GetLighthousePeers()
-            //        .Where(p => p != this)
-            //    );
-            return null;
+            return GetResourceProviders<INetworkProvider>()
+                .FirstOrDefault(np => np.CanResolve(serverName))
+                ?.GetClient(serverName);
         }
 
         public override bool Equals(object obj) => (obj is LighthouseServer ls) ? ls == this : false;

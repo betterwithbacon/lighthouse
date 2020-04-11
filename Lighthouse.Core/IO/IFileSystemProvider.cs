@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Lighthouse.Apps.Storage.FileSync;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -87,6 +88,26 @@ namespace Lighthouse.Core.IO
 
 	public class FileSystemRequest
 	{
+		public FileSystemRequestType Type { get; internal set; }
+		public bool IsRecursive { get; internal set; }
+		public string Folder { get; internal set; }
+	}
 
+	public enum FileSystemRequestType
+	{
+		LS
+	}
+
+	public class FileSystemLsResponse
+	{
+		public IList<FileSystemObject> Objects { get; } = new List<FileSystemObject>();
+	}
+
+	public class FileSystemObject
+	{
+		public bool IsDirectory { get; set; } = false;
+		public DateTime LastModified { get; }
+		public string Path { get; set; }
+		public IList<FileSystemObject> Children { get; } = new List<FileSystemObject>();
 	}
 }

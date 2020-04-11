@@ -1,5 +1,6 @@
 ﻿using Lighthouse.Core;
 using Lighthouse.Core.Configuration.ServiceDiscovery;
+using Lighthouse.Core.IO;
 using Lighthouse.Core.Logging;
 using System;
 using System.Collections.Concurrent;
@@ -11,6 +12,8 @@ namespace Lighthouse.Apps.Storage.FileSync
 {
     public class FileSyncFolderStatus
     {
+        public string Path { get; }
+
         public Dictionary<string, DateTime> FileUpdateDate { get; set; } = new Dictionary<string, DateTime>();
     }
 
@@ -24,7 +27,7 @@ namespace Lighthouse.Apps.Storage.FileSync
     [ExternalLighthouseService("filesync")]
     public class FileSyncApp : LighthouseServiceBase
     {
-        protected readonly ConcurrentDictionary<string, List<FileSyncFolderStatus>> FolderStatuses = new ConcurrentDictionary<string, List<FileSyncFolderStatus>>();
+        protected readonly Dictionary<string, List<string>> FilesByFolder = new Dictionary<string, List<string>>();
         public string SourceServer { get; private set; }
         public string TargetServer { get; private set; }
 
@@ -37,11 +40,13 @@ namespace Lighthouse.Apps.Storage.FileSync
         {
             base.OnInit(context);
 
+            // this probably should either come from the app config or the DB where we store app states
+            // right now this starts over, every time it boots up
             if(context is FileSyncAppConfig appConfig)
-            {
+            {                
                 foreach(var folder in appConfig.FoldersToWatch)
                 {
-                    FolderStatuses.TryAdd(folder, new List<FileSyncFolderStatus>());
+                    FilesByFolder.TryAdd(folder, new List<string>());
                 }
 
                 SourceServer = appConfig.SourceServer;
@@ -55,12 +60,42 @@ namespace Lighthouse.Apps.Storage.FileSync
 
         protected override async Task OnStart()
         {
+            static IEnumerable<(string folder, string path)> recurseFolders(IEnumerable<FileSystemObject> objects, string currentFolder)
+            {
+                foreach (var obj in objects)
+                {
+                    if (obj.IsDirectory)
+                    {
+                        foreach (var subobject in recurseFolders(obj.Children, obj.Path))
+                            yield return subobject;
+                    }
+                    else
+                    {
+                        yield return (currentFolder, obj.Path);
+                    }
+                }
+            }
+
             // start syncing files
             // request a file manifest from the remote server recursively for all files in the folders
             // record the file statuses in the local databases.
-            foreach (var folder in FolderStatuses)
+
+            // local db: C:\test --> C:\test\file1, C:\testfile2
+            // remote: --> C:\test\file1, C:\testfile2, *C:\testfile3*
+            foreach (var folder in FilesByFolder)
             {
-                // Container.HandleRequest(new FileSystemRequest { Type=FileSystemRequestType.LS, IsRecurisive=true,  });
+                var response = await Container.MakeRequest<FileSystemRequest, FileSystemLsResponse>(
+                    SourceServer, 
+                    new FileSystemRequest { 
+                        Type = FileSystemRequestType.LS, IsRecursive = true, Folder = folder.Key
+                    }
+                );
+
+                foreach(var objectStatus in recurseFolders(response.Objects, folder.Key))
+                {
+                    FilesByFolder.TryAdd(folder.Key, new List<string>());
+                    FilesByFolder[folder.Key].Add(objectStatus.path);
+                }
             }
 
             // after all of the files are there, then begin to copy them (in parallel?)

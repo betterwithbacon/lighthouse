@@ -10,7 +10,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Lighthouse.Client\Lighthouse.Client.csproj" />
     <ProjectReference Include="..\Lighthouse.Core\Lighthouse.Core.csproj" />
     <ProjectReference Include="..\Lighthouse.Server\Lighthouse.Server.csproj" />
   </ItemGroup>
