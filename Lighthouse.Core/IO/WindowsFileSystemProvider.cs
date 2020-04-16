@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -82,5 +83,29 @@ namespace Lighthouse.Core.IO
         {
             // no op, it doesn't care here either
         }
-    }
+
+		public IEnumerable<FileSystemObject> GetObjects(string folder)
+		{
+			var directory = new DirectoryInfo(folder);
+			return directory.GetFileSystemInfos("*.*", SearchOption.AllDirectories).Select(fi => fi.ToFileSystemObject());
+		}
+	}
+
+	internal static class FileSystemInfoExtensions
+	{
+		public static bool IsDirectory(this FileSystemInfo fsi) => (fsi.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+
+		public static FileSystemObject ToFileSystemObject(this FileSystemInfo fsi)
+		{
+			return new FileSystemObject
+			{
+				Path = fsi.FullName,
+				IsDirectory = fsi.IsDirectory(),
+				Children = fsi.IsDirectory() ?
+						(new DirectoryInfo(fsi.FullName))
+							.GetFileSystemInfos("*.*", SearchOption.TopDirectoryOnly)
+							.Select(fi => fi.ToFileSystemObject()).ToList() : new List<FileSystemObject>()
+			};
+		}
+	}
 }

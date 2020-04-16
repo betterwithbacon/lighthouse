@@ -29,7 +29,7 @@ namespace Lighthouse.CLI
             else
             {
                 TypeFactory = typeFactory;
-            }            
+            }
         }
 
         public Action<string> ConsoleWrite { get; }

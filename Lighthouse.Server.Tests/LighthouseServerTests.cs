@@ -102,7 +102,7 @@ namespace Lighthouse.Server.Tests
 		public void GetFileSystemProviders_ShouldFindProvider()
 		{
             Container.AddAvailableFileSystemProviders();
-			Container.GetFileSystemProviders().Should().NotBeEmpty();
+			Container.GetFileSystem().Should().NotBeNull();
 		}
 		#endregion
 

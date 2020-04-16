@@ -44,5 +44,15 @@ namespace Lighthouse.Core.IO
         {
             // no op, it doesn't care here either
         }
+
+        public bool CanResolve(string address)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ILighthouseClient GetClient(string address)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

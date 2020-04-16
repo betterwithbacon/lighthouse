@@ -78,7 +78,6 @@ namespace Lighthouse.Server
 			ServerName = serverName;
 			OS = RuntimeServices.GetOS();
 			
-			// the server is now actually configuring itself
 			Log(LogLevel.Debug, LogType.Info, this, "Lighthouse server initializing...");
 
             InitScheduler().GetAwaiter().GetResult();
@@ -104,21 +103,12 @@ namespace Lighthouse.Server
             attach<InspectHandler>();
             attach<LogsReader>();
             attach<ServicesReader>();
+            attach<StorageManager>(); // warehouses abstract storage, but this is about file systems (resources)
             ResourceManager = attach<ResourceManager>();
         }
         #endregion
 
         #region Server Lifecycle
-  //      public void Start()
-		//{			
-		//	Log(LogLevel.Debug,LogType.Info,this, "Lighthouse server starting");
-
-		//	// the service is now runnable
-		//	IsRunning = true;
-
-  //          StartScheduler().GetAwaiter().GetResult();
-  //      }
-
 		public async Task Stop()
 		{
             //// call stop on all of the services
@@ -156,13 +146,6 @@ namespace Lighthouse.Server
 
 		private void HandleTaskError(Exception e, string serviceId = null)
 		{
-			
-			//if (serviceId != null)
-			//{
-			//	owner = RunningServices.FirstOrDefault(ls => ls.Service.Id == serviceId);
-			//	owner?.Exceptions.TryAdd(e);
-			//}
-
 			Log(LogLevel.Error,LogType.Error,null,message: $"Error occurred running task: {e.Message}", exception: e);
 		}
 		#endregion

@@ -10,13 +10,6 @@ using System.Threading.Tasks;
 
 namespace Lighthouse.Apps.Storage.FileSync
 {
-    public class FileSyncFolderStatus
-    {
-        public string Path { get; }
-
-        public Dictionary<string, DateTime> FileUpdateDate { get; set; } = new Dictionary<string, DateTime>();
-    }
-
     public class FileSyncAppConfig
     {
         public List<string> FoldersToWatch { get; } = new List<string>();
@@ -84,7 +77,7 @@ namespace Lighthouse.Apps.Storage.FileSync
             // remote: --> C:\test\file1, C:\testfile2, *C:\testfile3*
             foreach (var folder in FilesByFolder)
             {
-                var response = await Container.MakeRequest<FileSystemRequest, FileSystemLsResponse>(
+                var response = await Container.MakeRequest<FileSystemRequest, FileSystemResponse>(
                     SourceServer, 
                     new FileSystemRequest { 
                         Type = FileSystemRequestType.LS, IsRecursive = true, Folder = folder.Key

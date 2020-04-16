@@ -78,7 +78,7 @@ namespace Lighthouse.Core.Database
 
             // talk to the network to create a client to talk to another node somewhere else
             // TODO: probably should find a network provider that makes sense for the type of request. But right now there's only one type.
-            var network = Container.GetNetworkProviders().First();
+            var network = Container.GetNetworkProvider();
             return await network.GetObjectAsync<InMemoryKeyValQueryRequest, string>(connection.Address, new InMemoryKeyValQueryRequest { Key = queryObject });
         }
 

@@ -1,6 +1,7 @@
 ﻿using Lighthouse.Apps.Storage.FileSync;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -42,6 +43,8 @@ namespace Lighthouse.Core.IO
 		/// <param name="fileName"></param>
 		/// <returns></returns>
 		bool FileExists(string fileName);
+
+		IEnumerable<FileSystemObject> GetObjects(string folder);
 	}
 
 	/// <summary>
@@ -84,7 +87,12 @@ namespace Lighthouse.Core.IO
         {
             // no op, it doesn't care here either
         }
-    }
+
+		public IEnumerable<FileSystemObject> GetObjects(string folder)
+		{
+			throw new NotImplementedException();
+		}
+	}
 
 	public class FileSystemRequest
 	{
@@ -98,9 +106,9 @@ namespace Lighthouse.Core.IO
 		LS
 	}
 
-	public class FileSystemLsResponse
+	public class FileSystemResponse
 	{
-		public IList<FileSystemObject> Objects { get; } = new List<FileSystemObject>();
+		public IList<FileSystemObject> Objects { get; set; } = new List<FileSystemObject>();
 	}
 
 	public class FileSystemObject
@@ -108,6 +116,6 @@ namespace Lighthouse.Core.IO
 		public bool IsDirectory { get; set; } = false;
 		public DateTime LastModified { get; }
 		public string Path { get; set; }
-		public IList<FileSystemObject> Children { get; } = new List<FileSystemObject>();
+		public IList<FileSystemObject> Children { get; set; } = new List<FileSystemObject>();
 	}
 }

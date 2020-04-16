@@ -50,7 +50,7 @@ namespace Lighthouse.Core.Storage.Legacy.Stores.Disk
 			Scope = scope;
 
 			// TODO: if there are 3 file system providers, who do you know which one to use. 
-			FileSystemProvider = Warehouse.Container.GetFileSystemProviders().FirstOrDefault();
+			FileSystemProvider = Warehouse.Container.GetFileSystem();
 			if (FileSystemProvider == null)
 				throw new ApplicationException("No filesystem could be located.");
 		}

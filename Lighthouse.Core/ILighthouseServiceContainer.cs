@@ -85,8 +85,13 @@ namespace Lighthouse.Core
         public static IEnumerable<T> GetResourceProviders<T>(this ILighthouseServiceContainer container)
             where T : IResourceProvider => container.GetResourceProviders().OfType<T>();
 
-        public static IEnumerable<INetworkProvider> GetNetworkProviders(this ILighthouseServiceContainer container) => container.GetResourceProviders<INetworkProvider>();
+        public static INetworkProvider GetNetworkProvider(this ILighthouseServiceContainer container) => container.GetResourceProviders<INetworkProvider>().FirstOrDefault();
 
-        public static IEnumerable<IFileSystemProvider> GetFileSystemProviders(this ILighthouseServiceContainer container) => container.GetResourceProviders<IFileSystemProvider>();
+        /// <summary>
+        /// Returns a list of file system providers available on the target server. A given file system could support multiple drives
+        /// </summary>
+        /// <param name="container"></param>
+        /// <returns></returns>
+        public static IFileSystemProvider GetFileSystem(this ILighthouseServiceContainer container) => container.GetResourceProviders<IFileSystemProvider>().FirstOrDefault();
     }
 }
