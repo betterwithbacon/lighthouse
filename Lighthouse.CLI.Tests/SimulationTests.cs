@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Lighthouse.Apps.Storage.FileSync;
 using Lighthouse.Core;
@@ -295,7 +299,6 @@ namespace Lighthouse.CLI.Tests
 		[Fact]
 		public void LargeSimulation_All_In_Memory_ScaleOut()
 		{
-
 			var scenario = new Scenario(Output);
 
 			scenario.Start(50);
@@ -308,15 +311,28 @@ namespace Lighthouse.CLI.Tests
 			// first, create a key_value DB on the dbNode
 			// this is where the data will be stored, and the work of the worker node will be stored
 			// the worker node, will be completely dumb
-		
 
+			var workerQueueApp = new WorkerQueueApp();
+			masterNode.Launch(workerQueueApp).GetAwaiter().GetResult();
+
+			// now the master, will queue up a bunch of work..and the worker nodes, will pick up the work, and start doing the work, and sending the results to the specified key
+			var random = new Random(123_321);
+			var allTestCases = new Dictionary<double, double>();
+			workerQueueApp.EnqueueTasks(500, () => {
+				var seed = random.Next();
+				var seed_squared = Math.Pow(seed, 2);
+				allTestCases.Add(seed, seed_squared);
+				return (seed, seed_squared);
+			});
+
+			// the master node has queued up a bunch of work, let the workers start processing it
+
+			// start a bunch of workers
 			foreach (var container in workerPool)
 			{
 				var workerApp = new WorkerApp();
-				workerPool.Launch(workerApp);
+				container.Launch(workerApp).GetAwaiter().GetResult();
 			}
-
-
 		}
 
 		[Fact]
@@ -474,7 +490,32 @@ namespace Lighthouse.CLI.Tests
 		}
 	}
 
+	public class WorkerTask
+	{
+		public float Input { get; set; }
+	}
+
+	public class WorkerQueueApp : LighthouseServiceBase
+	{
+		ConcurrentQueue<WorkerTask> Tasks { get; set; } = new ConcurrentQueue<WorkerTask>();
+
+		public void EnqueueTasks(int numberOftasks, Func<(double taskInput, double expectedResult)> taskAndResult)
+		{
+
+		}
+	}
+
 	public class WorkerApp : LighthouseServiceBase
 	{
+		protected override async Task OnStart()
+		{
+			await Task.Run(async () =>{
+				while(true)
+				{
+					Container.
+					await Task.Delay(1000);
+				}
+			});
+		}
 	}
 }
