@@ -114,7 +114,7 @@ namespace Lighthouse.Core.IO
 	public class FileSystemObject
 	{
 		public bool IsDirectory { get; set; } = false;
-		public DateTime LastModified { get; }
+		public DateTime LastModified { get; set; }
 		public string Path { get; set; }
 		public IList<FileSystemObject> Children { get; set; } = new List<FileSystemObject>();
 	}

@@ -300,15 +300,21 @@ namespace Lighthouse.CLI.Tests
 
 			scenario.Start(50);
 
-			// cvreate a three node cluster where the first one is what the client will interoperate with, 
+			// create a three node cluster where the first one is what the client will interoperate with, 
 			// but the other 2 will actually own the resources
 			var masterNode = scenario.Containers[0];
-			var workerPool = scenario.Containers.Skip(1); // every node BUT the master
+			var workerPool = scenario.Containers.Skip(1).ToList(); // every node BUT the master
 
 			// first, create a key_value DB on the dbNode
 			// this is where the data will be stored, and the work of the worker node will be stored
 			// the worker node, will be completely dumb
+		
 
+			foreach (var container in workerPool)
+			{
+				var workerApp = new WorkerApp();
+				workerPool.Launch(workerApp);
+			}
 
 
 		}
@@ -466,5 +472,9 @@ namespace Lighthouse.CLI.Tests
 				Output.WriteLine(message);
 			#endregion
 		}
+	}
+
+	public class WorkerApp : LighthouseServiceBase
+	{
 	}
 }

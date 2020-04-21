@@ -23,15 +23,8 @@ namespace Lighthouse.Server
 		{
 			// this request, needs to be routed to the container
 			var filesystem = Container.GetFileSystem();
-							
-			if(filesystem == null)
-			{
-				return Enumerable.Empty<FileSystemObject>();
-			}
-			else
-			{
-				return filesystem.GetObjects(folder);
-			}
+
+			return filesystem == null ? Enumerable.Empty<FileSystemObject>() : filesystem.GetObjects(folder);
 		}
 	}
 }
