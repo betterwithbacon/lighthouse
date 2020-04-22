@@ -21,6 +21,7 @@ using Lighthouse.Core.Functions;
 using Dasync.Collections;
 using System.Security;
 using System.Collections.ObjectModel;
+using Lighthouse.Core.Events.Queueing;
 
 namespace Lighthouse.Server
 {
@@ -549,9 +550,16 @@ namespace Lighthouse.Server
             // call the client
             return await client.MakeRequest<TRequest, TResponse>(request);
         }
+
+	    ConcurrentDictionary<string, IWorkQueue> workqueues = new ConcurrentDictionary<string, IWorkQueue>();
+	    
+        public IWorkQueue<T> GetWorkQueue<T>(string workQueueName)
+        {
+	        return workqueues[workQueueName];
+        }
     }
 
-    public static class IRequestHandlerExtensions
+    public static class RequestHandlerExtensions
     {
         public static bool HandlesRequest<TRequest>(this IRequestHandler handler)
         {

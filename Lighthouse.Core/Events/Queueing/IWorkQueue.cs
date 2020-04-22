@@ -2,9 +2,9 @@
 
 namespace Lighthouse.Core.Events.Queueing
 {
-    public interface IWorkQueue<out T>
+    public interface IWorkQueue
     {
-		IEnumerable<T> Dequeue(int count);
-		void Enqueue(IEvent ev);
+		IEnumerable<T> Dequeue<T>(int count);
+		void Enqueue(object work);
     }
 }

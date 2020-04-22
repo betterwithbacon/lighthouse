@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Lighthouse.Core.Events.Queueing;
 
 namespace Lighthouse.Core
 {
@@ -78,6 +79,8 @@ namespace Lighthouse.Core
 
         Task<TResponse> MakeRequest<TRequest, TResponse>(string serverName, TRequest request)
             where TRequest : class;
+
+        IWorkQueue GetWorkQueue(string workQueueName);
     }
 
     public static class ContainerExtensions

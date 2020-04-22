@@ -16,6 +16,7 @@ using Lighthouse.Core.IO;
 using Lighthouse.Core.Storage;
 using Lighthouse.Core.Utils;
 using Lighthouse.Server;
+using NSubstitute.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -320,9 +321,9 @@ namespace Lighthouse.CLI.Tests
 			var allTestCases = new Dictionary<double, double>();
 			workerQueueApp.EnqueueTasks(500, () => {
 				var seed = random.Next();
-				var seed_squared = Math.Pow(seed, 2);
-				allTestCases.Add(seed, seed_squared);
-				return (seed, seed_squared);
+				var seedSquared = Math.Pow(seed, 2);
+				allTestCases.Add(seed, seedSquared);
+				return (seed, seedSquared);
 			});
 
 			// the master node has queued up a bunch of work, let the workers start processing it
@@ -331,6 +332,8 @@ namespace Lighthouse.CLI.Tests
 			foreach (var container in workerPool)
 			{
 				var workerApp = new WorkerApp();
+				workerApp.WorkQueueName = "workQueue";
+				workerApp.PollTimeInMS = 100;
 				container.Launch(workerApp).GetAwaiter().GetResult();
 			}
 		}
@@ -492,16 +495,23 @@ namespace Lighthouse.CLI.Tests
 
 	public class WorkerTask
 	{
-		public float Input { get; set; }
+		public double Input { get; set; }
 	}
 
 	public class WorkerQueueApp : LighthouseServiceBase
 	{
-		ConcurrentQueue<WorkerTask> Tasks { get; set; } = new ConcurrentQueue<WorkerTask>();
+		private ConcurrentQueue<WorkerTask> Tasks { get; set; } = new ConcurrentQueue<WorkerTask>();
 
-		public void EnqueueTasks(int numberOftasks, Func<(double taskInput, double expectedResult)> taskAndResult)
+		public void EnqueueTasks(int numberOfTasks, Func<(double taskInput, double expectedResult)> taskAndResult)
 		{
-
+			for (var i = 0; i < numberOfTasks; i++)
+			{
+				var newTask = new WorkerTask
+				{
+					Input = taskAndResult().taskInput	
+				};
+				Tasks.Enqueue(newTask);
+			}
 		}
 	}
 
@@ -509,13 +519,23 @@ namespace Lighthouse.CLI.Tests
 	{
 		protected override async Task OnStart()
 		{
-			await Task.Run(async () =>{
+			await Task.Run(new Action(async () => {
 				while(true)
 				{
-					Container.
-					await Task.Delay(1000);
+					var task = Container.GetWorkQueue<WorkerTask>(WorkQueueName).Dequeue(1).FirstOrDefault();
+					if(task != null)
+					{
+						task.Run();
+					}
+					else
+					{
+						await Task.Delay(PollTimeInMS).ConfigureAwait(false);
+					}
 				}
-			});
+			}));
 		}
+
+		public string WorkQueueName { get; set; }
+		public int PollTimeInMS { get; set; } = 1000;
 	}
 }
