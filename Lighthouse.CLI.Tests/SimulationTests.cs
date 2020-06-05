@@ -123,6 +123,29 @@ namespace Lighthouse.CLI.Tests
 		}
 
 		[Fact]
+		public void IOT_1Master_1Storage_3Reporters()
+		{
+			var scenario = new Scenario(Output);
+
+			scenario.Start(5);
+
+			Uri resolve(LighthouseServer server) => scenario.Network.ResolveUri(server);
+
+			var apiNode = scenario.Containers[0];
+			var dbNode = scenario.Containers[1];
+			var sensorNodes = scenario.Containers.Skip(2);
+
+			// first create a timeseries write-once DB
+
+			// register the DB with the master node 
+			// ?? I'm still not sure I know what "registration" means, it seems like that defeats the entire purpose
+
+			// start a loop where each remote node, pings some sort of API server
+
+
+		}
+
+		[Fact]
 		public void LargeSimulation_1NodeOrchestrates_OtherPerforms()
 		{
 			var scenario = new Scenario(Output);
