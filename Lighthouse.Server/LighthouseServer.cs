@@ -553,7 +553,7 @@ namespace Lighthouse.Server
 
 	    ConcurrentDictionary<string, IWorkQueue> workqueues = new ConcurrentDictionary<string, IWorkQueue>();
 	    
-        public IWorkQueue<T> GetWorkQueue<T>(string workQueueName)
+        public IWorkQueue GetWorkQueue(string workQueueName)
         {
 	        return workqueues[workQueueName];
         }

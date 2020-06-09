@@ -16,7 +16,7 @@ namespace Lighthouse.Core.Events.Queueing
 		
 		public IEnumerable<T> Dequeue<T>(int count)
 		{
-			for (int i = 0; i < count && Queue.Count > 0; i++)
+			for (var i = 0; i < count && Queue.Count > 0; i++)
 				if (Queue.TryDequeue(out var result))
 					yield return (T)result;
 				else

@@ -519,7 +519,13 @@ namespace Lighthouse.CLI.Tests
 	public class WorkerTask
 	{
 		public double Input { get; set; }
-	}
+        public double Output { get; set; }
+
+        public void Run()
+        {
+            
+        }
+    }
 
 	public class WorkerQueueApp : LighthouseServiceBase
 	{
@@ -545,11 +551,11 @@ namespace Lighthouse.CLI.Tests
 			await Task.Run(new Action(async () => {
 				while(true)
 				{
-					var task = Container.GetWorkQueue<WorkerTask>(WorkQueueName).Dequeue(1).FirstOrDefault();
+					var task = Container.GetWorkQueue(WorkQueueName).Dequeue<WorkerTask>(1).FirstOrDefault();
 					if(task != null)
 					{
-						task.Run();
-					}
+                        task.Run();
+                    }
 					else
 					{
 						await Task.Delay(PollTimeInMS).ConfigureAwait(false);
