@@ -136,11 +136,18 @@ namespace Lighthouse.CLI.Tests
 			var sensorNodes = scenario.Containers.Skip(2);
 
 			// first create a timeseries write-once DB
+            apiNode.Launch(typeof(TimeSeriesDatabase))
 
 			// register the DB with the master node 
 			// ?? I'm still not sure I know what "registration" means, it seems like that defeats the entire purpose
 
+            // create the API endpoints
+
 			// start a loop where each remote node, pings some sort of API server
+
+            // the api endpoint should have been writing the time series data
+
+            // inspect the data log
 
 
 		}
