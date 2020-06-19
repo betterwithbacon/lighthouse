@@ -12,7 +12,6 @@ namespace Lighthouse.Core.Database
             StartDate = startDate;
             EndDate = endDate;
         }
-
     }
 
     public class Record<T>
