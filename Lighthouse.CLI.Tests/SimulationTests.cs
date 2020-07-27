@@ -65,13 +65,16 @@ namespace Lighthouse.CLI.Tests
 			}
 		}
 
-		public void Type(string text)
+		public void Type(params string[] text)
 		{
 			var message = $"USER: {text}";
 			WriteDelegate(message);
 			((List<string>)ConsoleLog).Add(message);
 
-			Runner.Run(text.Split(" ").Skip(1));
+			foreach (var command in text)
+			{
+				Runner.Run(command.Split(" ").Skip(1));
+			}
 		}
 
 		public string Read() => ReadDelegate();
@@ -127,6 +130,7 @@ namespace Lighthouse.CLI.Tests
 		{
 			var scenario = new Scenario(Output);
 
+            // just assume 5 unitsare running some place
 			scenario.Start(5);
 
 			Uri resolve(LighthouseServer server) => scenario.Network.ResolveUri(server);
@@ -135,11 +139,16 @@ namespace Lighthouse.CLI.Tests
 			var dbNode = scenario.Containers[1];
 			var sensorNodes = scenario.Containers.Skip(2);
 
-			// first create a timeseries write-once DB
-			apiNode.Launch(typeof(TimeSeriesDatabase<int>)).GetAwaiter().GetResult();
 
-			// register the DB with the master node 
-			// ?? I'm still not sure I know what "registration" means, it seems like that defeats the entire purpose
+            // 1: create a timeseries write-once DB, it will make itself known to the other servers in the local network
+
+            scenario.Type(
+				$"lighthouse run time_series_db --called tsdb --where {resolve(apiNode)}",
+				$"lighthouse create api --called iot_api --where {resolve(apiNode)}", // this creates an api resource called
+				$"lighthouse create endpoint --called add --method post --where iot_api --on_call iot_api_post", // don't need the server, as the API is resolvable anywhere in the cluster now
+                $"lighthouse use network --what post --where iot_api" // this assumes a function handler exists
+            );
+
 
             // create the API endpoints
 
