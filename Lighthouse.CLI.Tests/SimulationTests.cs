@@ -129,36 +129,105 @@ namespace Lighthouse.CLI.Tests
 		public void IOT_1Master_1Storage_3Reporters()
 		{
 			var scenario = new Scenario(Output);
+			int numberOfSensorNodes = 3;
 
-            // just assume 5 unitsare running some place
+            // just assume 5 units are running some place
 			scenario.Start(5);
 
 			Uri resolve(LighthouseServer server) => scenario.Network.ResolveUri(server);
 
 			var apiNode = scenario.Containers[0];
 			var dbNode = scenario.Containers[1];
-			var sensorNodes = scenario.Containers.Skip(2);
+			var sensorNodes = scenario.Containers.Skip(2).ToList();
 
+			var iot_payload = new { eventTime = DateTime.Now, value = "1.0" };
 
-            // 1: create a timeseries write-once DB, it will make itself known to the other servers in the local network
+			scenario.Type(
+				// 1: create a timeseries write-once DB, it will make itself known to the other servers in the local network
+				// this is type is pre-known to the db
+				$"lighthouse run time_series_db --called tsdb --where {resolve(dbNode)}",
 
-            scenario.Type(
-				$"lighthouse run time_series_db --called tsdb --where {resolve(apiNode)}",
-				$"lighthouse create api --called iot_api --where {resolve(apiNode)}", // this creates an api resource called
-				$"lighthouse create endpoint --called add --method post --where iot_api --on_call iot_api_post", // don't need the server, as the API is resolvable anywhere in the cluster now
-                $"lighthouse use network --what post --where iot_api" // this assumes a function handler exists
-            );
+				$"lighthouse create function --called iot_api_post --from C:\\development\\iot_api_post.cs --where {resolve(apiNode)}",
 
+				// create the API endpoints
+				// this creates an api resource called iot on the apiNode node 
+				// (does it matter where it's created? are we just doing this to be fancy?)
+				// the server would have an endpoint called http://127.0.0.1/api/iot
+				$"lighthouse create api --called iot --where {resolve(apiNode)}",
 
-            // create the API endpoints
+				// without a "where" specified, a local lighthouse spins up, connects to the cluster, and issues a general command
+				// don't need the server, as the API is resolvable anywhere in the cluster now
+				// endoint is: http://127.0.0.1/api/iot/events
+				// by default all of the methods asre supported (?)
+				$"lighthouse create api_resource --called events --for iot",
 
-			// start a loop where each remote node, pings some sort of API server
+				// not sure about this namespacing
+				// it seems like we'd need this in order to resolve the name (without using globally unique names)
+				// but it also seems a tiny bit verbose TBH
+				$"lighthouse configure api_resource --where iot.events --method post --on_call iot_post",
+				$"lighthouse configure api_resource --where iot.events --method get --on_call iot_get", // this call will fail for now
 
-            // the api endpoint should have been writing the time series data
+				// test the endpoint
+				// not sure how it knows to talk to 127.0.0.1
+				// should this literally be a curl call? or do we want to cheat to make it easier.
+				// or maybe this is fair game, if we consider this a call from a non-lighthouse endpoint
+				$"lighthouse call endpoint --where iot.events --method post --with {iot_payload}" // this assumes a function handler exists
+			);
 
-            // inspect the data log
+			// start the "sensor reporting" apps on each of the sensor nodes
+			// foreach(var node in sensorNodes)
+			for(int i = 2; i < numberOfSensorNodes; i++)
+			{
+				var node = sensorNodes[i];
+				node.Launch(
+					typeof(ApiPinger), 
+					new ApiPingerContext { 
+						Value = i, 
+						PingFrequencyMS = 100, 
+						EndpointName= $"{resolve(apiNode)}/api/events" // not sure about how this is supposed to work, TBH. 
+						// The IOT point, needs to "know" where it's reporting, but the less routing information the better (right?)
+						// should this data jsut be events, and the IOT endpoint picks it up. that seems liek the wrong approach.
+						// it seems like a non "lighthouse" node reporting, is the actual goal
+					}
+				).GetAwaiter().GetResult();
+				
+				//node.Do(container => {
+				//	}).GetAwaiter().GetResult();
+			}
 
+			// wait a "while"
+			Thread.Sleep(1000);
+				
+			// the api endpoint should have been writing the time series database
+		
 
+			// inspect the data log
+
+		}
+
+		class ApiPingerContext
+		{
+			public decimal Value { get; set; }
+			public int PingFrequencyMS { get; set; }
+			public string EndpointName { get; set; }
+		}
+
+		class ApiPinger : LighthouseServiceBase
+		{
+			public decimal Value { get; private set; }
+			public int PingFrequencyMS { get; private set; }
+
+			protected override void OnInit(object context = null)
+			{
+				base.OnInit(context);
+
+				if(context is ApiPingerContext appContext)
+				{
+					Value = appContext.Value;
+					PingFrequencyMS = appContext.PingFrequencyMS;
+
+				}
+			}
 		}
 
 		[Fact]
